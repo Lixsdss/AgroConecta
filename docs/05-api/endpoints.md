@@ -19,7 +19,11 @@ Base: `/api/v1`. Formato JSON (UTF-8). Autenticación con JWT en la cabecera `Au
 
   `errores` solo tiene elementos en 400; en los demás casos es `[]`.
 - **Códigos:** 400 validación · 401 sin sesión, credenciales incorrectas o usuario no ACTIVO · 403 rol incorrecto · 404 no existe · 409 dato duplicado · 422 regla de negocio o de la base de datos · 500 error interno.
-- **Listas paginadas:** `page`, `size`, `sort` (a partir de los listados de RF-03).
+- **Listas paginadas:** parámetros `page` (desde 0) y `size`. Respuesta:
+
+  ```json
+  { "content": [ ... ], "page": { "size": 20, "number": 0, "totalElements": 3, "totalPages": 1 } }
+  ```
 
 ## Índice
 
@@ -37,6 +41,9 @@ Base: `/api/v1`. Formato JSON (UTF-8). Autenticación con JWT en la cabecera `Au
 | PUT | `/api/v1/usuarios/me/contrasena` | Autenticado | RF-08 | usuario |
 | POST | `/api/v1/publicaciones` | AGRICULTOR | RF-01 | publicacion |
 | GET | `/api/v1/publicaciones/{id}` | Público | RF-01 | publicacion |
+| GET | `/api/v1/moderacion/publicaciones` | ADMINISTRADOR | RF-09 | administracion |
+| GET | `/api/v1/moderacion/decisiones` | ADMINISTRADOR | RF-09 | administracion |
+| POST | `/api/v1/moderacion/publicaciones/{id}/decisiones` | ADMINISTRADOR | RF-09 | administracion |
 
 ---
 
@@ -312,7 +319,93 @@ Público. Devuelve la publicación si está **PUBLICADA**, o en cualquier estado
 
 `marca_revision` (cola de moderación) no se expone aquí: es interna de la moderación (RF-09).
 
+**Marcas de moderación al publicar** (SRS RF-09; umbrales aprobados en el plan del slice 3). La columna guarda una sola marca, con prioridad PRECIO_FUERA_RANGO > CANTIDAD_INUSUAL > PRIMERA_PUBLICACION:
+
+- `CANTIDAD_INUSUAL`: los kilos superan 3 veces el promedio de las publicaciones del mismo cultivo en el mismo distrito de los últimos 90 días (solo si hay al menos 3 para comparar).
+- `PRECIO_FUERA_RANGO` (slice 4): el precio por kilo se aleja más de ±15 % del precio de mercado de hoy (de la zona, o el promedio de las 4 zonas).
+- `PRIMERA_PUBLICACION`: la pone `trg_publicaciones_bi` si no hay otra marca.
+
 **Errores:** 404 "La publicación no existe." (inexistente, o no PUBLICADA y quien la pide no es su dueño).
+
+---
+
+## Moderación posterior (`administracion`)
+
+Todos los endpoints exigen rol **ADMINISTRADOR** (403 para los demás roles).
+
+### GET `/api/v1/moderacion/publicaciones?vista={vista}&page=0&size=20`
+
+| `vista` | Qué devuelve | Orden |
+|---|---|---|
+| `POR_REVISAR` (por defecto) | Publicaciones PUBLICADA o BLOQUEADA con marca de revisión (la cola "Por revisar") | La más antigua primero |
+| `OCULTAS` | Publicaciones BLOQUEADA (para "Volver a mostrar") | La más reciente primero |
+
+**200** — lista paginada de:
+```json
+{
+  "id": 15, "cultivo": "Mango", "variedad": "Kent", "unidad": "Jaba", "unidadPlural": "jabas",
+  "cantidad": 30.00, "pesoUnidadKg": 20.000, "cantidadKg": 600.00, "precioUnitario": 28.00, "precioKg": 1.4000,
+  "distrito": "Tambogrande", "provincia": "Piura", "fechaCosecha": "2026-09-27", "fechaLimite": "2026-10-11",
+  "estado": "PUBLICADA", "marcaRevision": "PRIMERA_PUBLICACION", "fechaPublicacion": "2026-09-27T12:30:00",
+  "agricultor": { "id": 3, "nombreCompleto": "Juan Carlos Chunga", "celular": "987654321", "distrito": "Tambogrande", "fechaRegistro": "2026-09-27T09:00:00" }
+}
+```
+
+**Errores:** 400 si `vista` no es válida.
+
+### GET `/api/v1/moderacion/decisiones?fecha=AAAA-MM-DD`
+
+Decisiones registradas ese día (por defecto, hoy), de la más reciente a la más antigua.
+
+**200**
+```json
+[
+  {
+    "id": 4, "idPublicacion": 15, "producto": "Mango Kent", "decision": "BLOQUEO",
+    "motivo": "PRECIO_NO_COINCIDE", "mensaje": "El precio no coincide con el mercado de hoy. Revise el precio por jaba.",
+    "fecha": "2026-09-27T13:05:00", "administrador": "Lucía Farfán"
+  }
+]
+```
+
+### POST `/api/v1/moderacion/publicaciones/{id}/decisiones`
+
+Registra una decisión sobre la publicación (UC-11, parte 2). `trg_revisiones_ai` aplica el cambio, borra la marca y avisa al agricultor.
+
+**Request**
+
+| Campo | Obligatorio | Regla |
+|---|---|---|
+| `decision` | Sí | `CONFORME`, `ADVERTENCIA`, `BLOQUEO` (ocultar) o `DESBLOQUEO` (volver a mostrar) |
+| `motivo` | ADVERTENCIA y BLOQUEO | `PRECIO_NO_COINCIDE`, `CANTIDAD_INCORRECTA`, `PESO_UNIDAD_INCORRECTO`, `DATOS_INCORRECTOS`, `OTRO`. Se ignora en CONFORME y DESBLOQUEO |
+| `mensaje` | ADVERTENCIA y BLOQUEO | Texto que verá el agricultor, máx. 300 caracteres. Opcional en DESBLOQUEO; se ignora en CONFORME |
+
+```json
+{ "decision": "BLOQUEO", "motivo": "PRECIO_NO_COINCIDE", "mensaje": "El precio no coincide con el mercado de hoy. Revise el precio por jaba." }
+```
+
+**201** — cabecera `Location: /api/v1/moderacion/decisiones?fecha=AAAA-MM-DD`
+
+```json
+{ "idRevision": 4, "idPublicacion": 15, "decision": "BLOQUEO", "estadoPublicacion": "BLOQUEADA" }
+```
+
+| Decisión | Estado requerido | Resultado | Aviso al agricultor |
+|---|---|---|---|
+| CONFORME | PUBLICADA y en la cola | Sigue PUBLICADA, sale de la cola | — |
+| ADVERTENCIA | PUBLICADA | Sigue PUBLICADA, sale de la cola | MODERACION |
+| BLOQUEO | PUBLICADA | BLOQUEADA (deja de verse) | MODERACION |
+| DESBLOQUEO | BLOQUEADA | PUBLICADA (o VENCIDA si ya pasó su fecha límite) | MODERACION |
+
+**Errores**
+
+| Código | Cuándo | `mensaje` |
+|---|---|---|
+| 400 | Falta la decisión, o motivo y mensaje en ADVERTENCIA/BLOQUEO (detalle en `errores`) | "Los datos enviados no son válidos." |
+| 404 | La publicación no existe | "La publicación no existe." |
+| 422 | CONFORME, ADVERTENCIA u OCULTAR sobre una publicación que no está visible | "Solo se revisa, advierte u oculta una publicación visible." |
+| 422 | Volver a mostrar una publicación que no está oculta | "Solo se vuelve a mostrar una publicación oculta." |
+| 422 | CONFORME sobre una publicación que no está en la cola | "La publicación no está en la cola de revisión." |
 
 ---
 
