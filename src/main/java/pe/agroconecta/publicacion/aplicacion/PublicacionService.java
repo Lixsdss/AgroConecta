@@ -3,6 +3,11 @@ package pe.agroconecta.publicacion.aplicacion;
 import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import jakarta.persistence.EntityManager;
 
@@ -10,6 +15,8 @@ import com.google.common.base.Preconditions;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,13 +27,18 @@ import pe.agroconecta.catalogo.aplicacion.VariedadDto;
 import pe.agroconecta.compartido.error.RecursoNoEncontradoException;
 import pe.agroconecta.compartido.error.ReglaNegocioException;
 import pe.agroconecta.publicacion.dominio.EstadoPublicacion;
+import pe.agroconecta.publicacion.dominio.MarcaRevision;
 import pe.agroconecta.publicacion.dominio.Publicacion;
+import pe.agroconecta.publicacion.infraestructura.EstadisticaCantidad;
 import pe.agroconecta.publicacion.infraestructura.PublicacionRepository;
 
 /**
  * Publicación de cosechas (RF-01, UC-01). Valida con mensajes amigables lo mismo que {@code trg_publicaciones_bi}
  * (la base de datos es la última barrera) y refresca la entidad para leer lo que calcula la base de datos:
  * peso de las unidades fijas, fecha límite, marca de moderación y columnas generadas.
+ *
+ * <p>También calcula las marcas de la moderación posterior que no pone la base de datos (RF-09) y ofrece a
+ * {@code administracion} las consultas de la cola de moderación.</p>
  */
 @Service
 public class PublicacionService {
@@ -40,6 +52,13 @@ public class PublicacionService {
     static final String MENSAJE_COSECHA_VENCIDA =
             "Con esa fecha de cosecha, el producto ya pasó su tiempo de venta. Revise la fecha.";
     static final String MENSAJE_NO_EXISTE = "La publicación no existe.";
+
+    /** CANTIDAD_INUSUAL: los kilos superan este múltiplo del promedio de la zona (umbral aprobado en el slice 3). */
+    static final double FACTOR_CANTIDAD_INUSUAL = 3.0;
+    /** CANTIDAD_INUSUAL: publicaciones mínimas del mismo cultivo y distrito para poder comparar. */
+    static final long MINIMO_PARA_COMPARAR = 3;
+    /** CANTIDAD_INUSUAL: días hacia atrás que se consideran. */
+    static final int DIAS_PARA_COMPARAR = 90;
 
     private static final Logger LOG = LoggerFactory.getLogger(PublicacionService.class);
 
@@ -86,9 +105,12 @@ public class PublicacionService {
         BigDecimal peso = pesoPorUnidad(unidad, datos.pesoUnidadKg());
         validarFechas(datos.fechaCosecha(), datos.fechaLimite(), variedad.vidaUtilDias());
 
-        Publicacion publicacion = publicaciones.saveAndFlush(new Publicacion(idAgricultor, variedad.id(),
-                distrito.id(), unidad.id(), datos.cantidad(), peso, datos.precioUnitario(), datos.fechaCosecha(),
-                datos.fechaLimite()));
+        Publicacion nueva = new Publicacion(idAgricultor, variedad.id(), distrito.id(), unidad.id(), datos.cantidad(),
+                peso, datos.precioUnitario(), datos.fechaCosecha(), datos.fechaLimite());
+        if (esCantidadInusual(variedad.idCultivo(), distrito.id(), datos.cantidad().multiply(peso))) {
+            nueva.marcarParaRevision(MarcaRevision.CANTIDAD_INUSUAL);
+        }
+        Publicacion publicacion = publicaciones.saveAndFlush(nueva);
         entityManager.refresh(publicacion);
 
         LOG.info("Cosecha publicada: id={}, agricultor={}, cultivo={}, kg={}, marca={}", publicacion.getId(),
@@ -113,6 +135,77 @@ public class PublicacionService {
         UnidadDto unidad = catalogo.buscarUnidad(publicacion.getIdUnidad()).orElseThrow();
         DistritoDto distrito = catalogo.buscarDistrito(publicacion.getIdDistrito()).orElseThrow();
         return aDto(publicacion, variedad, unidad, distrito);
+    }
+
+    /**
+     * Lista las publicaciones de la moderación posterior.
+     *
+     * @param vista  cola "Por revisar" u ocultas
+     * @param pagina página pedida
+     * @return página de publicaciones con su estado y marca
+     */
+    @Transactional(readOnly = true)
+    public Page<PublicacionModeracionDto> listarParaModeracion(VistaModeracion vista, Pageable pagina) {
+        Page<Publicacion> encontradas = vista == VistaModeracion.OCULTAS
+                ? publicaciones.buscarOcultas(pagina)
+                : publicaciones.buscarPorRevisar(pagina);
+        NombresCatalogo nombres = nombresCatalogo();
+        return encontradas.map(nombres::aDtoModeracion);
+    }
+
+    /**
+     * Devuelve una publicación para la moderación, leída de nuevo de la base de datos (refleja lo que acaban de
+     * cambiar los triggers de {@code revisiones_publicacion} en la misma transacción).
+     *
+     * @param idPublicacion id de la publicación
+     * @return publicación con su estado y marca actuales
+     * @throws RecursoNoEncontradoException si no existe
+     */
+    @Transactional(readOnly = true)
+    public PublicacionModeracionDto obtenerParaModeracion(long idPublicacion) {
+        Publicacion publicacion = publicaciones.findById(idPublicacion)
+                .orElseThrow(() -> new RecursoNoEncontradoException(MENSAJE_NO_EXISTE));
+        entityManager.refresh(publicacion);
+        return nombresCatalogo().aDtoModeracion(publicacion);
+    }
+
+    /**
+     * CANTIDAD_INUSUAL: más de 3 veces el promedio de kilos del mismo cultivo y distrito en los últimos 90 días,
+     * con al menos 3 publicaciones para comparar.
+     */
+    private boolean esCantidadInusual(int idCultivo, int idDistrito, BigDecimal cantidadKg) {
+        List<Integer> idsVariedad = catalogo.listarVariedades(idCultivo).stream().map(VariedadDto::id).toList();
+        if (idsVariedad.isEmpty()) {
+            return false;
+        }
+        EstadisticaCantidad estadistica = publicaciones.estadisticaCantidad(idsVariedad, idDistrito,
+                LocalDateTime.now(reloj).minusDays(DIAS_PARA_COMPARAR));
+        return estadistica != null && estadistica.promedioKg() != null
+                && estadistica.publicaciones() >= MINIMO_PARA_COMPARAR
+                && cantidadKg.doubleValue() > FACTOR_CANTIDAD_INUSUAL * estadistica.promedioKg();
+    }
+
+    private NombresCatalogo nombresCatalogo() {
+        return new NombresCatalogo(
+                catalogo.listarVariedades(null).stream().collect(Collectors.toMap(VariedadDto::id, Function.identity())),
+                catalogo.listarUnidades().stream().collect(Collectors.toMap(UnidadDto::id, Function.identity())),
+                catalogo.listarDistritos(null).stream().collect(Collectors.toMap(DistritoDto::id, Function.identity())));
+    }
+
+    /** Catálogos cargados una sola vez para armar varias publicaciones. */
+    private record NombresCatalogo(Map<Integer, VariedadDto> variedades, Map<Integer, UnidadDto> unidades,
+            Map<Integer, DistritoDto> distritos) {
+
+        PublicacionModeracionDto aDtoModeracion(Publicacion p) {
+            VariedadDto v = variedades.get(p.getIdVariedad());
+            UnidadDto u = unidades.get(p.getIdUnidad());
+            DistritoDto d = distritos.get(p.getIdDistrito());
+            return new PublicacionModeracionDto(p.getId(), p.getIdAgricultor(), v.cultivo(), v.nombre(), u.nombre(),
+                    u.nombrePlural(), p.getCantidad(), p.getPesoUnidadKg(), p.getCantidadKg(), p.getPrecioUnitario(),
+                    p.getPrecioKg(), d.nombre(), d.provincia(), p.getFechaCosecha(), p.getFechaLimite(),
+                    p.getEstado().name(), p.getMarcaRevision() == null ? null : p.getMarcaRevision().name(),
+                    p.getFechaPublicacion());
+        }
     }
 
     /** Peso por unidad: el del catálogo en las unidades fijas; el que indica el agricultor en jaba y saco. */

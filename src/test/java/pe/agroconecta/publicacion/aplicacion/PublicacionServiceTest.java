@@ -12,6 +12,7 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.util.List;
 import java.util.Optional;
 
 import jakarta.persistence.EntityManager;
@@ -30,8 +31,13 @@ import pe.agroconecta.catalogo.aplicacion.UnidadDto;
 import pe.agroconecta.catalogo.aplicacion.VariedadDto;
 import pe.agroconecta.compartido.error.RecursoNoEncontradoException;
 import pe.agroconecta.compartido.error.ReglaNegocioException;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+
 import pe.agroconecta.publicacion.dominio.EstadoPublicacion;
+import pe.agroconecta.publicacion.dominio.MarcaRevision;
 import pe.agroconecta.publicacion.dominio.Publicacion;
+import pe.agroconecta.publicacion.infraestructura.EstadisticaCantidad;
 import pe.agroconecta.publicacion.infraestructura.PublicacionRepository;
 
 @ExtendWith(MockitoExtension.class)
@@ -143,6 +149,60 @@ class PublicacionServiceTest {
         assertThat(servicio.obtener(15L, 3L).estado()).isEqualTo(EstadoPublicacion.BLOQUEADA);
         assertThatThrownBy(() -> servicio.obtener(15L, 7L)).isInstanceOf(RecursoNoEncontradoException.class);
         assertThatThrownBy(() -> servicio.obtener(15L, null)).isInstanceOf(RecursoNoEncontradoException.class);
+    }
+
+    @Test
+    void marcaCantidadInusualSiSuperaTresVecesElPromedioDeLaZona() {
+        catalogoCon(JABA);
+        when(catalogo.listarVariedades(1)).thenReturn(List.of(KENT));
+        when(publicaciones.estadisticaCantidad(any(), any(), any())).thenReturn(new EstadisticaCantidad(3, 100.0));
+        when(publicaciones.saveAndFlush(any(Publicacion.class))).thenAnswer(i -> conId(i.getArgument(0), 17L));
+
+        servicio.publicar(3L, datos(2, "20", null, HOY));
+
+        ArgumentCaptor<Publicacion> guardada = ArgumentCaptor.forClass(Publicacion.class);
+        verify(publicaciones).saveAndFlush(guardada.capture());
+        assertThat(guardada.getValue().getMarcaRevision()).isEqualTo(MarcaRevision.CANTIDAD_INUSUAL);
+    }
+
+    @Test
+    void noMarcaSinSuficientesPublicacionesParaComparar() {
+        catalogoCon(JABA);
+        when(catalogo.listarVariedades(1)).thenReturn(List.of(KENT));
+        when(publicaciones.estadisticaCantidad(any(), any(), any())).thenReturn(new EstadisticaCantidad(2, 10.0));
+        when(publicaciones.saveAndFlush(any(Publicacion.class))).thenAnswer(i -> conId(i.getArgument(0), 18L));
+
+        servicio.publicar(3L, datos(2, "20", null, HOY));
+
+        ArgumentCaptor<Publicacion> guardada = ArgumentCaptor.forClass(Publicacion.class);
+        verify(publicaciones).saveAndFlush(guardada.capture());
+        assertThat(guardada.getValue().getMarcaRevision()).isNull();
+    }
+
+    @Test
+    void listaYObtieneParaModeracionConEstadoYMarcaComoTexto() {
+        Publicacion p = conId(new Publicacion(3L, 1, 9, 2, BigDecimal.TEN, BigDecimal.ONE, BigDecimal.ONE, HOY,
+                HOY.plusDays(14)), 15L);
+        p.marcarParaRevision(MarcaRevision.PRIMERA_PUBLICACION);
+        PageRequest pagina = PageRequest.of(0, 20);
+        when(publicaciones.buscarPorRevisar(pagina)).thenReturn(new PageImpl<>(List.of(p), pagina, 1));
+        when(publicaciones.buscarOcultas(pagina)).thenReturn(new PageImpl<>(List.of(), pagina, 0));
+        when(publicaciones.findById(15L)).thenReturn(Optional.of(p));
+        when(catalogo.listarVariedades(null)).thenReturn(List.of(KENT));
+        when(catalogo.listarUnidades()).thenReturn(List.of(JABA));
+        when(catalogo.listarDistritos(null)).thenReturn(List.of(TAMBOGRANDE));
+
+        assertThat(servicio.listarParaModeracion(VistaModeracion.POR_REVISAR, pagina).getContent()).singleElement()
+                .satisfies(d -> {
+                    assertThat(d.marcaRevision()).isEqualTo("PRIMERA_PUBLICACION");
+                    assertThat(d.estado()).isEqualTo("PUBLICADA");
+                    assertThat(d.cultivo()).isEqualTo("Mango");
+                });
+        assertThat(servicio.listarParaModeracion(VistaModeracion.OCULTAS, pagina)).isEmpty();
+        assertThat(servicio.obtenerParaModeracion(15L).distrito()).isEqualTo("Tambogrande");
+        verify(entityManager).refresh(p);
+        when(publicaciones.findById(99L)).thenReturn(Optional.empty());
+        assertThatThrownBy(() -> servicio.obtenerParaModeracion(99L)).isInstanceOf(RecursoNoEncontradoException.class);
     }
 
     private void catalogoCon(UnidadDto unidad) {

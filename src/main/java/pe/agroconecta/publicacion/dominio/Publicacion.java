@@ -115,6 +115,16 @@ public class Publicacion {
     }
 
     /**
+     * Pone la publicación en la cola de moderación con una marca calculada por el servicio (RF-09). Si no se
+     * llama, {@code trg_publicaciones_bi} marca PRIMERA_PUBLICACION cuando corresponde.
+     *
+     * @param marca marca de revisión
+     */
+    public void marcarParaRevision(MarcaRevision marca) {
+        this.marcaRevision = marca;
+    }
+
+    /**
      * Indica si la publicación es de ese agricultor.
      *
      * @param idUsuario id del usuario
