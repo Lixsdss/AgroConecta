@@ -56,6 +56,23 @@ El borrador de los 3 pasos vive en `sessionStorage` (`js/publicacion/borrador.js
 - **Fecha de cosecha:** hoy por defecto; no se aceptan fechas futuras.
 - **Referencia de precio y veredicto de color** (paso 3): llegan con RF-02 (slice 4); por ahora solo se muestra el precio por kilo calculado.
 
+## Administrador · Moderación (RF-09, slice 3) — formato escritorio
+
+| # | Pantalla del diseño | Archivo | JS | Endpoints | Navegación |
+|---|---|---|---|---|---|
+| 11c | Moderación | `pages/administracion/moderacion.html` | `js/administracion/moderacion.js` | `GET /api/v1/moderacion/publicaciones?vista=POR_REVISAR` y `OCULTAS`, `GET /api/v1/moderacion/decisiones` | Pestañas Por revisar / Ocultas / Decisiones de hoy; lista y detalle |
+| 11d | Advertir u ocultar (en el diseño: "Rechazar con motivo") | ventana `<dialog>` de la misma página | — | `POST /api/v1/moderacion/publicaciones/{id}/decisiones` | Cancelar · Advertir y avisar / Ocultar y avisar |
+
+El administrador entra por la misma pantalla "Ingresar"; el inicio lo lleva directo a Moderación. La barra lateral solo muestra Moderación; Panel, Precios de mercado y Usuarios se agregan en sus slices.
+
+### Diferencias con el diseño (moderación posterior de v4.1, aprobadas en el plan del slice 3)
+
+- **Acciones:** "Aprobar y publicar" / "Rechazar" pasan a **Conforme**, **Advertir**, **Ocultar** y **Volver a mostrar** (`revisiones_publicacion.decision`).
+- **Pestañas:** "En revisión / Rechazadas hoy / Aprobadas hoy" pasan a **Por revisar / Ocultas / Decisiones de hoy**.
+- **Marcas:** la marca del diseño "Peso por unidad inusual" no existe en el esquema; se muestran PRIMERA_PUBLICACION, CANTIDAD_INUSUAL, PRECIO_FUERA_RANGO (desde el slice 4) y CORREGIDA.
+- **Detalle:** la línea "Hoy en … pagan entre …" llega con RF-02 (slice 4); la calificación y las ventas del agricultor, con RF-05 y RF-06.
+- **Motivos y mensajes sugeridos:** son los 5 del diseño, que coinciden con `chk_revision_motivo`.
+
 ## Sesión en el navegador
 
 - `js/api.js` agrega `Authorization: Bearer <token>` y convierte las respuestas de error en `ErrorApi` (`estado`, `message`, `errores`).

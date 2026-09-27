@@ -179,7 +179,10 @@ Never reimplement these side effects in Java and never use `@Scheduled` for the 
 
 ### 6.3 Business rules the services must implement (not in the database)
 
-- **Moderation flags (RF-01, RF-09):** when a listing is created or edited, the `publicacion` service sets `marca_revision = PRECIO_FUERA_RANGO` if the price per kilo is far from the reference price (`v_precios_vigentes` / `v_rango_precio_plataforma`) and `CANTIDAD_INUSUAL` if the quantity is unusual. The thresholds are **not defined yet**: define and approve them in the RF-09 slice before coding them.
+- **Moderation flags (RF-01, RF-09), thresholds approved in slice 3:** when a listing is created, the `publicacion` service sets `marca_revision`, with priority PRECIO_FUERA_RANGO > CANTIDAD_INUSUAL > PRIMERA_PUBLICACION (the trigger sets the last one only if there is no other flag):
+  - `CANTIDAD_INUSUAL` (implemented): the listing's kilos exceed **3 ×** the average kilos of listings of the same crop in the same district in the last **90 days**, with at least **3** listings to compare.
+  - `PRECIO_FUERA_RANGO` (slice 4, needs `precio`): the price per kilo differs by more than **±15 %** from today's market price per kilo (`v_precios_vigentes`) of the listing's district if it is a price zone, otherwise the average of the 4 zones. No reference price → no flag.
+- **Moderation decisions (RF-09):** CONFORME only for listings in the queue (`marca_revision` not NULL); ADVERTENCIA and BLOQUEO for any PUBLICADA listing; DESBLOQUEO only for BLOQUEADA. Cross-module DTOs carry states and flags as `String` (never another module's `dominio` enums).
 - **Proportional split (RF-10):** the `ventaagrupada` service splits the joint proposal's kilos among the farmers of the lot in proportion to each farmer's available kilos, rounded down to whole units of each farmer's listing, and creates one PROPUESTA sale per farmer through `venta.aplicacion`, in the farmer's unit. A farmer whose share is less than one unit receives no proposal.
 - **Offers (RF-04):** reject OFERTA messages on a listing that is not PUBLICADA before inserting (friendly 422).
 - **Cancellation (RF-06):** only an ACORDADA sale can be cancelled; after pick-up, point the user to a complaint (`reclamos`).

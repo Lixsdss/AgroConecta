@@ -16,7 +16,7 @@ Relaciona cada requisito funcional con su caso de uso, módulo, tablas, endpoint
 | RF-06 | Registro e historial de transacciones | UC-05, UC-06 A1, UC-08 | venta | 7 | Pendiente |
 | RF-07 | Alertas de vencimiento | UC-09 | notificacion, publicacion | 9 | Pendiente |
 | **RF-08** | **Registro y gestión de usuarios** | **UC-10** | **usuario (+ catalogo)** | **1** | **Implementado** (gestión por el administrador: slice 11) |
-| RF-09 | Panel administrativo | UC-11 | administracion | 3 y 11 | Pendiente |
+| **RF-09** | **Panel administrativo** | **UC-11** | **administracion** | **3 y 11** | **Moderación implementada (slice 3)**; reclamos, suspensiones, usuarios y panel: slice 11; corrección de una publicación bloqueada (CORREGIDA): slice 9 |
 | RF-10 | Venta agrupada | UC-12 | ventaagrupada | 10 | Pendiente |
 | RF-11 | Seguimiento de entrega | UC-06 | venta | 7 | Pendiente |
 
@@ -47,6 +47,18 @@ Relaciona cada requisito funcional con su caso de uso, módulo, tablas, endpoint
 | Pantallas | 07 Paso 1 (`paso1.html`), 08 Paso 2 (`paso2.html`), 09 Paso 3 (`paso3.html`), 10 Confirmar (`confirmar.html`), 11 Publicada (`publicada.html`) |
 | Pruebas | Unitarias: `PublicacionServiceTest`, `CatalogoServiceTest`. Integración (MariaDB): `PublicacionIntegracionTest` (jaba, quintal con 46 kg, fecha límite calculada, PRIMERA_PUBLICACION solo en la primera, 400/401/403/404/422, catálogo). Arquitectura: `ArquitecturaTest` |
 | RNF | RNF-01 (páginas livianas, borrador en `sessionStorage`), RNF-03 (una pregunta por bloque, botones ≥ 56 px), RNF-05 (trigger y CHECK como última barrera) |
+
+### RF-09 — Moderación posterior (slice 3)
+
+| Elemento | Trazas |
+|---|---|
+| Caso de uso | UC-11 parte 2: cola "Por revisar" (1), revisión con datos del agricultor (2), Conforme / Advertir / Ocultar (3), Volver a mostrar (5); A3 motivo o mensaje vacío (400); A4 decisión no permitida (422). Parte 2 paso 4 (corrección → CORREGIDA) queda para el slice 9, que agrega la edición de la publicación |
+| Módulos | `administracion` (dueño de `revisiones_publicacion`); `publicacion` (cola y marca CANTIDAD_INUSUAL, vía `publicacion.aplicacion`); `usuario` (datos del agricultor, vía `usuario.aplicacion`) |
+| Tablas | revisiones_publicacion (escritura); publicaciones, usuarios (lectura); notificaciones (la escribe el trigger) |
+| Triggers y restricciones | `trg_revisiones_bi`, `trg_revisiones_ai` (estado, borra la marca, notificación MODERACION); `chk_revision_decision`, `chk_revision_motivo`, `chk_revision_coherencia` |
+| Endpoints | `GET /api/v1/moderacion/publicaciones`, `GET /api/v1/moderacion/decisiones`, `POST /api/v1/moderacion/publicaciones/{id}/decisiones` |
+| Pantallas | 11c Moderación y 11d Advertir u ocultar (`pages/administracion/moderacion.html`, formato escritorio) |
+| Pruebas | Unitarias: `ModeracionServiceTest`, `PublicacionServiceTest` (CANTIDAD_INUSUAL y consultas), `UsuarioConsultaServiceTest`. Integración (MariaDB): `ModeracionIntegracionTest` (cola, conforme, advertir con aviso, ocultar y volver a mostrar, 400/403/404/422, CANTIDAD_INUSUAL). Arquitectura: `ArquitecturaTest` |
 
 ### Resto de requisitos
 
