@@ -119,6 +119,25 @@ class ManejadorGlobalExcepcionesTest {
     }
 
     @Test
+    void conflictoDelServicioDevuelve409ConSuMensaje() {
+        ResponseEntity<ErrorResponse> respuesta =
+                manejador.manejarConflicto(new ConflictoException("Este celular ya está registrado."), request);
+
+        assertThat(respuesta.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+        assertThat(respuesta.getBody().mensaje()).isEqualTo("Este celular ya está registrado.");
+    }
+
+    @Test
+    void autenticacionFallidaDevuelve401ConSuMensaje() {
+        ResponseEntity<ErrorResponse> respuesta = manejador.manejarAutenticacionFallida(
+                new AutenticacionFallidaException("Celular o contraseña incorrectos."), request);
+
+        assertThat(respuesta.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+        assertThat(respuesta.getBody().error()).isEqualTo("Unauthorized");
+        assertThat(respuesta.getBody().mensaje()).isEqualTo("Celular o contraseña incorrectos.");
+    }
+
+    @Test
     void otroErrorDeBaseDeDatosDevuelve500Generico() {
         var sql = new SQLException("Communications link failure", "08S01", 0);
 

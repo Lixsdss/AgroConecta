@@ -36,6 +36,7 @@ import pe.agroconecta.compartido.error.ErrorResponse.ErrorCampo;
  * <li>Errores de Bean Validation: 400 con el mensaje de cada campo.</li>
  * <li>Errores de los triggers ({@code SIGNAL SQLSTATE '45000'}): 422 con el texto del trigger.</li>
  * <li>Violaciones de {@code CHECK} y {@link ReglaNegocioException}: 422.</li>
+ * <li>{@link ConflictoException}: 409; {@link AutenticacionFallidaException}: 401.</li>
  * <li>Clave única duplicada o clave foránea: 409 con un mensaje genérico, sin detalles de SQL.</li>
  * <li>Cualquier otro error: 500 con un mensaje genérico; el detalle solo va al log.</li>
  * </ul>
@@ -72,6 +73,31 @@ public class ManejadorGlobalExcepciones extends ResponseEntityExceptionHandler {
     @ExceptionHandler(ReglaNegocioException.class)
     public ResponseEntity<ErrorResponse> manejarReglaNegocio(ReglaNegocioException ex, HttpServletRequest request) {
         return responder(HttpStatus.UNPROCESSABLE_CONTENT, ex.getMessage(), request.getRequestURI());
+    }
+
+    /**
+     * Responde 409 cuando un servicio detecta que un dato ya existe.
+     *
+     * @param ex      excepción con el mensaje para el usuario
+     * @param request petición que falló
+     * @return 409 con el mensaje de la excepción
+     */
+    @ExceptionHandler(ConflictoException.class)
+    public ResponseEntity<ErrorResponse> manejarConflicto(ConflictoException ex, HttpServletRequest request) {
+        return responder(HttpStatus.CONFLICT, ex.getMessage(), request.getRequestURI());
+    }
+
+    /**
+     * Responde 401 cuando se rechaza un inicio de sesión.
+     *
+     * @param ex      excepción con el mensaje para el usuario
+     * @param request petición que falló
+     * @return 401 con el mensaje de la excepción
+     */
+    @ExceptionHandler(AutenticacionFallidaException.class)
+    public ResponseEntity<ErrorResponse> manejarAutenticacionFallida(AutenticacionFallidaException ex,
+            HttpServletRequest request) {
+        return responder(HttpStatus.UNAUTHORIZED, ex.getMessage(), request.getRequestURI());
     }
 
     /**
