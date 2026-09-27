@@ -1,4 +1,4 @@
-# CLAUDE.md — AgroConecta (v3.1)
+# CLAUDE.md — AgroConecta (v3.2)
 
 Guide for Claude Code. Read this file completely before any task.
 
@@ -62,15 +62,15 @@ One deployable WAR, split into **business modules** under `pe.agroconecta`. Each
 | Module | RF | Responsibility | Allowed dependencies |
 |---|---|---|---|
 | `compartido` | — | Config, security (incl. `VerificadorEstadoUsuario` interface), global exception handling, utils. OPEN module, no business logic | none |
-| `catalogo` | Support for RF-01, RF-02, RF-03, RF-10 | Read-only catalogs: categorias, cultivos, variedades, unidades_medida, provincias, distritos | compartido |
+| `catalogo` | Support for RF-01, RF-02, RF-03, RF-10 | Read-only catalogs: provincias, distritos, unidades_medida, cultivos, variedades | compartido |
 | `usuarios` | RF-08 | Registration, phone login, JWT issuing, profile, own password change, roles; implements `VerificadorEstadoUsuario` | compartido, catalogo::api |
 | `publicaciones` | RF-01, RF-03, RF-07 (quick actions) | Harvest listing in max. 3 steps, public multi-criteria search, lower price / extend deadline / withdraw | compartido, catalogo::api, usuarios::api |
 | `precios` | RF-02 | Public price board with history; admin upload via form or CSV/Excel | compartido, catalogo::api |
-| `mensajeria` | RF-04 | Internal chat per listing and buyer; WhatsApp lead | compartido, usuarios::api, publicaciones::api, notificaciones::api |
-| `transacciones` | RF-06, RF-11 | Propose, accept, reject, cancel, confirm reception; history + Excel export; deliveries and delivery events | compartido, usuarios::api, publicaciones::api, notificaciones::api |
+| `mensajeria` | RF-04 | Internal chat per listing and buyer (text and structured offers); WhatsApp lead (`conversaciones.canal_inicio`, `clics_whatsapp`) | compartido, usuarios::api, publicaciones::api, notificaciones::api |
+| `transacciones` | RF-06, RF-11 | Register the chat agreement, accept/reject group-sale proposals, cancel, delivery tracking and confirm reception; history (timeline from `transacciones_historial`) + Excel export | compartido, usuarios::api, publicaciones::api, notificaciones::api |
 | `calificaciones` | RF-05 | 1–5 stars + comment, only for COMPLETADA transactions; reputation | compartido, usuarios::api, transacciones::api, notificaciones::api |
-| `ventaagrupada` | RF-10 | Buyer creates a group proposal; farmers contribute (each contribution is a transaction created through `transacciones::api`); consolidated offer view | compartido, catalogo::api, usuarios::api, publicaciones::api, transacciones::api, notificaciones::api |
-| `notificaciones` | RF-07 + in-app notifications of other RFs | Lists notifications and marks them as read. Its `api` exposes a service that other modules call to create notifications (MENSAJE, PROPUESTA, TRANSACCION, ENTREGA, CALIFICACION, MODERACION). VENCIMIENTO notifications are created by `ev_tareas_diarias` | compartido, usuarios::api |
+| `ventaagrupada` | RF-10 | Buyer creates a joint proposal for a lot (`v_lotes_agrupados`); each farmer receives it as a PROPUESTA transaction in their own unit, created through `transacciones::api`, and accepts or rejects it | compartido, catalogo::api, usuarios::api, publicaciones::api, transacciones::api, notificaciones::api |
+| `notificaciones` | RF-07 + in-app notifications of other RFs | Lists notifications and marks them as read. Its `api` exposes a service that other modules call to create notifications (types in the `CHECK` of `notificaciones.tipo`: MENSAJE, OFERTA, VENTA, PROPUESTA_CONJUNTA, CALIFICACION, RECLAMO, CUENTA). POR_VENCER notifications are created by `ev_tareas_diarias` and PUBLICACION_APROBADA/RECHAZADA by `trg_revisiones_ai` | compartido, usuarios::api |
 | `administracion` | RF-09 | User management, moderation, metrics, Excel export | compartido, catalogo::api, usuarios::api, publicaciones::api, precios::api, transacciones::api, calificaciones::api, notificaciones::api |
 
 ### 5.2 Internal structure of every business module
@@ -112,18 +112,50 @@ Request flow: `web` → `api` interface → `service` → `dao` → database.
 - Apply SOLID; prefer constructor injection; no field injection.
 - Use Guava / Commons Lang3 where they simplify code; Apache POI for Excel import in `precios`.
 
-## 6. Database
+## 6. Database (data model v4)
 
-- The schema is defined by SQL, not by JPA: `spring.jpa.hibernate.ddl-auto=validate`.
+- The schema is defined by SQL, not by JPA: `spring.jpa.hibernate.ddl-auto=validate`. `docs/04-diseno/base-datos/modelo-bd.sql` (v4) is the single source of truth; `cambios-v4.md` explains the changes from v3, `modelo-logico.md` has one ER diagram per module and `notas-integridad-bd.md` lists what the database does not guarantee.
 - Migrations live in `src/main/resources/db/migration/`:
-  - `V1__esquema_inicial.sql` = sections 2–11 of `modelo-bd.sql` (no `CREATE DATABASE` / `USE`).
-  - `V2__datos_iniciales.sql` = section 12 of `modelo-bd.sql` (roles, catalogs, units).
+  - `V1__esquema_inicial.sql` = sections 2–11 of `modelo-bd.sql` (no `DROP/CREATE DATABASE` / `USE`). It starts with `SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci;`: triggers and routines keep the collation of the session that created them.
+  - `V2__datos_iniciales.sql` = section 12 of `modelo-bd.sql` (provinces, the 65 districts of Piura, units, crops, varieties). The first ADMINISTRADOR is created by the application, never by SQL.
+  - Flyway (`flyway-mysql`) runs the `DELIMITER $$` blocks of V1 as they are.
 - Schema changes: new migration `V3__...` onward AND update `modelo-bd.sql`. Only with explicit approval. Never edit an applied migration.
-- Tables are in plural Spanish. The schema has 24 tables, 15 triggers, 7 views and 1 daily event (`ev_tareas_diarias`). Before writing service logic, check which triggers already enforce a rule — do not duplicate it in Java.
-- The database user needs privileges for CREATE, ALTER, INDEX, REFERENCES, TRIGGER, EVENT, CREATE VIEW, CREATE ROUTINE and ALTER ROUTINE (function `fn_rol_usuario`). The server needs `event_scheduler=ON`. Both are configured outside the migrations.
-- Alerts, expiry and group-proposal closing are done by `ev_tareas_diarias`. Never reimplement them with `@Scheduled`.
-- Lock the listing with `PESSIMISTIC_WRITE` when a transaction is accepted (RNF-02).
+- Tables are in plural Spanish. v4 has **20 tables**, 36 foreign keys, **10 views**, 21 triggers, 1 function (`fn_rol_usuario`), 1 procedure (`sp_sincronizar_publicacion`) and 1 daily event (`ev_tareas_diarias`, 06:00).
+- Roles, states, reasons, sources and notification types are fixed lists enforced with `CHECK` constraints, not catalog tables. Only `provincias`, `distritos`, `unidades_medida`, `cultivos` and `variedades` are catalog tables.
+- The database user needs privileges for CREATE, ALTER, INDEX, REFERENCES, TRIGGER, EVENT, CREATE VIEW, CREATE ROUTINE and ALTER ROUTINE (`fn_rol_usuario`, `sp_sincronizar_publicacion`). The server needs `event_scheduler=ON`; it is a server setting, not part of the migrations. Both are configured outside the migrations.
 - `spring.jpa.open-in-view=false`.
+
+### 6.1 Business rules enforced by triggers
+
+Before writing service logic, read the triggers of the tables involved. The database already enforces these rules and performs these side effects:
+
+| Trigger / object | Rule or side effect |
+|---|---|
+| `trg_agricultores_bi`, `trg_compradores_bi` | The subtype row matches `usuarios.rol` |
+| `trg_publicaciones_bi` | Every listing starts `EN_REVISION`; fixed units (kilo, quintal, tonelada) take `peso_unidad_kg` from the catalog, variable units (jaba, saco) require it; if `fecha_limite` is NULL it is `fecha_cosecha + cultivos.vida_util_dias`; `fecha_limite` ≥ today; the first listing of a farmer gets `marca_revision = PRIMERA_PUBLICACION` |
+| `trg_publicaciones_bu` | Allowed state transitions; "Extender" a VENCIDA listing returns it to PUBLICADA; quantity cannot drop below what is already agreed; the farmer never changes |
+| `trg_revisiones_bi`, `trg_revisiones_ai` | Only an ADMINISTRADOR reviews, only `EN_REVISION` listings; the review sets PUBLICADA/RECHAZADA and creates the PUBLICACION_APROBADA/RECHAZADA notification |
+| `trg_precios_mercado_bi`, `trg_precios_mercado_bu` | Only an ADMINISTRADOR loads or edits prices, only for districts with `es_zona_precio` |
+| `trg_conversaciones_bi`, `trg_mensajes_bi` | Only PUBLICADA listings are contacted; the sender takes part in the conversation |
+| `trg_transacciones_bi` | A sale starts ACORDADA (chat agreement) or PROPUESTA (only with `id_propuesta_grupal`); the listing is PUBLICADA; `id_actualizado_por` is one of the parties; weight of the agreed unit; quantity in kg ≤ available; coherence with the group proposal |
+| `trg_transacciones_bu` | Finished sales and terms (unit, quantity, weight, price) never change; allowed transitions per user: the farmer accepts/rejects a PROPUESTA, the buyer cancels it; ACORDADA → RECOGIDO/CANCELADA and RECOGIDO → EN_CAMINO by either party; EN_CAMINO → ENTREGADO and ENTREGADO → COMPLETADA only by the buyer; `id_actualizado_por = NULL` only for the automatic cancellation of expired proposals |
+| `trg_transacciones_ai`, `trg_transacciones_au` | Insert the row in `transacciones_historial` (timeline) and call `sp_sincronizar_publicacion` (listing VENDIDA when fully agreed, back to PUBLICADA/VENCIDA when an agreement is cancelled) |
+| `trg_calificaciones_bi` | Only COMPLETADA sales, only by one of the parties (one per evaluator: unique key) |
+| `trg_reclamos_bi`, `trg_reclamos_bu` | Only on agreed sales, only by a party, starts PENDIENTE; only an ADMINISTRADOR resolves it, once; sets `fecha_resolucion` |
+| `trg_suspensiones_*` | Only an ADMINISTRADOR suspends, never another administrator; one open suspension per user; `RECLAMOS_FUNDADOS` requires ≥ 3 founded complaints; insert sets `usuarios.estado = SUSPENDIDO`, setting `fecha_fin` sets it back to ACTIVO |
+| `ev_tareas_diarias` | POR_VENCER notifications 3 days and 1 day before `fecha_limite`; PUBLICADA → VENCIDA after the deadline; cancels expired group PROPUESTA sales and closes their proposals |
+
+Never reimplement these side effects in Java and never use `@Scheduled` for the daily tasks.
+
+### 6.2 Rules for the vertical slices (JPA and services)
+
+- Generated columns (`cantidad_kg`, `precio_kg`, `monto_total`) are mapped with `@Column(insertable = false, updatable = false)`. Refresh the entity after saving when their value or a trigger-set value (`peso_unidad_kg`, `fecha_limite`, `estado`) is needed.
+- Roles, states and reasons are `CHECK`-constrained strings: map them as Java enums with `@Enumerated(EnumType.STRING)`, with exactly the values of the `CHECK`.
+- Every update to `transacciones` must set `id_actualizado_por` to the user making the change; the triggers use it for the timeline and for permissions.
+- "Confirmar que recibí" performs two updates (ENTREGADO, then COMPLETADA) in one `@Transactional` method.
+- The application never inserts into `transacciones_historial`; the triggers do.
+- Services also validate business rules to return friendly messages in Spanish; the database is the last barrier (its errors are mapped as described in section 8).
+- Lock the listing with `PESSIMISTIC_WRITE` before a sale becomes ACORDADA (chat agreement or accepted group proposal) (RNF-02).
 
 ## 7. Configuration
 
@@ -154,15 +186,15 @@ Request flow: `web` → `api` interface → `service` → `dao` → database.
 
 ## 9. Key business rules (full list in the SRS)
 
-- RF-01: publishing takes max. 3 steps (variety → crop, quantity and **unit**; price and district; availability date and deadline). Units come from `unidades_medida` (seed data in V2); never hardcode them. Selling by area is out of scope. If no deadline is given, the trigger calculates it.
+- RF-01: publishing takes max. 3 steps (variety → crop, quantity and **unit** with the weight of a jaba/saco; price per unit and district; harvest date and deadline). Units come from `unidades_medida` (seed data in V2); never hardcode them. Selling by area is out of scope. If no deadline is given, the trigger calculates it. Every listing starts EN_REVISION and is published after the administrator review (RF-09).
 - RF-02: public price board; the admin uploads by form or CSV/Excel.
 - RF-04: one conversation per listing and buyer; the WhatsApp button records a lead.
 - RF-05: rating only for COMPLETADA transactions, once per evaluator.
-- RF-06: either party proposes; the other party accepts or rejects; either party cancels; without delivery, the buyer confirms reception → COMPLETADA.
+- RF-06: either party registers the agreement reached in the chat, and the sale starts ACORDADA; PROPUESTA exists only for group sales (RF-10). Either party cancels an ACORDADA sale.
 - RF-07: notifications at 3 days and 1 day before the deadline are created by `ev_tareas_diarias`; quick actions live in `publicaciones`.
 - RF-08: phone is the login identifier; email is optional; the role never changes after registration.
-- RF-10: the **buyer** creates the group proposal; farmers contribute.
-- RF-11: RECOGIDO → EN_CAMINO → ENTREGADO; only the buyer confirms reception, and the trigger sets COMPLETADA. Delivery events are never edited, deleted or "corrected".
+- RF-10: the **buyer** creates the joint proposal (price per kg, kg, pickup date); each farmer accepts or rejects their PROPUESTA; `ev_tareas_diarias` cancels the ones not answered by the pickup date.
+- RF-11: ACORDADA → RECOGIDO → EN_CAMINO → ENTREGADO → COMPLETADA. Only the buyer confirms reception ("Confirmar que recibí": ENTREGADO and COMPLETADA in one transaction, section 6.2). The timeline is `transacciones_historial`; it is never edited, deleted or "corrected".
 - Use cases: UC-01 to UC-12 (UC-12 = RF-10). RF-06 is covered by UC-05, UC-06 A1 and UC-08.
 
 ## 10. Frontend
