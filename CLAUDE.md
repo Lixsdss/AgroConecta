@@ -1,4 +1,4 @@
-# CLAUDE.md — AgroConecta (v3.3)
+# CLAUDE.md — AgroConecta (v3.4)
 
 Guide for Claude Code. Read this file completely before any task.
 
@@ -37,7 +37,7 @@ If a requirement is ambiguous or the schema lacks something the code needs: **st
 
 - Java 21, Spring Boot 4.1.1, Maven Wrapper (`./mvnw`), packaging **WAR** (deployed on Tomcat; `ServletInitializer` must stay).
 - Spring Web (REST), Spring Data JPA (Hibernate), Validation, Actuator, Flyway (+ `flyway-mysql`). Architecture rules are verified only with ArchUnit (section 5).
-- Security: Spring Security + **OAuth2 Resource Server** with JWT signed with HMAC (HS256). Login is **phone number + password** (BCrypt). Tokens are issued by the `usuario` module with `NimbusJwtEncoder`: `sub` = user ID, claim `roles`. The secret comes from the `JWT_SECRET` environment variable. No hand-written JWT filter and no JJWT.
+- Security: Spring Security + **OAuth2 Resource Server** with JWT signed with HMAC (HS256). Login is **mobile number (`celular`) + password** (BCrypt). Tokens are issued by the `usuario` module with `NimbusJwtEncoder`: `sub` = user ID, claim `roles`. The secret comes from the `JWT_SECRET` environment variable. No hand-written JWT filter and no JJWT.
 - On every authenticated request, the user must still be ACTIVO (SRS §9.1). Implement it as a JWT validator in `compartido.seguridad` that calls an interface `VerificadorEstadoUsuario` defined in `compartido.seguridad`; the `usuario` module implements it (primary-key lookup, no cache unless load tests require it). A SUSPENDIDO or INACTIVO user gets 401.
 - Libraries required by the course: Apache POI (`poi-ooxml`), Google Guava, Apache Commons Lang3, Logback (included by default).
 - springdoc-openapi (Swagger UI), version compatible with Spring Boot 4.1.
@@ -53,92 +53,95 @@ If a requirement is ambiguous or the schema lacks something the code needs: **st
 - Deployment target and external monitoring are chosen among free options and recorded in an ADR before week 15.
 - If a task seems to require something that costs money, stop and ask.
 
-## 5. Arquitectura modular
+## 5. Modular architecture
 
-Un solo WAR dividido en **módulos de negocio** bajo `pe.agroconecta`. Todos los módulos tienen las mismas cuatro capas. Las reglas se verifican con **ArchUnit** en `src/test/java/pe/agroconecta/ArquitecturaTest.java` (una prueba por regla).
+One WAR split into **business modules** under `pe.agroconecta`. Every module has the same four layers. The rules are verified with **ArchUnit** in `src/test/java/pe/agroconecta/ArquitecturaTest.java` (one test per rule).
 
-### 5.1 Mapa de módulos
+### 5.1 Module map
 
-Un módulo es dueño **solo** de las tablas y vistas de su fila; ningún otro módulo las mapea.
+A module owns **only** the tables and views in its row; no other module maps them.
 
-| Módulo | Requisitos | Tablas y vistas que le pertenecen |
+| Module | Requirements | Tables and views it owns |
 |---|---|---|
-| `catalogo` | catálogos compartidos | provincias, distritos, cultivos, variedades, unidades_medida |
+| `catalogo` | shared catalogs | provincias, distritos, cultivos, variedades, unidades_medida |
 | `usuario` | RF-08 | usuarios, agricultores, compradores |
-| `publicacion` | RF-01, RF-03, RF-07 | publicaciones, v_publicaciones_disponibles |
+| `publicacion` | RF-01, RF-03, RF-07 (quick actions) | publicaciones, v_publicaciones_disponibles |
 | `precio` | RF-02 | precios_mercado, v_precios_vigentes, v_rango_precio_plataforma |
 | `mensajeria` | RF-04 | conversaciones, mensajes |
 | `venta` | RF-05, RF-06, RF-11 | transacciones, transacciones_historial, calificaciones, v_historial_transacciones, v_reputacion_usuario |
 | `ventaagrupada` | RF-10 | propuestas_grupales, v_lotes_agrupados |
-| `notificacion` | RF-07 (alertas) | notificaciones |
+| `notificacion` | RF-07 (alerts) | notificaciones |
 | `administracion` | RF-09 | revisiones_publicacion, reclamos, suspensiones, v_panel_admin, v_resumen_usuario, v_ventas_mensuales_cultivo, v_conversion_publicacion |
 
-`pe.agroconecta.compartido` no es un módulo de negocio: contiene `config/` (OpenAPI, CORS), `seguridad/` (Spring Security, JWT, interfaz `VerificadorEstadoUsuario`) y `error/` (`ErrorResponse`, `ManejadorGlobalExcepciones`). No tiene lógica de negocio.
+`pe.agroconecta.compartido` is not a business module: it holds `config/` (OpenAPI, CORS), `seguridad/` (Spring Security, JWT, the `VerificadorEstadoUsuario` interface) and `error/` (`ErrorResponse`, `ManejadorGlobalExcepciones`, `ReglaNegocioException`). It has no business logic.
 
-### 5.2 Capas de cada módulo
+### 5.2 Layers of every module
 
 ```
 pe.agroconecta.<modulo>/
-├── package-info.java       responsabilidad y requisitos del módulo
-├── api/                    XxxController (@RestController) + XxxRequest / XxxResponse (records con Bean Validation)
-├── aplicacion/             XxxService (casos de uso, reglas de negocio, @Transactional) + XxxDto (records que devuelve)
-├── dominio/                entidades JPA y enums (las vistas, como entidades @Immutable)
+├── package-info.java       responsibility and requirements of the module
+├── api/                    XxxController (@RestController) + XxxRequest / XxxResponse (records with Bean Validation)
+├── aplicacion/             XxxService (use cases, business rules, @Transactional) + XxxDto (records it returns)
+├── dominio/                JPA entities and enums (views as @Immutable entities)
 └── infraestructura/        XxxRepository (Spring Data JPA)
 ```
 
-Flujo de una petición: `api` → `aplicacion` → `infraestructura` → base de datos. Cada capa tiene un `package-info.java` con su responsabilidad (en `dominio`, las tablas que mapea).
+Request flow: `api` → `aplicacion` → `infraestructura` → database. Every layer has a `package-info.java` with its responsibility (in `dominio`, the tables it maps).
 
-### 5.3 Reglas verificadas con ArchUnit (`ArquitecturaTest`)
+### 5.3 Rules verified with ArchUnit (`ArquitecturaTest`)
 
-1. Un módulo usa a otro **solo a través de la capa `aplicacion`** de ese otro módulo. Nunca toca su `api`, `dominio` ni `infraestructura`.
-2. Los repositorios (`infraestructura`) solo los usa la capa `aplicacion` de su propio módulo.
-3. Los controladores (`api`) dependen de `aplicacion`, nunca directamente de `infraestructura`.
-4. `compartido` no depende de ningún módulo. Define interfaces (como `VerificadorEstadoUsuario`) que los módulos implementan; Spring las inyecta por tipo.
-5. No hay ciclos de dependencias entre módulos.
+1. A module uses another module **only through that module's `aplicacion` layer**. It never touches the other module's `api`, `dominio` or `infraestructura`.
+2. Repositories (`infraestructura`) are used only by the `aplicacion` layer of their own module.
+3. Controllers (`api`) depend on `aplicacion`, never directly on `infraestructura`.
+4. `compartido` does not depend on any module. It defines interfaces (such as `VerificadorEstadoUsuario`) that modules implement; Spring injects them by type.
+5. There are no dependency cycles between modules.
 
-Las reglas usan `allowEmptyShould(true)` para pasar mientras una capa esté vacía. `ArquitecturaTest.MODULOS` debe coincidir con el mapa de módulos. Nunca se relaja una regla para que pase: se corrige la dependencia.
+The rules use `allowEmptyShould(true)` so they pass while a layer is still empty. `ArquitecturaTest.MODULOS` must match the module map. Never relax a rule to make it pass: fix the dependency.
 
-### 5.4 Reglas que ArchUnit no verifica por completo (obligatorias)
+### 5.4 Mandatory rules that ArchUnit cannot fully check
 
-- **Las entidades no cruzan módulos:** una entidad referencia una entidad de otro módulo por su id (`Long idAgricultor`), nunca con `@ManyToOne`. Las FK siguen existiendo en la base de datos.
-- **`api` expone DTO (records de Java), nunca entidades.** Los servicios de `aplicacion` que usan otros módulos también devuelven DTO (records en `aplicacion`), nunca entidades.
-- **Cada módulo mapea solo sus tablas** (sección 5.1). Las vistas son entidades de solo lectura (`@Immutable`). Para leer datos de otro módulo se llama a su servicio de `aplicacion`.
-- Muchos cambios de estado ocurren en la base de datos (triggers y `ev_tareas_diarias`), no en Java. No se crean eventos de dominio ni tareas `@Scheduled` para ellos. Los eventos de aplicación (`ApplicationEventPublisher`) solo se usan con aprobación; hoy no hay ninguno.
-- Las notificaciones no son eventos: el módulo que ejecuta la acción llama al servicio de `notificacion.aplicacion` dentro de la misma transacción, usando solo los tipos del `CHECK` de `notificaciones.tipo` (MENSAJE, OFERTA, VENTA, PROPUESTA_CONJUNTA, CALIFICACION, RECLAMO, CUENTA). POR_VENCER la crea `ev_tareas_diarias` y PUBLICACION_APROBADA/RECHAZADA, `trg_revisiones_ai`.
-- `administracion` lee las vistas de su fila con sus propias entidades `@Immutable`.
+- **Entities never cross modules:** an entity references an entity of another module by its id (`Long idAgricultor`), never with `@ManyToOne`. Foreign keys still exist in the database.
+- **`api` exposes DTOs (Java records), never entities.** `aplicacion` services used by other modules also return DTOs (records in `aplicacion`), never entities.
+- **Each module maps only its own tables** (section 5.1). Views are read-only entities (`@Immutable`). To read another module's data, call its `aplicacion` service.
+- Many state changes happen in the database (triggers and `ev_tareas_diarias`), not in Java. Do not create domain events or `@Scheduled` jobs for them. Application events (`ApplicationEventPublisher`) are used only with approval; none exist today.
+- Notifications are not events: the module that performs the action calls the `notificacion.aplicacion` service inside the same transaction, using only the types in the `CHECK` of `notificaciones.tipo`: MENSAJE, OFERTA, VENTA, PROPUESTA_CONJUNTA, CALIFICACION, RECLAMO, CUENTA. POR_VENCER is created by `ev_tareas_diarias` and MODERACION by `trg_revisiones_ai`.
+- `administracion` reads the views of its row with its own `@Immutable` entities.
 
-### 5.5 Reglas de código
+### 5.5 Coding rules
 
-- Los controladores no tienen lógica de negocio y nunca devuelven entidades.
-- Las reglas de negocio viven solo en `aplicacion`. `@Transactional` en los métodos que escriben.
-- Los DTO son records. La entrada se valida con Bean Validation en los `Request` de `api`.
-- Toda clase y todo método públicos tienen Javadoc en español (RNF-04).
-- SOLID; inyección por constructor; nunca inyección por campo.
-- Guava / Commons Lang3 cuando simplifiquen el código; Apache POI para Excel en `precio` y `venta`.
+- Controllers contain no business logic and never return entities.
+- Business rules live only in `aplicacion`. Use `@Transactional` on methods that write.
+- DTOs are records. Input is validated with Bean Validation in the `api` `Request` records.
+- A service rejects a business rule with `compartido.error.ReglaNegocioException` (422, message in Spanish).
+- Every public class and public method has Javadoc in Spanish (RNF-04).
+- SOLID; constructor injection; never field injection.
+- Guava / Commons Lang3 where they simplify code; Apache POI for Excel in `precio` (import) and `venta` / `administracion` (export).
 
-### 5.6 Cómo construir un slice vertical
+### 5.6 How to build a vertical slice
 
-Para cada RF, en su módulo (sección 5.1):
+For each RF, inside its module (section 5.1):
 
-1. **`dominio`:** entidades de las tablas del módulo y enums de sus `CHECK`, siguiendo la sección 6.2 (columnas generadas de solo lectura, `@Enumerated(EnumType.STRING)`, `id_actualizado_por` en cada update de `transacciones`, referencias a otros módulos por id).
-2. **`infraestructura`:** un `XxxRepository extends JpaRepository` por entidad que lo necesite; bloqueo `PESSIMISTIC_WRITE` donde lo indica la sección 6.2.
-3. **`aplicacion`:** `XxxService` con los casos de uso, las validaciones con mensajes en español (la BD es la última barrera) y los `XxxDto` que devuelve. Para datos de otro módulo, su servicio de `aplicacion`.
-4. **`api`:** `XxxController` con `@PreAuthorize`, `XxxRequest` / `XxxResponse` (records) y el contrato en `docs/05-api/endpoints.md`.
-5. **Pruebas:** unitarias del servicio (Mockito), del controlador (MockMvc) e integración contra MariaDB (`agroconecta_test`, perfil `test`) para lo que dependa de triggers; `ArquitecturaTest` debe pasar.
-6. **Pantalla:** `src/main/resources/static/pages/<modulo>/` + `static/js/<modulo>/`, conectada a los endpoints reales mediante `js/api.js` (sección 10).
+1. **`dominio`:** entities for the module's tables and enums for their `CHECK` constraints, following section 6.2 (read-only generated columns, `@Enumerated(EnumType.STRING)`, `id_actualizado_por` on every `transacciones` update, references to other modules by id).
+2. **`infraestructura`:** one `XxxRepository extends JpaRepository` per entity that needs it; `PESSIMISTIC_WRITE` lock where section 6.2 requires it.
+3. **`aplicacion`:** `XxxService` with the use cases, the validations with Spanish messages (the database is the last barrier), the rules of section 6.3 and the `XxxDto` records it returns. For another module's data, use its `aplicacion` service.
+4. **`api`:** `XxxController` with `@PreAuthorize`, `XxxRequest` / `XxxResponse` records and the contract in `docs/05-api/endpoints.md`.
+5. **Tests:** service unit tests (Mockito), controller tests (MockMvc) and integration tests against MariaDB (`agroconecta_test`, `test` profile) for anything that depends on triggers; `ArquitecturaTest` must pass.
+6. **Screen:** `src/main/resources/static/pages/<modulo>/` + `static/js/<modulo>/`, connected to the real endpoints through `js/api.js` (section 10).
 
-## 6. Database (data model v4)
+## 6. Database (data model v4.1)
 
-- The schema is defined by SQL, not by JPA: `spring.jpa.hibernate.ddl-auto=validate`. `docs/04-diseno/base-datos/modelo-bd.sql` (v4) is the single source of truth; `cambios-v4.md` explains the changes from v3, `modelo-logico.md` has one ER diagram per module and `notas-integridad-bd.md` lists what the database does not guarantee.
+- The schema is defined by SQL, not by JPA: `spring.jpa.hibernate.ddl-auto=validate`. `docs/04-diseno/base-datos/modelo-bd.sql` (v4.1) is the single source of truth; `cambios-v4.md` explains the changes from v3 and v4, `modelo-logico.md` has one ER diagram per module and `notas-integridad-bd.md` lists what the database does not guarantee.
 - Migrations live in `src/main/resources/db/migration/`:
   - `V1__esquema_inicial.sql` = sections 2–11 of `modelo-bd.sql` (no `DROP/CREATE DATABASE` / `USE`). It starts with `SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci;`: triggers and routines keep the collation of the session that created them.
   - `V2__datos_iniciales.sql` = section 12 of `modelo-bd.sql` (provinces, the 65 districts of Piura, units, crops, varieties). The first ADMINISTRADOR is created by the application, never by SQL.
   - Flyway (`flyway-mysql`) runs the `DELIMITER $$` blocks of V1 as they are.
 - Schema changes: new migration `V3__...` onward AND update `modelo-bd.sql`. Only with explicit approval. Never edit an applied migration.
-- Tables are in plural Spanish. v4 has **20 tables**, 36 foreign keys, **10 views**, 21 triggers, 1 function (`fn_rol_usuario`), 1 procedure (`sp_sincronizar_publicacion`) and 1 daily event (`ev_tareas_diarias`, 06:00).
-- Roles, states, reasons, sources and notification types are fixed lists enforced with `CHECK` constraints, not catalog tables. Only `provincias`, `distritos`, `unidades_medida`, `cultivos` and `variedades` are catalog tables.
+- Tables are in plural Spanish. v4.1 has **20 tables**, 36 foreign keys, **10 views**, 21 triggers, 1 function (`fn_rol_usuario`), 1 procedure (`sp_sincronizar_publicacion`) and 1 daily event (`ev_tareas_diarias`, 06:00).
+- Roles, states, reasons, sources, moderation decisions and notification types are fixed lists enforced with `CHECK` constraints, not catalog tables. Only `provincias`, `distritos`, `unidades_medida`, `cultivos` and `variedades` are catalog tables.
 - The database user needs privileges for CREATE, ALTER, INDEX, REFERENCES, TRIGGER, EVENT, CREATE VIEW, CREATE ROUTINE and ALTER ROUTINE (`fn_rol_usuario`, `sp_sincronizar_publicacion`). The server needs `event_scheduler=ON`; it is a server setting, not part of the migrations. Both are configured outside the migrations.
+- Local MariaDB 11+ with MySQL Connector/J: JDBC metadata fails (`INFORMATION_SCHEMA.KEYWORDS` has no `RESERVED` column), so the `dev` and `test` profiles set `spring.jpa.database-platform=org.hibernate.dialect.MariaDBDialect`. `prod` (MySQL) detects the dialect.
 - `spring.jpa.open-in-view=false`.
+- **Database safety:** connect only through the application as `agroconecta_app`, only to `agroconecta` and `agroconecta_test`. Never use sudo, root or another MariaDB user, and never run DROP, CREATE or GRANT. If a database must be dropped or recreated, stop and give the user the exact command.
 
 ### 6.1 Business rules enforced by triggers
 
@@ -147,30 +150,38 @@ Before writing service logic, read the triggers of the tables involved. The data
 | Trigger / object | Rule or side effect |
 |---|---|
 | `trg_agricultores_bi`, `trg_compradores_bi` | The subtype row matches `usuarios.rol` |
-| `trg_publicaciones_bi` | Every listing starts `EN_REVISION`; fixed units (kilo, quintal, tonelada) take `peso_unidad_kg` from the catalog, variable units (jaba, saco) require it; if `fecha_limite` is NULL it is `fecha_cosecha + cultivos.vida_util_dias`; `fecha_limite` ≥ today; the first listing of a farmer gets `marca_revision = PRIMERA_PUBLICACION` |
-| `trg_publicaciones_bu` | Allowed state transitions; "Extender" a VENCIDA listing returns it to PUBLICADA; quantity cannot drop below what is already agreed; the farmer never changes |
-| `trg_revisiones_bi`, `trg_revisiones_ai` | Only an ADMINISTRADOR reviews, only `EN_REVISION` listings; the review sets PUBLICADA/RECHAZADA and creates the PUBLICACION_APROBADA/RECHAZADA notification |
+| `trg_publicaciones_bi` | Every listing starts **PUBLICADA** (post-moderation); fixed units (kilo, quintal, tonelada) take `peso_unidad_kg` from the catalog, variable units (jaba, saco) require it; if `fecha_limite` is NULL it is `fecha_cosecha + cultivos.vida_util_dias`; `fecha_limite` ≥ today; the first listing of a farmer gets `marca_revision = PRIMERA_PUBLICACION` (moderation queue) |
+| `trg_publicaciones_bu` | Allowed transitions: PUBLICADA → BLOQUEADA/VENDIDA/VENCIDA/RETIRADA, BLOQUEADA → PUBLICADA/VENCIDA/RETIRADA, VENDIDA → PUBLICADA/VENCIDA, VENCIDA → PUBLICADA/RETIRADA; "Extender" a VENCIDA listing returns it to PUBLICADA; a farmer's correction of a BLOQUEADA listing sets `marca_revision = CORREGIDA`; quantity cannot drop below what is already agreed; the farmer never changes |
+| `trg_revisiones_bi`, `trg_revisiones_ai` | Only an ADMINISTRADOR decides; CONFORME, ADVERTENCIA and BLOQUEO only on a PUBLICADA listing, DESBLOQUEO only on a BLOQUEADA one; the decision sets BLOQUEADA or PUBLICADA/VENCIDA, clears `marca_revision` and creates the MODERACION notification (except CONFORME) |
 | `trg_precios_mercado_bi`, `trg_precios_mercado_bu` | Only an ADMINISTRADOR loads or edits prices, only for districts with `es_zona_precio` |
-| `trg_conversaciones_bi`, `trg_mensajes_bi` | Only PUBLICADA listings are contacted; the sender takes part in the conversation |
+| `trg_conversaciones_bi`, `trg_mensajes_bi` | Only PUBLICADA listings are contacted; the sender takes part in the conversation; OFERTA messages only while the listing is PUBLICADA (text messages always) |
 | `trg_transacciones_bi` | A sale starts ACORDADA (chat agreement) or PROPUESTA (only with `id_propuesta_grupal`); the listing is PUBLICADA; `id_actualizado_por` is one of the parties; weight of the agreed unit; quantity in kg ≤ available; coherence with the group proposal |
-| `trg_transacciones_bu` | Finished sales and terms (unit, quantity, weight, price) never change; allowed transitions per user: the farmer accepts/rejects a PROPUESTA, the buyer cancels it; ACORDADA → RECOGIDO/CANCELADA and RECOGIDO → EN_CAMINO by either party; EN_CAMINO → ENTREGADO and ENTREGADO → COMPLETADA only by the buyer; `id_actualizado_por = NULL` only for the automatic cancellation of expired proposals |
+| `trg_transacciones_bu` | Finished sales and terms (unit, quantity, weight, price) never change; allowed transitions per user: the farmer accepts/rejects a PROPUESTA, the buyer cancels it; ACORDADA → RECOGIDO/CANCELADA and RECOGIDO → EN_CAMINO by either party; ACORDADA → ENTREGADO (farm pick-up), EN_CAMINO → ENTREGADO and ENTREGADO → COMPLETADA only by the buyer; only ACORDADA can be cancelled; `id_actualizado_por = NULL` only for the automatic cancellation of expired proposals |
 | `trg_transacciones_ai`, `trg_transacciones_au` | Insert the row in `transacciones_historial` (timeline) and call `sp_sincronizar_publicacion` (listing VENDIDA when fully agreed, back to PUBLICADA/VENCIDA when an agreement is cancelled) |
 | `trg_calificaciones_bi` | Only COMPLETADA sales, only by one of the parties (one per evaluator: unique key) |
-| `trg_reclamos_bi`, `trg_reclamos_bu` | Only on agreed sales, only by a party, starts PENDIENTE; only an ADMINISTRADOR resolves it, once; sets `fecha_resolucion` |
+| `trg_reclamos_bi`, `trg_reclamos_bu` | Only on sales that reached ACORDADA (checked in `transacciones_historial`), only by a party, starts PENDIENTE; only an ADMINISTRADOR resolves it, once; sets `fecha_resolucion` |
 | `trg_suspensiones_*` | Only an ADMINISTRADOR suspends, never another administrator; one open suspension per user; `RECLAMOS_FUNDADOS` requires ≥ 3 founded complaints; insert sets `usuarios.estado = SUSPENDIDO`, setting `fecha_fin` sets it back to ACTIVO |
-| `ev_tareas_diarias` | POR_VENCER notifications 3 days and 1 day before `fecha_limite`; PUBLICADA → VENCIDA after the deadline; cancels expired group PROPUESTA sales and closes their proposals |
+| `ev_tareas_diarias` | POR_VENCER notifications 3 days and 1 day before `fecha_limite`; PUBLICADA → VENCIDA after the deadline; cancels group PROPUESTA sales whose `fecha_recojo` has passed and closes their proposals |
 
 Never reimplement these side effects in Java and never use `@Scheduled` for the daily tasks.
 
 ### 6.2 Rules for the vertical slices (JPA and services)
 
-- Generated columns (`cantidad_kg`, `precio_kg`, `monto_total`) are mapped with `@Column(insertable = false, updatable = false)`. Refresh the entity after saving when their value or a trigger-set value (`peso_unidad_kg`, `fecha_limite`, `estado`) is needed.
+- Generated columns (`cantidad_kg`, `precio_kg`, `monto_total`) are mapped with `@Column(insertable = false, updatable = false)`. Refresh the entity after saving when their value or a trigger-set value (`peso_unidad_kg`, `fecha_limite`, `estado`, `marca_revision`) is needed.
 - Roles, states and reasons are `CHECK`-constrained strings: map them as Java enums with `@Enumerated(EnumType.STRING)`, with exactly the values of the `CHECK`.
 - Every update to `transacciones` must set `id_actualizado_por` to the user making the change; the triggers use it for the timeline and for permissions.
-- "Confirmar que recibí" performs two updates (ENTREGADO, then COMPLETADA) in one `@Transactional` method.
+- "Confirmar que recibí" performs two updates (ENTREGADO, then COMPLETADA) in one `@Transactional` method, from EN_CAMINO or from ACORDADA (farm pick-up).
 - The application never inserts into `transacciones_historial`; the triggers do.
 - Services also validate business rules to return friendly messages in Spanish; the database is the last barrier (its errors are mapped as described in section 8).
 - Lock the listing with `PESSIMISTIC_WRITE` before a sale becomes ACORDADA (chat agreement or accepted group proposal) (RNF-02).
+- The `publicacion` module never changes the state of a BLOQUEADA listing (only its data); unblocking always goes through `revisiones_publicacion` (DESBLOQUEO).
+
+### 6.3 Business rules the services must implement (not in the database)
+
+- **Moderation flags (RF-01, RF-09):** when a listing is created or edited, the `publicacion` service sets `marca_revision = PRECIO_FUERA_RANGO` if the price per kilo is far from the reference price (`v_precios_vigentes` / `v_rango_precio_plataforma`) and `CANTIDAD_INUSUAL` if the quantity is unusual. The thresholds are **not defined yet**: define and approve them in the RF-09 slice before coding them.
+- **Proportional split (RF-10):** the `ventaagrupada` service splits the joint proposal's kilos among the farmers of the lot in proportion to each farmer's available kilos, rounded down to whole units of each farmer's listing, and creates one PROPUESTA sale per farmer through `venta.aplicacion`, in the farmer's unit. A farmer whose share is less than one unit receives no proposal.
+- **Offers (RF-04):** reject OFERTA messages on a listing that is not PUBLICADA before inserting (friendly 422).
+- **Cancellation (RF-06):** only an ACORDADA sale can be cancelled; after pick-up, point the user to a complaint (`reclamos`).
 
 ## 7. Configuration
 
@@ -202,15 +213,17 @@ Never reimplement these side effects in Java and never use `@Scheduled` for the 
 
 ## 9. Key business rules (full list in the SRS)
 
-- RF-01: publishing takes max. 3 steps (variety → crop, quantity and **unit** with the weight of a jaba/saco; price per unit and district; harvest date and deadline). Units come from `unidades_medida` (seed data in V2); never hardcode them. Selling by area is out of scope. If no deadline is given, the trigger calculates it. Every listing starts EN_REVISION and is published after the administrator review (RF-09).
-- RF-02: public price board; the admin uploads by form or CSV/Excel.
-- RF-04: one conversation per listing and buyer; the WhatsApp button records a lead.
-- RF-05: rating only for COMPLETADA transactions, once per evaluator.
-- RF-06: either party registers the agreement reached in the chat, and the sale starts ACORDADA; PROPUESTA exists only for group sales (RF-10). Either party cancels an ACORDADA sale.
-- RF-07: notifications at 3 days and 1 day before the deadline are created by `ev_tareas_diarias`; quick actions live in `publicacion`.
-- RF-08: phone is the login identifier; email is optional; the role never changes after registration.
-- RF-10: the **buyer** creates the joint proposal (price per kg, kg, pickup date); each farmer accepts or rejects their PROPUESTA; `ev_tareas_diarias` cancels the ones not answered by the pickup date.
-- RF-11: ACORDADA → RECOGIDO → EN_CAMINO → ENTREGADO → COMPLETADA. Only the buyer confirms reception ("Confirmar que recibí": ENTREGADO and COMPLETADA in one transaction, section 6.2). The timeline is `transacciones_historial`; it is never edited, deleted or "corrected".
+- RF-01: publishing takes max. 3 steps (variety → crop, **unit** (kilo, jaba, saco, quintal, tonelada) and quantity, with the kilos per jaba/saco; price per unit, with the price per kilo calculated, and district; harvest date and optional deadline). Units come from `unidades_medida` (seed data in V2); never hardcode them. Selling by area is out of scope. If no deadline is given, the trigger calculates it from the crop's shelf life. Listings are born **PUBLICADA** (post-moderation).
+- RF-02: reference prices are per kilo, per price zone (Piura, Tambogrande, Chulucanas, Sullana), with source and administrator; the board shows them in the crop's local unit with a trend (`v_precios_vigentes`). The range shown to the farmer comes from completed platform sales in the last 30 days (`v_rango_precio_plataforma`). The admin uploads by form or CSV/Excel.
+- RF-03: searches PUBLICADA listings with available kilos; the "Categoría" filter is the crop; filters include the unit; sort by price per kilo, harvest date or rating.
+- RF-04: one conversation per listing and buyer, never closed (used to coordinate delivery); structured OFERTA messages only while the listing is PUBLICADA; the WhatsApp button increments `clics_whatsapp`.
+- RF-05: rating only for COMPLETADA sales, once per evaluator.
+- RF-06: parties negotiate with offers; either party registers the agreement directly as ACORDADA (the agreed unit may differ from the listing's); either party can cancel while ACORDADA. PROPUESTA exists only in group sales (RF-10). After pick-up there is no cancellation: problems go through a complaint.
+- RF-07: POR_VENCER notifications 3 days and 1 day before the deadline are created by `ev_tareas_diarias`; quick actions (lower price, extend, withdraw) live in `publicacion`; extending moves VENCIDA back to PUBLICADA.
+- RF-08: the 9-digit mobile number starting with 9 (`celular`) is the login identifier; there is no email; district is mandatory; buyers register business name and type; the role never changes after registration.
+- RF-09: post-moderation queue (`marca_revision` not NULL); decisions CONFORME, ADVERTENCIA, BLOQUEO, DESBLOQUEO (warning and blocking need a catalog reason and a message); a corrected blocked listing returns to the queue as CORREGIDA. Complaints only on sales that reached ACORDADA, resolved by the admin. Justified suspensions; RECLAMOS_FUNDADOS needs ≥ 3 founded complaints. Metrics come from views.
+- RF-10: the system groups PUBLICADA listings by crop, variety and district (≥ 2 farmers, `v_lotes_agrupados`); the **buyer** sends a joint proposal (kg, price per kg, pick-up date); each farmer receives a PROPUESTA in their own unit and accepts or rejects it; proportional split (section 6.3); pending proposals are cancelled by `ev_tareas_diarias` when the pick-up date passes.
+- RF-11: no carrier or plate. ACORDADA → RECOGIDO → EN_CAMINO → ENTREGADO → COMPLETADA, or ACORDADA → ENTREGADO → COMPLETADA (farm pick-up). Only the buyer confirms reception ("Confirmar que recibí": ENTREGADO and COMPLETADA in one transaction). The timeline is `transacciones_historial`, recorded by triggers; it is never edited, deleted or "corrected".
 - Use cases: UC-01 to UC-12 (UC-12 = RF-10). RF-06 is covered by UC-05, UC-06 A1 and UC-08.
 
 ## 10. Frontend
@@ -238,7 +251,7 @@ src/main/resources/static/
 - Unit tests for services with Mockito; controller tests with MockMvc; integration tests against MariaDB (`agroconecta_test`) for anything that depends on triggers; architecture tests in `ArquitecturaTest` (ArchUnit).
 - Test packages mirror the modules: `src/test/java/pe/agroconecta/<modulo>/`.
 - Every RF is finished only when its tests pass. Run `./mvnw test` before finishing any task.
-- Minimum coverage: 70 % in the service layer (JaCoCo).
+- Minimum coverage: 70 % in the `aplicacion` layer (JaCoCo).
 - JaCoCo report: `./mvnw verify` → `target/site/jacoco/`.
 - The same command runs in CI on every push and pull request (section 14). Code that only passes locally is not finished.
 
@@ -283,21 +296,25 @@ RF-08 is the walking skeleton: registration and login working end to end (login 
 
 ### 12.5 Order and milestones
 
-Orden sugerido de los slices (por dependencia y luego por valor). Hitos del curso: 30 % en la semana 10, 40 % en la semana 11 y APF3 en la semana 12.
+Order by dependency first, then value. Course milestones map to slices:
 
-| Orden | Slice | Módulo | RF |
-|---|---|---|---|
-| 1 | Registro, inicio de sesión con celular, JWT y roles (walking skeleton) | catalogo + usuario | RF-08 |
-| 2 | Publicar cosecha | publicacion | RF-01 |
-| 3 | Moderación de publicaciones (solo la cola EN_REVISION) | administracion | RF-09 |
-| 4 | Precios de referencia | precio | RF-02 |
-| 5 | Búsqueda y filtros | publicacion | RF-03 |
-| 6 | Mensajería | mensajeria | RF-04 |
-| 7 | Acuerdo y seguimiento de la entrega | venta | RF-06, RF-11 |
-| 8 | Calificaciones | venta | RF-05 |
-| 9 | Notificaciones y alertas de vencimiento | notificacion (+ acciones rápidas en publicacion) | RF-07 |
-| 10 | Venta agrupada | ventaagrupada | RF-10 |
-| 11 | Reclamos, suspensiones y panel | administracion | RF-09 |
+| Order | Slice | Module | RF | Milestone |
+|---|---|---|---|---|
+| 1 | Registration, login with `celular`, JWT and roles (walking skeleton) | catalogo + usuario | RF-08 | Week 10 (30 %) |
+| 2 | Publish harvest | publicacion | RF-01 | Week 10 (30 %) |
+| 3 | Post-moderation queue only | administracion | RF-09 | Week 10 (30 %) |
+| 4 | Reference prices | precio | RF-02 | Week 11 (40 %) |
+| 5 | Search and filters | publicacion | RF-03 | Week 11 (40 %) |
+| 6 | Messaging and offers | mensajeria | RF-04 | Week 12 (APF3) |
+| 7 | Agreement and delivery tracking | venta | RF-06, RF-11 | Week 12 (APF3) |
+| 8 | Ratings | venta | RF-05 | — |
+| 9 | Notifications and expiry alerts | notificacion (+ quick actions in publicacion) | RF-07 | — |
+| 10 | Group sale | ventaagrupada | RF-10 | — |
+| 11 | Complaints, suspensions and dashboard | administracion | RF-09 | — |
+
+- **Week 10 (30 %):** slices 1 to 3, and the demo must show the top Java libraries in use: Guava, Apache Commons, Apache POI and Logback.
+- **Week 11 (40 %):** slices 4 and 5, integrated with Git and GitHub (branches, pull requests, CI).
+- **Week 12 (APF3):** slices 6 and 7.
 
 ## 13. Documentation structure
 
@@ -305,9 +322,9 @@ Orden sugerido de los slices (por dependencia y luego por valor). Hitos del curs
 docs/
 ├── README.md                  index and source-of-truth order
 ├── 01-negocio/                lean-canvas.md, project-charter.md
-├── 02-requisitos/             SRS-AgroConecta.md, matriz-trazabilidad.md, casos-de-uso/UC-XX-*.md
+├── 02-requisitos/             SRS-AgroConecta.md, matriz-trazabilidad.md, casos-de-uso/casos-de-uso.md
 ├── 03-procesos/               to-be.md, AgroConecta_TO-BE.drawio, to-be.png, as-is.md
-├── 04-diseno/                 arquitectura-modular.md, base-datos/, ux-ui/
+├── 04-diseno/                 base-datos/ (modelo-bd.sql, cambios-v4.md, modelo-logico.md, notas-integridad-bd.md), ux-ui/
 ├── 05-api/                    endpoints.md
 ├── 06-decisiones/             ADR-XXX-*.md (context, decision, alternatives, consequences)
 ├── 07-calidad/                test plan, security report (Unit 4)
