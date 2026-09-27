@@ -8,7 +8,7 @@ Relaciona cada requisito funcional con su caso de uso, módulo, tablas, endpoint
 
 | RF | Nombre | UC | Módulo | Slice | Estado |
 |---|---|---|---|---|---|
-| RF-01 | Publicación de cosecha | UC-01 | publicacion | 2 | Pendiente |
+| **RF-01** | **Publicación de cosecha** | **UC-01** | **publicacion (+ catalogo)** | **2** | **Implementado** (referencia de precio: slice 4; marcas PRECIO_FUERA_RANGO y CANTIDAD_INUSUAL: slice 3) |
 | RF-02 | Precios de mercado | UC-02 | precio | 4 | Pendiente |
 | RF-03 | Búsqueda multi-criterio | UC-03 | publicacion | 5 | Pendiente |
 | RF-04 | Mensajería directa | UC-04 | mensajeria | 6 | Pendiente |
@@ -34,6 +34,19 @@ Relaciona cada requisito funcional con su caso de uso, módulo, tablas, endpoint
 | Pantallas | 02 Ingresar (`ingresar.html`), 03 ¿Quién es usted? (`rol.html`), 04 Cree su cuenta (`registro.html`), 05 Bienvenida (`bienvenida.html`); de apoyo: `inicio.html`, `perfil.html` |
 | Pruebas | Unitarias: `RegistroServiceTest`, `SesionServiceTest`, `PerfilServiceTest`, `EmisorTokenTest`, `InicializadorAdministradorTest`, `ReglasUsuarioTest`, `CatalogoServiceTest`, `SeguridadUnitariaTest`, `ManejadorGlobalExcepcionesTest`. Integración (MariaDB): `AuthIntegracionTest`, `CatalogoIntegracionTest`, `TriggersUsuarioIntegracionTest`. Arquitectura: `ArquitecturaTest` |
 | RNF | RNF-02 (API stateless, verificación de estado por clave primaria), RNF-03 (botones ≥ 48 px), RNF-04 (Javadoc), RNF-05 (triggers y CHECK como última barrera) |
+
+### RF-01 — Publicación de cosecha (slice 2)
+
+| Elemento | Trazas |
+|---|---|
+| Caso de uso | UC-01: flujo básico (3 pasos, confirmación, publicada); A1 validación falla (400/422); A2 el agricultor cancela (el borrador queda en el navegador y no se guarda nada en la base de datos); A3 moderación posterior (marca PRIMERA_PUBLICACION por trigger; advertir y bloquear en el slice 3) |
+| Módulos | `publicacion` (dueño); `catalogo` (cultivos, variedades, unidades, distritos) |
+| Tablas | publicaciones (escritura); cultivos, variedades, unidades_medida, distritos (lectura) |
+| Triggers y restricciones | `trg_publicaciones_bi` (nace PUBLICADA, peso de unidades fijas, fecha límite calculada, fecha límite ≥ hoy, PRIMERA_PUBLICACION); columnas generadas `cantidad_kg` y `precio_kg`; `chk_publicacion_cantidad`, `_peso`, `_precio`, `_fechas`, `_estado`, `_marca` |
+| Endpoints | `GET /api/v1/catalogo/cultivos`, `GET /api/v1/catalogo/variedades`, `GET /api/v1/catalogo/unidades`, `POST /api/v1/publicaciones`, `GET /api/v1/publicaciones/{id}` |
+| Pantallas | 07 Paso 1 (`paso1.html`), 08 Paso 2 (`paso2.html`), 09 Paso 3 (`paso3.html`), 10 Confirmar (`confirmar.html`), 11 Publicada (`publicada.html`) |
+| Pruebas | Unitarias: `PublicacionServiceTest`, `CatalogoServiceTest`. Integración (MariaDB): `PublicacionIntegracionTest` (jaba, quintal con 46 kg, fecha límite calculada, PRIMERA_PUBLICACION solo en la primera, 400/401/403/404/422, catálogo). Arquitectura: `ArquitecturaTest` |
+| RNF | RNF-01 (páginas livianas, borrador en `sessionStorage`), RNF-03 (una pregunta por bloque, botones ≥ 56 px), RNF-05 (trigger y CHECK como última barrera) |
 
 ### Resto de requisitos
 

@@ -35,6 +35,27 @@ Relaciona cada pantalla del prototipo (numeración del diseño) con su archivo e
 - **Agricultor:** se agrega el campo opcional **nombre de su chacra** (`agricultores.nombre_chacra`).
 - **Distrito:** como en el diseño, chips con las 4 zonas de precio (Piura, Tambogrande, Chulucanas, Sullana) y "Otro", que abre la lista de los 65 distritos agrupados por provincia.
 
+## Agricultor · Vender una cosecha (RF-01, slice 2)
+
+| # | Pantalla del diseño | Archivo | JS | Endpoints | Navegación |
+|---|---|---|---|---|---|
+| 07 | Vender · Paso 1 | `pages/publicacion/paso1.html` | `js/publicacion/paso1.js` | `GET /api/v1/catalogo/cultivos`, `GET /api/v1/catalogo/variedades?idCultivo=` | Siguiente → 08 |
+| 08 | Vender · Paso 2 | `pages/publicacion/paso2.html` | `js/publicacion/paso2.js` | `GET /api/v1/catalogo/unidades` | Siguiente → 09 |
+| 09 | Vender · Paso 3 | `pages/publicacion/paso3.html` | `js/publicacion/paso3.js` | `GET /api/v1/usuarios/me`, `GET /api/v1/catalogo/distritos` | Revisar y publicar → 10 |
+| 10 | Confirmar publicación | `pages/publicacion/confirmar.html` | `js/publicacion/confirmar.js` | `POST /api/v1/publicaciones` | Sí, publicar → 11 · Corregir → 07 |
+| 11 | Cosecha publicada | `pages/publicacion/publicada.html` | `js/publicacion/publicada.js` | — | Volver al inicio |
+
+El borrador de los 3 pasos vive en `sessionStorage` (`js/publicacion/borrador.js`) y la pantalla muestra "Guardado" después de cada cambio. Se entra desde el botón "Vender mi cosecha" del inicio, visible solo para agricultores.
+
+### Diferencias con el diseño (aprobadas en el plan del slice 2)
+
+- **Unidades:** se muestran las 5 del catálogo para todos los cultivos; el diseño limita la lista por cultivo, pero el esquema no guarda esa relación.
+- **Quintal:** no se pregunta "¿Cuántos kilos tiene su quintal?"; vale siempre 46 kg (catálogo y trigger). Solo jaba y saco piden el peso.
+- **Peso sugerido:** solo cuando la unidad elegida es la unidad local del cultivo (`cultivos.peso_sugerido_kg`).
+- **Fecha límite:** no se muestra; la calcula la base de datos con la vida útil del cultivo y aparece en la pantalla 11.
+- **Fecha de cosecha:** hoy por defecto; no se aceptan fechas futuras.
+- **Referencia de precio y veredicto de color** (paso 3): llegan con RF-02 (slice 4); por ahora solo se muestra el precio por kilo calculado.
+
 ## Sesión en el navegador
 
 - `js/api.js` agrega `Authorization: Bearer <token>` y convierte las respuestas de error en `ErrorApi` (`estado`, `message`, `errores`).
