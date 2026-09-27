@@ -128,6 +128,15 @@ class ManejadorGlobalExcepcionesTest {
     }
 
     @Test
+    void recursoNoEncontradoDevuelve404ConSuMensaje() {
+        ResponseEntity<ErrorResponse> respuesta = manejador.manejarNoEncontrado(
+                new RecursoNoEncontradoException("La publicación no existe."), request);
+
+        assertThat(respuesta.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+        assertThat(respuesta.getBody().mensaje()).isEqualTo("La publicación no existe.");
+    }
+
+    @Test
     void autenticacionFallidaDevuelve401ConSuMensaje() {
         ResponseEntity<ErrorResponse> respuesta = manejador.manejarAutenticacionFallida(
                 new AutenticacionFallidaException("Celular o contraseña incorrectos."), request);

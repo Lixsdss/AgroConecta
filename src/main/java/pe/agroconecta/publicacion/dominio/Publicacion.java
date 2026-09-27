@@ -1,0 +1,206 @@
+package pe.agroconecta.publicacion.dominio;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+
+/**
+ * Cosecha publicada por un agricultor (tabla {@code publicaciones}, RF-01).
+ *
+ * <p>El agricultor, la variedad, el distrito y la unidad son de otros módulos y se referencian por id.
+ * {@code cantidad_kg} y {@code precio_kg} son columnas generadas por la base de datos. {@code trg_publicaciones_bi}
+ * fija el peso de las unidades de peso fijo, calcula la fecha límite si llega vacía y marca la primera
+ * publicación; por eso el servicio refresca la entidad después de guardarla.</p>
+ */
+@Entity
+@Table(name = "publicaciones")
+public class Publicacion {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id_publicacion")
+    private Long id;
+
+    @Column(name = "id_agricultor", nullable = false, updatable = false)
+    private Long idAgricultor;
+
+    @Column(name = "id_variedad", nullable = false)
+    private Integer idVariedad;
+
+    @Column(name = "id_distrito", nullable = false)
+    private Integer idDistrito;
+
+    @Column(name = "id_unidad", nullable = false)
+    private Integer idUnidad;
+
+    @Column(name = "cantidad", nullable = false, precision = 12, scale = 2)
+    private BigDecimal cantidad;
+
+    @Column(name = "peso_unidad_kg", nullable = false, precision = 10, scale = 3)
+    private BigDecimal pesoUnidadKg;
+
+    @Column(name = "precio_unitario", nullable = false, precision = 10, scale = 2)
+    private BigDecimal precioUnitario;
+
+    @Column(name = "cantidad_kg", precision = 14, scale = 2, insertable = false, updatable = false)
+    private BigDecimal cantidadKg;
+
+    @Column(name = "precio_kg", precision = 10, scale = 4, insertable = false, updatable = false)
+    private BigDecimal precioKg;
+
+    @Column(name = "fecha_cosecha", nullable = false)
+    private LocalDate fechaCosecha;
+
+    @Column(name = "fecha_limite", nullable = false)
+    private LocalDate fechaLimite;
+
+    @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.VARCHAR)
+    @Column(name = "estado", nullable = false, length = 12)
+    private EstadoPublicacion estado;
+
+    @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.VARCHAR)
+    @Column(name = "marca_revision", length = 20)
+    private MarcaRevision marcaRevision;
+
+    @Column(name = "fecha_publicacion", nullable = false, insertable = false, updatable = false)
+    private LocalDateTime fechaPublicacion;
+
+    @Column(name = "fecha_actualizacion", insertable = false, updatable = false)
+    private LocalDateTime fechaActualizacion;
+
+    /** Constructor requerido por JPA. */
+    protected Publicacion() {
+    }
+
+    /**
+     * Crea una publicación nueva en estado PUBLICADA (moderación posterior).
+     *
+     * @param idAgricultor   id del agricultor (módulo {@code usuario})
+     * @param idVariedad     id de la variedad (módulo {@code catalogo})
+     * @param idDistrito     id del distrito donde está la cosecha
+     * @param idUnidad       id de la unidad elegida
+     * @param cantidad       cantidad en esa unidad
+     * @param pesoUnidadKg   kilos por unidad
+     * @param precioUnitario soles por unidad
+     * @param fechaCosecha   fecha de cosecha
+     * @param fechaLimite    fecha límite de venta, o {@code null} para que la calcule la base de datos
+     */
+    public Publicacion(Long idAgricultor, Integer idVariedad, Integer idDistrito, Integer idUnidad,
+            BigDecimal cantidad, BigDecimal pesoUnidadKg, BigDecimal precioUnitario, LocalDate fechaCosecha,
+            LocalDate fechaLimite) {
+        this.idAgricultor = idAgricultor;
+        this.idVariedad = idVariedad;
+        this.idDistrito = idDistrito;
+        this.idUnidad = idUnidad;
+        this.cantidad = cantidad;
+        this.pesoUnidadKg = pesoUnidadKg;
+        this.precioUnitario = precioUnitario;
+        this.fechaCosecha = fechaCosecha;
+        this.fechaLimite = fechaLimite;
+        this.estado = EstadoPublicacion.PUBLICADA;
+    }
+
+    /**
+     * Indica si la publicación es de ese agricultor.
+     *
+     * @param idUsuario id del usuario
+     * @return {@code true} si es su dueño
+     */
+    public boolean esDe(Long idUsuario) {
+        return idAgricultor.equals(idUsuario);
+    }
+
+    /** @return id de la publicación */
+    public Long getId() {
+        return id;
+    }
+
+    /** @return id del agricultor */
+    public Long getIdAgricultor() {
+        return idAgricultor;
+    }
+
+    /** @return id de la variedad */
+    public Integer getIdVariedad() {
+        return idVariedad;
+    }
+
+    /** @return id del distrito */
+    public Integer getIdDistrito() {
+        return idDistrito;
+    }
+
+    /** @return id de la unidad */
+    public Integer getIdUnidad() {
+        return idUnidad;
+    }
+
+    /** @return cantidad en la unidad elegida */
+    public BigDecimal getCantidad() {
+        return cantidad;
+    }
+
+    /** @return kilos por unidad */
+    public BigDecimal getPesoUnidadKg() {
+        return pesoUnidadKg;
+    }
+
+    /** @return soles por unidad */
+    public BigDecimal getPrecioUnitario() {
+        return precioUnitario;
+    }
+
+    /** @return kilos totales (columna generada) */
+    public BigDecimal getCantidadKg() {
+        return cantidadKg;
+    }
+
+    /** @return soles por kilo (columna generada) */
+    public BigDecimal getPrecioKg() {
+        return precioKg;
+    }
+
+    /** @return fecha de cosecha */
+    public LocalDate getFechaCosecha() {
+        return fechaCosecha;
+    }
+
+    /** @return fecha límite de venta */
+    public LocalDate getFechaLimite() {
+        return fechaLimite;
+    }
+
+    /** @return estado */
+    public EstadoPublicacion getEstado() {
+        return estado;
+    }
+
+    /** @return marca de la cola de moderación, o {@code null} */
+    public MarcaRevision getMarcaRevision() {
+        return marcaRevision;
+    }
+
+    /** @return fecha y hora de publicación (la fija la base de datos) */
+    public LocalDateTime getFechaPublicacion() {
+        return fechaPublicacion;
+    }
+
+    /** @return fecha y hora del último cambio, o {@code null} */
+    public LocalDateTime getFechaActualizacion() {
+        return fechaActualizacion;
+    }
+}

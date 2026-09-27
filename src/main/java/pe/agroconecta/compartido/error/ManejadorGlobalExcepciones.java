@@ -36,7 +36,8 @@ import pe.agroconecta.compartido.error.ErrorResponse.ErrorCampo;
  * <li>Errores de Bean Validation: 400 con el mensaje de cada campo.</li>
  * <li>Errores de los triggers ({@code SIGNAL SQLSTATE '45000'}): 422 con el texto del trigger.</li>
  * <li>Violaciones de {@code CHECK} y {@link ReglaNegocioException}: 422.</li>
- * <li>{@link ConflictoException}: 409; {@link AutenticacionFallidaException}: 401.</li>
+ * <li>{@link ConflictoException}: 409; {@link AutenticacionFallidaException}: 401;
+ * {@link RecursoNoEncontradoException}: 404.</li>
  * <li>Clave única duplicada o clave foránea: 409 con un mensaje genérico, sin detalles de SQL.</li>
  * <li>Cualquier otro error: 500 con un mensaje genérico; el detalle solo va al log.</li>
  * </ul>
@@ -85,6 +86,19 @@ public class ManejadorGlobalExcepciones extends ResponseEntityExceptionHandler {
     @ExceptionHandler(ConflictoException.class)
     public ResponseEntity<ErrorResponse> manejarConflicto(ConflictoException ex, HttpServletRequest request) {
         return responder(HttpStatus.CONFLICT, ex.getMessage(), request.getRequestURI());
+    }
+
+    /**
+     * Responde 404 cuando un servicio no encuentra el recurso pedido.
+     *
+     * @param ex      excepción con el mensaje para el usuario
+     * @param request petición que falló
+     * @return 404 con el mensaje de la excepción
+     */
+    @ExceptionHandler(RecursoNoEncontradoException.class)
+    public ResponseEntity<ErrorResponse> manejarNoEncontrado(RecursoNoEncontradoException ex,
+            HttpServletRequest request) {
+        return responder(HttpStatus.NOT_FOUND, ex.getMessage(), request.getRequestURI());
     }
 
     /**
