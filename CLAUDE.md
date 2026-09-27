@@ -245,6 +245,8 @@ src/main/resources/static/
 - RNF-03: large buttons, high contrast, linear navigation. RNF-01: page load under 3 s on 4G — keep pages light, no heavy libraries.
 - Screens call only documented endpoints (`docs/04-diseno/ux-ui/pantallas.md`).
 - Render user data with `textContent`, never `innerHTML`. Never log passwords, tokens or message content.
+- Formats: agricultor, comprador and public screens are **mobile** (design 360×800, `.ac-pantalla` max 480 px); the 5 administrador screens are **desktop** (design 1440×900).
+- Icons: Lucide, served from the local sprite `static/img/iconos.svg` (use `js/comun/iconos.js`); fonts Work Sans and Cormorant Garamond from `static/vendor/fuentes/`. No CDN. Details in `docs/04-diseno/ux-ui/guia-estilos.md`.
 - The `templates/` folder is not used (no server-side rendering).
 
 ## 11. Testing
