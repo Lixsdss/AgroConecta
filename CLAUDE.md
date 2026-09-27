@@ -251,7 +251,7 @@ src/main/resources/static/
 - Unit tests for services with Mockito; controller tests with MockMvc; integration tests against MariaDB (`agroconecta_test`) for anything that depends on triggers; architecture tests in `ArquitecturaTest` (ArchUnit).
 - Test packages mirror the modules: `src/test/java/pe/agroconecta/<modulo>/`.
 - Every RF is finished only when its tests pass. Run `./mvnw test` before finishing any task.
-- Minimum coverage: 70 % in the `aplicacion` layer (JaCoCo).
+- Minimum coverage: 70 % of lines in every `pe.agroconecta.*.aplicacion` package. The JaCoCo `check` goal enforces it in `./mvnw verify` and fails the build below it; packages without classes are not evaluated.
 - JaCoCo report: `./mvnw verify` → `target/site/jacoco/`.
 - The same command runs in CI on every push and pull request (section 14). Code that only passes locally is not finished.
 
@@ -335,7 +335,8 @@ docs/
 ## 14. Continuous integration
 
 - Workflow file: `.github/workflows/ci.yml` (GitHub Actions). It runs on every push and pull request to `main` and `develop`.
-- It starts a MariaDB service container with the `agroconecta_test` database, sets up Java 21 and runs `./mvnw -B verify` (compile, tests, `ArquitecturaTest`, JaCoCo report).
-- The JaCoCo report is uploaded as a build artifact.
+- It starts a MariaDB service container (`mariadb:11.8`) with the `agroconecta_test` database and the `agroconecta_app` user, sets up Java 21 (Temurin) with the Maven cache and runs `./mvnw -B clean verify` (compile, tests against the real database, Flyway, `ArquitecturaTest`, JaCoCo report and check). No H2.
+- Required GitHub Actions repository secrets: `DB_PASSWORD` (password of `agroconecta_app` in the CI container) and `JWT_SECRET` (HS256 key, at least 32 bytes). Pull requests from forks do not receive secrets.
+- The JaCoCo report is uploaded as the `informe-jacoco` artifact; test reports are uploaded when the build fails.
 - A red CI blocks the merge. Fix the cause; never skip or disable tests to make CI pass.
 - Do not modify `ci.yml` without explicit approval.
