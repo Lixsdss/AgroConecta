@@ -14,6 +14,11 @@ const ROLES = {
 
 const sesion = requerirSesion();
 
+// El administrador trabaja en su panel de escritorio (diseño 11a–11e)
+if (sesion?.usuario.rol === 'ADMINISTRADOR') {
+    window.location.replace('/pages/administracion/moderacion.html');
+}
+
 document.getElementById('salir').addEventListener('click', () => {
     cerrarSesion();
     window.location.assign('/pages/usuario/ingresar.html');

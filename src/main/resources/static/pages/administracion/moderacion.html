@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Moderación · AgroConecta</title>
+    <link rel="stylesheet" href="/vendor/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/css/estilos.css">
+    <script type="module" src="/js/administracion/moderacion.js"></script>
+</head>
+<body>
+<!-- Formato escritorio del administrador (diseño 11c y 11d, 1440×900) -->
+<div class="ac-escritorio">
+    <aside class="ac-lateral" aria-label="Menú de administración">
+        <div>
+            <p class="ac-marca mb-1">AgroConecta</p>
+            <p class="ac-suave mb-0">Administración</p>
+        </div>
+        <nav>
+            <a href="/pages/administracion/moderacion.html" aria-current="page">
+                <svg class="ac-icono" aria-hidden="true" focusable="false"><use href="/img/iconos.svg#shield-check"></use></svg>
+                <span>Moderación</span>
+                <span class="ac-insignia" id="insignia" hidden></span>
+            </a>
+        </nav>
+        <div class="ac-usuario-lateral">
+            <span class="ac-iniciales" id="iniciales" aria-hidden="true"></span>
+            <div>
+                <strong id="nombre-admin"></strong>
+                <div class="ac-suave">Administración</div>
+            </div>
+        </div>
+        <button class="btn btn-outline-primary w-100" type="button" id="salir">
+            <svg class="ac-icono" aria-hidden="true" focusable="false"><use href="/img/iconos.svg#log-out"></use></svg>
+            <span>Salir</span>
+        </button>
+    </aside>
+
+    <main class="ac-contenido">
+        <p class="ac-alerta ac-alerta-info ac-solo-escritorio">Esta sección está pensada para una computadora.</p>
+        <h1 class="mb-3">Moderación de publicaciones</h1>
+
+        <div id="aviso" class="ac-alerta" role="status" tabindex="-1" hidden></div>
+
+        <div class="ac-pestanas" role="tablist" aria-label="Listados de moderación">
+            <button type="button" role="tab" id="tab-POR_REVISAR" aria-selected="true" data-vista="POR_REVISAR">Por revisar</button>
+            <button type="button" role="tab" id="tab-OCULTAS" aria-selected="false" data-vista="OCULTAS">Ocultas</button>
+            <button type="button" role="tab" id="tab-DECISIONES" aria-selected="false" data-vista="DECISIONES">Decisiones de hoy</button>
+        </div>
+
+        <div class="ac-moderacion">
+            <section aria-label="Lista" id="lista" aria-live="polite"></section>
+            <section class="ac-panel" aria-label="Detalle" id="detalle" hidden></section>
+        </div>
+    </main>
+</div>
+
+<dialog class="ac-dialogo" id="dialogo" aria-labelledby="dialogo-titulo">
+    <form method="dialog" id="form-motivo" novalidate>
+        <h2 class="h4 fw-semibold" id="dialogo-titulo">Advertir</h2>
+        <p class="ac-suave" id="dialogo-sub"></p>
+
+        <fieldset class="ac-motivos mb-3">
+            <legend class="form-label">Motivo</legend>
+            <div id="motivos"></div>
+            <div class="invalid-feedback d-block" data-error-de="motivo"></div>
+        </fieldset>
+
+        <div class="mb-3">
+            <label class="form-label" for="mensaje">Mensaje para el agricultor</label>
+            <textarea class="form-control" id="mensaje" name="mensaje" rows="3" maxlength="300"
+                      aria-describedby="ayuda-mensaje"></textarea>
+            <div class="form-text" id="ayuda-mensaje">Use palabras sencillas y diga cómo corregir. Trate al agricultor de “usted”.</div>
+            <div class="invalid-feedback d-block" data-error-de="mensaje"></div>
+        </div>
+
+        <div class="ac-vista-celular mb-3">
+            <p class="ac-suave mb-1">Así lo verá el agricultor en su celular:</p>
+            <strong id="vista-titulo"></strong>
+            <p class="mb-0" id="vista-mensaje"></p>
+        </div>
+
+        <div id="alerta-dialogo" class="ac-alerta" role="alert" tabindex="-1" hidden></div>
+
+        <div class="d-flex gap-2 justify-content-end">
+            <button class="btn btn-outline-primary" type="button" id="cancelar">Cancelar</button>
+            <button class="btn btn-primary" type="submit" id="confirmar">Confirmar</button>
+        </div>
+    </form>
+</dialog>
+</body>
+</html>
