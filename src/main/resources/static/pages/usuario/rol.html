@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Crear cuenta · AgroConecta</title>
+    <link rel="stylesheet" href="/vendor/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/css/estilos.css">
+    <script type="module" src="/js/usuario/rol.js"></script>
+</head>
+<body>
+<main class="ac-pantalla">
+    <div class="ac-barra">
+        <a class="ac-atras" href="/pages/usuario/ingresar.html" aria-label="Volver">&larr;</a>
+        <h1>Crear cuenta</h1>
+    </div>
+
+    <h2 class="ac-titulo">¿Quién es usted?</h2>
+
+    <div role="group" aria-label="Tipo de cuenta">
+        <button class="ac-opcion" type="button" data-rol="AGRICULTOR" aria-pressed="true">
+            <strong>Agricultor</strong>
+            <span>Quiero vender mi cosecha. Es gratis.</span>
+        </button>
+        <button class="ac-opcion" type="button" data-rol="COMPRADOR" aria-pressed="false">
+            <strong>Comprador</strong>
+            <span>Quiero comprar a los agricultores.</span>
+        </button>
+    </div>
+
+    <button class="btn btn-primary w-100 mt-3" type="button" id="continuar">Continuar &rarr;</button>
+</main>
+</body>
+</html>

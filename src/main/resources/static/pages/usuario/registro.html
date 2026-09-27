@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Crear cuenta · AgroConecta</title>
+    <link rel="stylesheet" href="/vendor/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/css/estilos.css">
+    <script type="module" src="/js/usuario/registro.js"></script>
+</head>
+<body>
+<main class="ac-pantalla">
+    <div class="ac-barra">
+        <a class="ac-atras" href="/pages/usuario/rol.html" aria-label="Volver">&larr;</a>
+        <h1>Crear cuenta</h1>
+    </div>
+
+    <p class="mb-1 fw-semibold" id="tipo-cuenta">Cuenta de Agricultor</p>
+    <h2 class="ac-titulo">Cree su cuenta gratis</h2>
+
+    <div id="alerta" class="ac-alerta" role="alert" tabindex="-1" hidden></div>
+
+    <form id="formulario" novalidate>
+        <div class="mb-3">
+            <label class="form-label" for="nombreCompleto">Su nombre</label>
+            <input class="form-control" id="nombreCompleto" name="nombreCompleto" autocomplete="name"
+                   maxlength="120" required>
+            <div class="invalid-feedback d-block" data-error-de="nombreCompleto"></div>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label" for="celular">Número de celular</label>
+            <input class="form-control" id="celular" name="celular" type="tel" inputmode="numeric"
+                   autocomplete="tel-national" maxlength="11" required aria-describedby="ayuda-celular">
+            <div class="form-text" id="ayuda-celular">Será su usuario para ingresar.</div>
+            <div class="invalid-feedback d-block" data-error-de="celular"></div>
+        </div>
+
+        <fieldset class="mb-3">
+            <legend class="form-label">Su distrito</legend>
+            <div class="ac-chips" id="zonas"></div>
+            <div class="mt-2" id="caja-otro-distrito" hidden>
+                <label class="visually-hidden" for="otroDistrito">Elija su distrito</label>
+                <select class="form-select" id="otroDistrito" name="otroDistrito">
+                    <option value="">Elija su distrito</option>
+                </select>
+            </div>
+            <div class="invalid-feedback d-block" data-error-de="idDistrito"></div>
+        </fieldset>
+
+        <div class="mb-3" data-solo="AGRICULTOR">
+            <label class="form-label" for="nombreChacra">Nombre de su chacra <span class="fw-normal">(opcional)</span></label>
+            <input class="form-control" id="nombreChacra" name="nombreChacra" maxlength="80">
+            <div class="invalid-feedback d-block" data-error-de="nombreChacra"></div>
+        </div>
+
+        <div data-solo="COMPRADOR" hidden>
+            <div class="mb-3">
+                <label class="form-label" for="nombreNegocio">Nombre de su negocio</label>
+                <input class="form-control" id="nombreNegocio" name="nombreNegocio" maxlength="120"
+                       autocomplete="organization">
+                <div class="invalid-feedback d-block" data-error-de="nombreNegocio"></div>
+            </div>
+            <div class="mb-3">
+                <label class="form-label" for="tipoComprador">Tipo de negocio</label>
+                <select class="form-select" id="tipoComprador" name="tipoComprador">
+                    <option value="">Elija una opción</option>
+                    <option value="MERCADO_MAYORISTA">Mercado mayorista</option>
+                    <option value="RESTAURANTE">Restaurante</option>
+                    <option value="HOTEL">Hotel</option>
+                    <option value="PROCESADORA">Procesadora</option>
+                    <option value="MOLINO">Molino</option>
+                    <option value="OTRO">Otro</option>
+                </select>
+                <div class="invalid-feedback d-block" data-error-de="tipoComprador"></div>
+            </div>
+            <div class="mb-3">
+                <label class="form-label" for="ruc">RUC <span class="fw-normal">(opcional)</span></label>
+                <input class="form-control" id="ruc" name="ruc" inputmode="numeric" maxlength="11">
+                <div class="invalid-feedback d-block" data-error-de="ruc"></div>
+            </div>
+        </div>
+
+        <div class="mb-4">
+            <label class="form-label" for="contrasena">Cree una contraseña</label>
+            <div class="input-group">
+                <input class="form-control" id="contrasena" name="contrasena" type="password"
+                       autocomplete="new-password" required aria-describedby="ayuda-contrasena">
+                <button class="btn btn-outline-primary" type="button" id="mostrar" aria-pressed="false"
+                        aria-controls="contrasena">Mostrar</button>
+            </div>
+            <div class="form-text" id="ayuda-contrasena">Use al menos 8 caracteres, con letras y números.</div>
+            <div class="invalid-feedback d-block" data-error-de="contrasena"></div>
+        </div>
+
+        <button class="btn btn-primary w-100" type="submit" id="enviar">Crear mi cuenta &rarr;</button>
+    </form>
+</main>
+</body>
+</html>

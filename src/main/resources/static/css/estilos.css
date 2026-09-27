@@ -1,0 +1,258 @@
+/*
+ * AgroConecta — estilos propios sobre Bootstrap 5.
+ * Paleta y medidas tomadas del diseño de Claude Design (docs/04-diseno/ux-ui/guia-estilos.md).
+ * RNF-03: botones grandes (≥ 48 px), alto contraste, textos simples.
+ */
+:root {
+    --ac-verde: #306D35;
+    --ac-verde-oscuro: #22572A;
+    --ac-verde-claro: #E7EFE3;
+    --ac-ambar: #F9A825;
+    --ac-ambar-claro: #FEF3D6;
+    --ac-texto: #2C3C46;
+    --ac-texto-suave: #5B646F;
+    --ac-error: #A23B2A;
+    --ac-error-claro: #F7E7E2;
+    --ac-linea: #D3D5C8;
+    --ac-superficie: #FDFDFD;
+    --ac-fondo: #F9F6F0;
+    --ac-radio: 10px;
+
+    --bs-body-color: var(--ac-texto);
+    --bs-body-bg: var(--ac-fondo);
+    --bs-body-font-family: 'Work Sans', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    --bs-body-font-size: 1.0625rem;
+    --bs-link-color: var(--ac-verde);
+    --bs-link-hover-color: var(--ac-verde-oscuro);
+    --bs-border-color: var(--ac-linea);
+    --bs-form-invalid-color: var(--ac-error);
+    --bs-form-invalid-border-color: var(--ac-error);
+}
+
+body {
+    min-height: 100vh;
+}
+
+/* Contenedor de una pantalla móvil, centrado en pantallas grandes */
+.ac-pantalla {
+    max-width: 480px;
+    margin: 0 auto;
+    padding: 1.25rem 1rem 2rem;
+    background: var(--ac-superficie);
+    min-height: 100vh;
+}
+
+.ac-barra {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    margin-bottom: 1.25rem;
+    min-height: 48px;
+}
+
+.ac-barra h1 {
+    font-size: 1.1875rem;
+    margin: 0;
+    font-weight: 600;
+}
+
+.ac-atras {
+    min-width: 48px;
+    min-height: 48px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--ac-radio);
+    color: var(--ac-texto);
+    text-decoration: none;
+    font-size: 1.5rem;
+}
+
+.ac-titulo {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-weight: 600;
+    font-size: 2rem;
+    line-height: 1.15;
+    margin-bottom: 1.25rem;
+}
+
+.ac-marca {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-weight: 600;
+    font-size: 2.5rem;
+    color: var(--ac-verde);
+}
+
+.form-label {
+    font-weight: 600;
+    font-size: 1.0625rem;
+}
+
+.form-control,
+.form-select {
+    min-height: 56px;
+    font-size: 1.125rem;
+    border-radius: var(--ac-radio);
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--ac-verde);
+    box-shadow: 0 0 0 .2rem rgba(48, 109, 53, .25);
+}
+
+.form-text {
+    color: var(--ac-texto-suave);
+    font-size: 1rem;
+}
+
+.invalid-feedback {
+    font-size: 1rem;
+}
+
+/* Botones: altura mínima de 56 px (RNF-03) */
+.btn {
+    min-height: 56px;
+    border-radius: var(--ac-radio);
+    font-size: 1.125rem;
+    font-weight: 600;
+}
+
+.btn-primary {
+    --bs-btn-bg: var(--ac-verde);
+    --bs-btn-border-color: var(--ac-verde);
+    --bs-btn-hover-bg: var(--ac-verde-oscuro);
+    --bs-btn-hover-border-color: var(--ac-verde-oscuro);
+    --bs-btn-active-bg: var(--ac-verde-oscuro);
+    --bs-btn-active-border-color: var(--ac-verde-oscuro);
+    --bs-btn-disabled-bg: var(--ac-verde);
+    --bs-btn-disabled-border-color: var(--ac-verde);
+}
+
+.btn-outline-primary {
+    --bs-btn-color: var(--ac-verde);
+    --bs-btn-border-color: var(--ac-verde);
+    --bs-btn-hover-bg: var(--ac-verde-claro);
+    --bs-btn-hover-color: var(--ac-verde-oscuro);
+    --bs-btn-hover-border-color: var(--ac-verde);
+    --bs-btn-active-bg: var(--ac-verde-claro);
+    --bs-btn-active-color: var(--ac-verde-oscuro);
+}
+
+.btn-link {
+    min-height: 48px;
+    color: var(--ac-verde);
+    font-weight: 600;
+}
+
+/* Chips de selección (distrito) */
+.ac-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .5rem;
+}
+
+.ac-chips input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.ac-chips label {
+    min-height: 48px;
+    padding: .7rem 1rem;
+    border: 1px solid var(--ac-linea);
+    border-radius: 999px;
+    background: var(--ac-superficie);
+    cursor: pointer;
+    font-size: 1.0625rem;
+}
+
+.ac-chips input:checked + label {
+    border: 2px solid var(--ac-verde);
+    background: var(--ac-verde-claro);
+    font-weight: 600;
+}
+
+.ac-chips input:focus-visible + label {
+    outline: 3px solid var(--ac-ambar);
+}
+
+/* Tarjetas de elección (rol) */
+.ac-opcion {
+    display: block;
+    width: 100%;
+    text-align: left;
+    padding: 1.25rem;
+    border: 1px solid var(--ac-linea);
+    border-radius: 12px;
+    background: var(--ac-superficie);
+    margin-bottom: .75rem;
+    cursor: pointer;
+}
+
+.ac-opcion strong {
+    display: block;
+    font-size: 1.25rem;
+}
+
+.ac-opcion span {
+    color: var(--ac-texto-suave);
+}
+
+.ac-opcion[aria-pressed="true"] {
+    border: 2px solid var(--ac-verde);
+    background: var(--ac-verde-claro);
+}
+
+/* Mensajes */
+.ac-alerta {
+    border-radius: var(--ac-radio);
+    padding: .875rem 1rem;
+    margin-bottom: 1rem;
+    font-size: 1.0625rem;
+}
+
+.ac-alerta-error {
+    background: var(--ac-error-claro);
+    color: var(--ac-error);
+}
+
+.ac-alerta-info {
+    background: var(--ac-ambar-claro);
+    color: var(--ac-texto);
+}
+
+.ac-alerta-exito {
+    background: var(--ac-verde-claro);
+    color: var(--ac-verde-oscuro);
+}
+
+/* Bienvenida */
+.ac-tarjeta-bienvenida {
+    background: var(--ac-verde-claro);
+    border-radius: 12px;
+    padding: 2.5rem 1.5rem;
+    text-align: center;
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin: 2rem 0;
+}
+
+.ac-dato {
+    display: flex;
+    justify-content: space-between;
+    padding: .75rem 0;
+    border-bottom: 1px solid var(--ac-linea);
+}
+
+.ac-dato dt {
+    font-weight: 400;
+    color: var(--ac-texto-suave);
+}
+
+.ac-dato dd {
+    margin: 0;
+    font-weight: 600;
+    text-align: right;
+}
