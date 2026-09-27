@@ -168,7 +168,8 @@ Never reimplement these side effects in Java and never use `@Scheduled` for the 
 ### 6.2 Rules for the vertical slices (JPA and services)
 
 - Generated columns (`cantidad_kg`, `precio_kg`, `monto_total`) are mapped with `@Column(insertable = false, updatable = false)`. Refresh the entity after saving when their value or a trigger-set value (`peso_unidad_kg`, `fecha_limite`, `estado`, `marca_revision`) is needed.
-- Roles, states and reasons are `CHECK`-constrained strings: map them as Java enums with `@Enumerated(EnumType.STRING)`, with exactly the values of the `CHECK`.
+- Roles, states and reasons are `CHECK`-constrained strings: map them as Java enums with `@Enumerated(EnumType.STRING)` **plus `@JdbcTypeCode(SqlTypes.VARCHAR)`** (otherwise Hibernate expects a native `enum` column and `validate` fails), with exactly the values of the `CHECK`. `CHAR(n)` columns (`celular`, `ruc`, `ubigeo`) use `@JdbcTypeCode(SqlTypes.CHAR)`.
+- Integration tests that change rows with `JdbcTemplate` inside a `@Transactional` test must call `EntityManager.flush()` before and `clear()` after, because the test shares the persistence context with the services.
 - Every update to `transacciones` must set `id_actualizado_por` to the user making the change; the triggers use it for the timeline and for permissions.
 - "Confirmar que recibí" performs two updates (ENTREGADO, then COMPLETADA) in one `@Transactional` method, from EN_CAMINO or from ACORDADA (farm pick-up).
 - The application never inserts into `transacciones_historial`; the triggers do.

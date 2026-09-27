@@ -430,9 +430,10 @@ En Java, las entidades de un módulo referencian a las de otro módulo solo por 
 | POST /api/v1/precios (carga) | ADMINISTRADOR | `@PreAuthorize("hasRole('ADMINISTRADOR')")` |
 | POST /api/v1/transacciones | AGRICULTOR, COMPRADOR | Parte de la publicación; lógica en el service |
 | POST /api/v1/propuestas-grupales | COMPRADOR | `@PreAuthorize("hasRole('COMPRADOR')")` |
-| GET /api/v1/usuarios/{id} | El propio usuario o ADMINISTRADOR | Lógica en el service |
-| PUT /api/v1/usuarios/{id} | El propio usuario o ADMINISTRADOR | Lógica en el service |
+| GET /api/v1/usuarios/me | Usuario autenticado | Perfil propio |
+| PUT /api/v1/usuarios/me | Usuario autenticado | Edita el perfil propio (no el rol ni el celular) |
 | PUT /api/v1/usuarios/me/contrasena | Usuario autenticado | Requiere contraseña actual |
+| GET /api/v1/usuarios/{id} | ADMINISTRADOR | Gestión de usuarios (slice de RF-09) |
 | PUT /api/v1/usuarios/{id}/contrasena | ADMINISTRADOR (reinicio) | `@PreAuthorize("hasRole('ADMINISTRADOR')")` |
 | DELETE /api/v1/usuarios/{id} | ADMINISTRADOR (pasa a INACTIVO) | `@PreAuthorize("hasRole('ADMINISTRADOR')")` |
 
