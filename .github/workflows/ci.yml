@@ -1,0 +1,80 @@
+# Integración continua de AgroConecta.
+# Compila, ejecuta todas las pruebas contra una MariaDB real (sin H2), verifica la
+# arquitectura (ArchUnit) y la cobertura (JaCoCo, 70 % de líneas en las capas aplicacion).
+name: CI
+
+on:
+  push:
+    branches: [develop, main]
+  pull_request:
+    branches: [develop, main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verificar:
+    name: Compilar y probar
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    services:
+      mariadb:
+        image: mariadb:11.8
+        env:
+          MARIADB_DATABASE: agroconecta_test
+          MARIADB_USER: agroconecta_app
+          MARIADB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          MARIADB_RANDOM_ROOT_PASSWORD: "yes"
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="healthcheck.sh --connect --innodb_initialized"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=20
+
+    env:
+      DB_URL: jdbc:mysql://127.0.0.1:3306/agroconecta_test
+      DB_USER: agroconecta_app
+      DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+      JWT_SECRET: ${{ secrets.JWT_SECRET }}
+
+    steps:
+      - name: Obtener el código
+        uses: actions/checkout@v4
+
+      - name: Configurar Java 21 (Temurin) con caché de Maven
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+
+      - name: Verificar que los secretos existen
+        run: |
+          test -n "$DB_PASSWORD" || { echo "::error::Falta el secreto DB_PASSWORD"; exit 1; }
+          test -n "$JWT_SECRET" || { echo "::error::Falta el secreto JWT_SECRET"; exit 1; }
+
+      - name: Compilar, probar y verificar (Flyway, ArchUnit, JaCoCo)
+        run: ./mvnw -B clean verify
+
+      - name: Publicar el informe de cobertura
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: informe-jacoco
+          path: target/site/jacoco/
+          if-no-files-found: ignore
+
+      - name: Publicar los resultados de las pruebas
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: resultados-pruebas
+          path: target/surefire-reports/
+          if-no-files-found: ignore
