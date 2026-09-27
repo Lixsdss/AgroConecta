@@ -2,8 +2,14 @@
  * Pantalla "Bienvenida" (diseño 05): tres tarjetas de una frase para el agricultor nuevo. Se puede saltar.
  */
 import { requerirSesion } from '../comun/sesion.js';
+import { icono } from '../comun/iconos.js';
 
-const TARJETAS = ['Publique su cosecha', 'Reciba ofertas', 'Venda sin intermediarios'];
+/** Textos e íconos de las tres tarjetas, según el diseño. */
+const TARJETAS = [
+    ['Publique su cosecha', 'sprout'],
+    ['Reciba ofertas', 'hand-coins'],
+    ['Venda sin intermediarios', 'handshake']
+];
 
 requerirSesion();
 
@@ -18,7 +24,12 @@ siguiente.addEventListener('click', () => {
         return;
     }
     actual += 1;
+    const [texto, nombreIcono] = TARJETAS[actual];
     paso.textContent = `${actual + 1} de ${TARJETAS.length}`;
-    tarjeta.textContent = TARJETAS[actual];
-    siguiente.textContent = actual === TARJETAS.length - 1 ? 'Empezar →' : 'Siguiente →';
+    const span = document.createElement('span');
+    span.textContent = texto;
+    tarjeta.replaceChildren(icono(nombreIcono), span);
+    const etiqueta = document.createElement('span');
+    etiqueta.textContent = actual === TARJETAS.length - 1 ? 'Empezar' : 'Siguiente';
+    siguiente.replaceChildren(etiqueta, icono('arrow-right'));
 });

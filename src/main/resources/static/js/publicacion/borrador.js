@@ -3,6 +3,7 @@
  * cambio (indicador "Guardado" del diseño). Se borra al publicar o al cerrar la pestaña.
  */
 import { requerirSesion } from '../comun/sesion.js';
+import { icono } from '../comun/iconos.js';
 
 const CLAVE = 'agroconecta.borrador-publicacion';
 const CLAVE_PUBLICADA = 'agroconecta.publicacion-creada';
@@ -117,21 +118,30 @@ export function fechaCorta(iso) {
  *
  * @param {string} titulo texto principal
  * @param {string} [detalle] texto secundario
+ * @param {string} [nombreIcono] ícono de Lucide a la izquierda
  * @returns {HTMLButtonElement} botón
  */
-export function crearOpcion(titulo, detalle) {
+export function crearOpcion(titulo, detalle, nombreIcono) {
     const boton = document.createElement('button');
     boton.type = 'button';
-    boton.className = 'ac-opcion';
+    boton.className = nombreIcono ? 'ac-opcion ac-con-icono' : 'ac-opcion';
     boton.setAttribute('aria-pressed', 'false');
+    if (nombreIcono) {
+        const caja = document.createElement('span');
+        caja.className = 'ac-icono-opcion';
+        caja.append(icono(nombreIcono));
+        boton.append(caja);
+    }
+    const textos = document.createElement('span');
     const fuerte = document.createElement('strong');
     fuerte.textContent = titulo;
-    boton.append(fuerte);
+    textos.append(fuerte);
     if (detalle) {
         const span = document.createElement('span');
         span.textContent = detalle;
-        boton.append(span);
+        textos.append(span);
     }
+    boton.append(textos);
     return boton;
 }
 

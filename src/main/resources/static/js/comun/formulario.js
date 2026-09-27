@@ -2,6 +2,11 @@
  * Ayudas para formularios: errores por campo, mensaje general y botón ocupado.
  * Todo el texto se escribe con textContent (nunca innerHTML).
  */
+import { icono, ponerIconoYTexto } from './iconos.js';
+
+const ICONO_ALERTA = { error: 'circle-alert', info: 'info', exito: 'circle-check' };
+/** Contenido original de cada botón mientras está ocupado. */
+const contenidoOriginal = new WeakMap();
 
 /**
  * Borra los errores mostrados en el formulario.
@@ -55,7 +60,9 @@ export function mostrarErrores(formulario, alerta, error, alias = {}) {
  * @param {'error'|'info'|'exito'} tipo tipo de mensaje
  */
 export function mostrarAlerta(alerta, mensaje, tipo = 'error') {
-    alerta.textContent = mensaje;
+    const texto = document.createElement('span');
+    texto.textContent = mensaje;
+    alerta.replaceChildren(icono(ICONO_ALERTA[tipo]), texto);
     alerta.className = `ac-alerta ac-alerta-${tipo}`;
     alerta.hidden = false;
 }
@@ -71,7 +78,7 @@ export function ocultarAlerta(alerta) {
 }
 
 /**
- * Deshabilita el botón mientras se espera la respuesta y cambia su texto.
+ * Deshabilita el botón mientras se espera la respuesta y cambia su contenido (ícono de espera y texto).
  *
  * @param {HTMLButtonElement} boton botón de envío
  * @param {boolean} ocupado true mientras se espera
@@ -79,11 +86,14 @@ export function ocultarAlerta(alerta) {
  */
 export function marcarOcupado(boton, ocupado, textoOcupado = 'Espere…') {
     if (ocupado) {
-        boton.dataset.textoOriginal = boton.textContent;
-        boton.textContent = textoOcupado;
+        contenidoOriginal.set(boton, [...boton.childNodes]);
+        ponerIconoYTexto(boton, 'loader', textoOcupado);
         boton.disabled = true;
     } else {
-        boton.textContent = boton.dataset.textoOriginal ?? boton.textContent;
+        if (contenidoOriginal.has(boton)) {
+            boton.replaceChildren(...contenidoOriginal.get(boton));
+            contenidoOriginal.delete(boton);
+        }
         boton.disabled = false;
     }
 }
@@ -98,7 +108,7 @@ export function conectarMostrarContrasena(boton, campo) {
     boton.addEventListener('click', () => {
         const oculta = campo.type === 'password';
         campo.type = oculta ? 'text' : 'password';
-        boton.textContent = oculta ? 'Ocultar' : 'Mostrar';
+        ponerIconoYTexto(boton, oculta ? 'eye-off' : 'eye', oculta ? 'Ocultar' : 'Mostrar');
         boton.setAttribute('aria-pressed', String(oculta));
     });
 }

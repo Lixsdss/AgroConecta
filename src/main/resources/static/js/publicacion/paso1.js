@@ -4,6 +4,7 @@
  */
 import { api } from '../api.js';
 import { mostrarAlerta } from '../comun/formulario.js';
+import { ICONO_CULTIVO } from '../comun/iconos.js';
 import {
     exigirAgricultor, leerBorrador, guardarBorrador, crearOpcion, marcarElegida, RUTA
 } from './borrador.js';
@@ -65,7 +66,8 @@ async function iniciar() {
         const cultivos = await api.get('/catalogo/cultivos');
         const borrador = leerBorrador();
         for (const c of cultivos) {
-            const boton = crearOpcion(c.nombre, `Se vende en ${c.unidadLocal.toLowerCase()}`);
+            const boton = crearOpcion(c.nombre, `Se vende en ${c.unidadLocal.toLowerCase()}`,
+                ICONO_CULTIVO[c.nombre] ?? 'sprout');
             boton.addEventListener('click', () => elegirCultivo(c, boton, false));
             contCultivos.append(boton);
             if (borrador.idCultivo === c.id) {

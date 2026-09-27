@@ -11,7 +11,7 @@
 <body>
 <main class="ac-pantalla">
     <div class="ac-barra">
-        <a class="ac-atras" href="/pages/publicacion/paso2.html" aria-label="Volver al paso 2">&larr;</a>
+        <a class="ac-atras" href="/pages/publicacion/paso2.html" aria-label="Volver al paso 2"><svg class="ac-icono" aria-hidden="true" focusable="false"><use href="/img/iconos.svg#arrow-left"></use></svg></a>
         <h1>Vender mi cosecha</h1>
     </div>
     <p class="ac-progreso">Paso 3 de 3 <span id="guardado" hidden>· Guardado</span></p>
@@ -36,8 +36,8 @@
         <fieldset class="mb-4">
             <legend class="form-label">¿Dónde está su cosecha?</legend>
             <div class="d-flex justify-content-between align-items-center">
-                <strong id="distrito-actual">—</strong>
-                <button class="btn btn-link" type="button" id="cambiar" aria-controls="caja-distrito">Cambiar</button>
+                <strong class="d-inline-flex align-items-center gap-2"><svg class="ac-icono" aria-hidden="true" focusable="false"><use href="/img/iconos.svg#map-pin"></use></svg><span id="distrito-actual">—</span></strong>
+                <button class="btn btn-link" type="button" id="cambiar" aria-controls="caja-distrito"><svg class="ac-icono" aria-hidden="true" focusable="false"><use href="/img/iconos.svg#sliders-horizontal"></use></svg> <span>Cambiar</span></button>
             </div>
             <div class="form-text" id="origen-distrito">Tomado de su perfil.</div>
             <div class="mt-2" id="caja-distrito" hidden>
@@ -47,7 +47,7 @@
             <div class="invalid-feedback d-block" data-error-de="idDistrito"></div>
         </fieldset>
 
-        <button class="btn btn-primary w-100" type="submit">Revisar y publicar &rarr;</button>
+        <button class="btn btn-primary w-100" type="submit"><span>Revisar y publicar</span> <svg class="ac-icono" aria-hidden="true" focusable="false"><use href="/img/iconos.svg#arrow-right"></use></svg></button>
     </form>
 </main>
 </body>

@@ -11,24 +11,24 @@
 <body>
 <main class="ac-pantalla">
     <div class="ac-barra">
-        <a class="ac-atras" href="/pages/usuario/ingresar.html" aria-label="Volver">&larr;</a>
+        <a class="ac-atras" href="/pages/usuario/ingresar.html" aria-label="Volver"><svg class="ac-icono" aria-hidden="true" focusable="false"><use href="/img/iconos.svg#arrow-left"></use></svg></a>
         <h1>Crear cuenta</h1>
     </div>
 
     <h2 class="ac-titulo">¿Quién es usted?</h2>
 
     <div role="group" aria-label="Tipo de cuenta">
-        <button class="ac-opcion" type="button" data-rol="AGRICULTOR" aria-pressed="true">
-            <strong>Agricultor</strong>
-            <span>Quiero vender mi cosecha. Es gratis.</span>
+        <button class="ac-opcion ac-con-icono" type="button" data-rol="AGRICULTOR" aria-pressed="true">
+            <span class="ac-icono-opcion"><svg class="ac-icono" aria-hidden="true" focusable="false"><use href="/img/iconos.svg#sprout"></use></svg></span>
+            <span><strong>Agricultor</strong><span>Quiero vender mi cosecha. Es gratis.</span></span>
         </button>
-        <button class="ac-opcion" type="button" data-rol="COMPRADOR" aria-pressed="false">
-            <strong>Comprador</strong>
-            <span>Quiero comprar a los agricultores.</span>
+        <button class="ac-opcion ac-con-icono" type="button" data-rol="COMPRADOR" aria-pressed="false">
+            <span class="ac-icono-opcion"><svg class="ac-icono" aria-hidden="true" focusable="false"><use href="/img/iconos.svg#store"></use></svg></span>
+            <span><strong>Comprador</strong><span>Quiero comprar a los agricultores.</span></span>
         </button>
     </div>
 
-    <button class="btn btn-primary w-100 mt-3" type="button" id="continuar">Continuar &rarr;</button>
+    <button class="btn btn-primary w-100 mt-3" type="button" id="continuar"><span>Continuar</span> <svg class="ac-icono" aria-hidden="true" focusable="false"><use href="/img/iconos.svg#arrow-right"></use></svg></button>
 </main>
 </body>
 </html>

@@ -76,7 +76,7 @@ async function iniciar() {
         const unidades = await api.get('/catalogo/unidades');
         for (const u of unidades) {
             const detalle = u.factorKg === null ? 'Usted dice cuántos kilos pesa' : `${numero(u.factorKg, 3)} kilos`;
-            const boton = crearOpcion(u.nombre, detalle);
+            const boton = crearOpcion(u.nombre, detalle, u.factorKg === null ? 'weight' : 'scale');
             boton.addEventListener('click', () => elegirUnidad(u, boton));
             contUnidades.append(boton);
             const elegida = borrador.idUnidad ?? borrador.idUnidadLocal;

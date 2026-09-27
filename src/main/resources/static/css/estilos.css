@@ -3,6 +3,24 @@
  * Paleta y medidas tomadas del diseño de Claude Design (docs/04-diseno/ux-ui/guia-estilos.md).
  * RNF-03: botones grandes (≥ 48 px), alto contraste, textos simples.
  */
+
+/* Fuentes servidas localmente (licencia OFL, ver /vendor/fuentes/). Subconjunto latino: incluye tildes y ñ.
+   font-display: swap muestra el texto con la fuente del sistema mientras la fuente carga (RNF-01). */
+@font-face {
+    font-family: 'Work Sans';
+    font-style: normal;
+    font-weight: 400 700;
+    font-display: swap;
+    src: url('/vendor/fuentes/work-sans-latin-400-600-700.woff2') format('woff2');
+}
+
+@font-face {
+    font-family: 'Cormorant Garamond';
+    font-style: normal;
+    font-weight: 600;
+    font-display: swap;
+    src: url('/vendor/fuentes/cormorant-garamond-latin-600.woff2') format('woff2');
+}
 :root {
     --ac-verde: #306D35;
     --ac-verde-oscuro: #22572A;
@@ -194,6 +212,7 @@ body {
 .ac-opcion strong {
     display: block;
     font-size: 1.25rem;
+    color: var(--ac-texto);
 }
 
 .ac-opcion span {
@@ -278,4 +297,82 @@ body {
 .input-group-text {
     font-size: 1.125rem;
     border-radius: var(--ac-radio);
+}
+
+/* Íconos de Lucide (/img/iconos.svg): heredan el color del texto */
+.ac-icono {
+    width: 1.25em;
+    height: 1.25em;
+    flex-shrink: 0;
+    vertical-align: -0.25em;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.ac-icono-grande {
+    width: 2rem;
+    height: 2rem;
+}
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: .5rem;
+}
+
+.ac-atras .ac-icono {
+    width: 1.75rem;
+    height: 1.75rem;
+}
+
+/* Tarjeta de opción con ícono a la izquierda */
+.ac-opcion.ac-con-icono {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.ac-opcion .ac-icono-opcion {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    background: var(--ac-verde-claro);
+    color: var(--ac-verde);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.ac-opcion .ac-icono-opcion .ac-icono {
+    width: 28px;
+    height: 28px;
+}
+
+.ac-alerta {
+    display: flex;
+    gap: .5rem;
+    align-items: flex-start;
+}
+
+.ac-alerta .ac-icono {
+    margin-top: .1em;
+}
+
+.ac-tarjeta-bienvenida .ac-icono {
+    display: block;
+    width: 64px;
+    height: 64px;
+    margin: 0 auto 1rem;
+    color: var(--ac-verde);
+}
+
+.ac-check .ac-icono {
+    width: 56px;
+    height: 56px;
+    vertical-align: middle;
 }
