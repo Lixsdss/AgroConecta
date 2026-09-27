@@ -1,5 +1,5 @@
 -- =====================================================================
--- AgroConecta - V2: datos iniciales de catalogos (modelo de datos v4)
+-- AgroConecta - V2: datos iniciales de catalogos (modelo de datos v4.1)
 -- Generado desde docs/04-diseno/base-datos/modelo-bd.sql, seccion 12.
 -- modelo-bd.sql es la fuente de verdad; no editar esta migracion una vez aplicada.
 -- =====================================================================

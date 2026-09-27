@@ -1,5 +1,5 @@
 -- =====================================================================
--- AgroConecta - V1: esquema inicial (modelo de datos v4)
+-- AgroConecta - V1: esquema inicial (modelo de datos v4.1)
 -- Generado desde docs/04-diseno/base-datos/modelo-bd.sql, secciones 2 a 11
 -- (catalogos, actores, oferta y precios, interaccion comercial, seguimiento,
 -- administracion, indices, funciones, procedimiento, triggers, evento y vistas).
@@ -136,8 +136,8 @@ CREATE TABLE publicaciones (
     precio_kg           DECIMAL(10,4) GENERATED ALWAYS AS (ROUND(precio_unitario / NULLIF(peso_unidad_kg, 0), 4)) STORED,
     fecha_cosecha       DATE          NOT NULL,
     fecha_limite        DATE          NOT NULL COMMENT 'Vencimiento (RF-07). Si llega NULL se calcula',
-    estado              VARCHAR(12)   NOT NULL DEFAULT 'EN_REVISION',
-    marca_revision      VARCHAR(20)   NULL COMMENT 'Alerta del sistema para el moderador',
+    estado              VARCHAR(12)   NOT NULL DEFAULT 'PUBLICADA' COMMENT 'Moderacion posterior',
+    marca_revision      VARCHAR(20)   NULL COMMENT 'No NULL = en la cola de moderacion',
     fecha_publicacion   DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
     fecha_actualizacion DATETIME      NULL ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (id_publicacion),
@@ -146,9 +146,9 @@ CREATE TABLE publicaciones (
     CONSTRAINT chk_publicacion_precio CHECK (precio_unitario > 0),
     CONSTRAINT chk_publicacion_fechas CHECK (fecha_limite >= fecha_cosecha),
     CONSTRAINT chk_publicacion_estado CHECK (estado IN
-        ('EN_REVISION', 'PUBLICADA', 'RECHAZADA', 'VENDIDA', 'VENCIDA', 'RETIRADA')),
+        ('PUBLICADA', 'BLOQUEADA', 'VENDIDA', 'VENCIDA', 'RETIRADA')),
     CONSTRAINT chk_publicacion_marca CHECK (marca_revision IS NULL OR marca_revision IN
-        ('PRIMERA_PUBLICACION', 'PRECIO_FUERA_RANGO', 'CANTIDAD_INUSUAL')),
+        ('PRIMERA_PUBLICACION', 'PRECIO_FUERA_RANGO', 'CANTIDAD_INUSUAL', 'CORREGIDA')),
     CONSTRAINT fk_publicacion_agricultor FOREIGN KEY (id_agricultor)
         REFERENCES agricultores (id_usuario) ON DELETE RESTRICT ON UPDATE RESTRICT,
     CONSTRAINT fk_publicacion_variedad FOREIGN KEY (id_variedad)
@@ -159,22 +159,24 @@ CREATE TABLE publicaciones (
         REFERENCES unidades_medida (id_unidad) ON DELETE RESTRICT ON UPDATE RESTRICT
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
--- RF-09: cada decision del moderador (una publicacion corregida puede revisarse varias veces)
+-- RF-09: moderacion posterior. Cada accion del administrador sobre una publicacion.
+-- La cola de moderacion = publicaciones con marca_revision no NULL.
 CREATE TABLE revisiones_publicacion (
     id_revision      BIGINT       NOT NULL AUTO_INCREMENT,
     id_publicacion   BIGINT       NOT NULL,
     id_administrador BIGINT       NOT NULL,
-    decision         VARCHAR(10)  NOT NULL,
-    motivo_rechazo   VARCHAR(25)  NULL,
+    decision         VARCHAR(12)  NOT NULL,
+    motivo           VARCHAR(25)  NULL,
     mensaje          VARCHAR(300) NULL COMMENT 'Texto que ve el agricultor en su celular',
     fecha            DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (id_revision),
-    CONSTRAINT chk_revision_decision CHECK (decision IN ('APROBADA', 'RECHAZADA')),
-    CONSTRAINT chk_revision_motivo CHECK (motivo_rechazo IS NULL OR motivo_rechazo IN
+    CONSTRAINT chk_revision_decision CHECK (decision IN ('CONFORME', 'ADVERTENCIA', 'BLOQUEO', 'DESBLOQUEO')),
+    CONSTRAINT chk_revision_motivo CHECK (motivo IS NULL OR motivo IN
         ('PRECIO_NO_COINCIDE', 'CANTIDAD_INCORRECTA', 'PESO_UNIDAD_INCORRECTO', 'DATOS_INCORRECTOS', 'OTRO')),
+    -- Advertir y bloquear exigen motivo de catalogo y mensaje al agricultor
     CONSTRAINT chk_revision_coherencia CHECK (
-        (decision = 'APROBADA' AND motivo_rechazo IS NULL)
-        OR (decision = 'RECHAZADA' AND motivo_rechazo IS NOT NULL AND mensaje IS NOT NULL)
+        (decision IN ('CONFORME', 'DESBLOQUEO') AND motivo IS NULL)
+        OR (decision IN ('ADVERTENCIA', 'BLOQUEO') AND motivo IS NOT NULL AND mensaje IS NOT NULL)
     ),
     CONSTRAINT fk_revision_publicacion FOREIGN KEY (id_publicacion)
         REFERENCES publicaciones (id_publicacion) ON DELETE RESTRICT ON UPDATE RESTRICT,
@@ -258,6 +260,8 @@ CREATE TABLE mensajes (
 
 -- RF-10: propuesta conjunta del comprador a un lote (cultivo + variedad + zona), en kg.
 -- Cada agricultor la recibe como una transaccion PROPUESTA en su propia unidad.
+-- Reparto (service): proporcional a lo disponible de cada agricultor, redondeado
+-- hacia abajo a unidades enteras de su publicacion.
 CREATE TABLE propuestas_grupales (
     id_propuesta_grupal BIGINT        NOT NULL AUTO_INCREMENT,
     id_comprador        BIGINT        NOT NULL,
@@ -284,7 +288,9 @@ CREATE TABLE propuestas_grupales (
 -- Acuerdo comercial. No registra pagos (se hacen fuera de la plataforma).
 -- Acuerdo del chat:   ACORDADA -> RECOGIDO -> EN_CAMINO -> ENTREGADO -> COMPLETADA
 -- Venta agrupada:     PROPUESTA -> ACORDADA (sigue igual) | RECHAZADA | CANCELADA
--- ACORDADA puede pasar a CANCELADA. La unidad acordada puede diferir de la publicacion.
+-- Recojo en chacra:  ACORDADA -> ENTREGADO -> COMPLETADA (solo el comprador)
+-- Solo ACORDADA pasa a CANCELADA: despues del recojo, los problemas van por reclamo.
+-- La unidad acordada puede diferir de la publicacion.
 CREATE TABLE transacciones (
     id_transaccion      BIGINT        NOT NULL AUTO_INCREMENT,
     id_conversacion     BIGINT        NOT NULL COMMENT 'Da la publicacion (agricultor) y el comprador',
@@ -421,7 +427,7 @@ CREATE TABLE notificaciones (
     fecha_creacion  DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (id_notificacion),
     CONSTRAINT chk_notificacion_tipo CHECK (tipo IN ('POR_VENCER', 'OFERTA', 'MENSAJE',
-        'PUBLICACION_APROBADA', 'PUBLICACION_RECHAZADA', 'PROPUESTA_CONJUNTA', 'VENTA',
+        'MODERACION', 'PROPUESTA_CONJUNTA', 'VENTA',
         'CALIFICACION', 'RECLAMO', 'CUENTA')),
     CONSTRAINT fk_notificacion_usuario FOREIGN KEY (id_usuario)
         REFERENCES usuarios (id_usuario) ON DELETE RESTRICT ON UPDATE RESTRICT
@@ -510,8 +516,8 @@ BEGIN
     DECLARE v_factor DECIMAL(10,3);
     DECLARE v_dias   SMALLINT;
 
-    IF NEW.estado <> 'EN_REVISION' THEN
-        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Toda publicacion inicia EN_REVISION';
+    IF NEW.estado <> 'PUBLICADA' THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Toda publicacion inicia PUBLICADA (moderacion posterior)';
     END IF;
 
     -- Unidad de peso fijo (kilo, quintal, tonelada): el peso lo pone el catalogo
@@ -533,7 +539,7 @@ BEGIN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'La fecha de vencimiento no puede ser anterior a hoy';
     END IF;
 
-    -- RF-09: alerta para el moderador (las demas marcas las pone el service)
+    -- RF-09: pone la publicacion en la cola de moderacion (las demas marcas las pone el service)
     IF NEW.marca_revision IS NULL
        AND NOT EXISTS (SELECT 1 FROM publicaciones WHERE id_agricultor = NEW.id_agricultor) THEN
         SET NEW.marca_revision = 'PRIMERA_PUBLICACION';
@@ -566,13 +572,21 @@ BEGIN
     END IF;
 
     IF NEW.estado <> OLD.estado AND NOT (
-           (OLD.estado = 'EN_REVISION' AND NEW.estado IN ('PUBLICADA', 'RECHAZADA', 'RETIRADA'))
-        OR (OLD.estado = 'RECHAZADA'   AND NEW.estado IN ('EN_REVISION', 'RETIRADA'))
-        OR (OLD.estado = 'PUBLICADA'   AND NEW.estado IN ('VENDIDA', 'VENCIDA', 'RETIRADA'))
+           (OLD.estado = 'PUBLICADA'   AND NEW.estado IN ('BLOQUEADA', 'VENDIDA', 'VENCIDA', 'RETIRADA'))
+        OR (OLD.estado = 'BLOQUEADA'   AND NEW.estado IN ('PUBLICADA', 'VENCIDA', 'RETIRADA'))
         OR (OLD.estado = 'VENDIDA'     AND NEW.estado IN ('PUBLICADA', 'VENCIDA'))
         OR (OLD.estado = 'VENCIDA'     AND NEW.estado IN ('PUBLICADA', 'RETIRADA'))
     ) THEN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Cambio de estado de publicacion no permitido';
+    END IF;
+
+    -- El agricultor corrige una publicacion bloqueada: vuelve a la cola de moderacion
+    IF OLD.estado = 'BLOQUEADA' AND NEW.estado = 'BLOQUEADA' AND (
+           NEW.id_variedad <> OLD.id_variedad OR NEW.id_distrito <> OLD.id_distrito
+        OR NEW.id_unidad <> OLD.id_unidad OR NEW.cantidad <> OLD.cantidad
+        OR NEW.peso_unidad_kg <> OLD.peso_unidad_kg OR NEW.precio_unitario <> OLD.precio_unitario
+        OR NEW.fecha_cosecha <> OLD.fecha_cosecha OR NEW.fecha_limite <> OLD.fecha_limite) THEN
+        SET NEW.marca_revision = 'CORREGIDA';
     END IF;
 
     IF NEW.estado = 'PUBLICADA' AND NEW.fecha_limite < CURRENT_DATE THEN
@@ -596,15 +610,21 @@ END$$
 CREATE TRIGGER trg_revisiones_bi BEFORE INSERT ON revisiones_publicacion
 FOR EACH ROW
 BEGIN
+    DECLARE v_estado VARCHAR(12);
+
     IF fn_rol_usuario(NEW.id_administrador) <> 'ADMINISTRADOR' THEN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Solo un ADMINISTRADOR revisa publicaciones';
     END IF;
-    IF (SELECT estado FROM publicaciones WHERE id_publicacion = NEW.id_publicacion) <> 'EN_REVISION' THEN
-        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'La publicacion no esta EN_REVISION';
+    SET v_estado = (SELECT estado FROM publicaciones WHERE id_publicacion = NEW.id_publicacion);
+    IF NEW.decision IN ('CONFORME', 'ADVERTENCIA', 'BLOQUEO') AND v_estado <> 'PUBLICADA' THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Solo se revisa, advierte o bloquea una publicacion PUBLICADA';
+    END IF;
+    IF NEW.decision = 'DESBLOQUEO' AND v_estado <> 'BLOQUEADA' THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Solo se desbloquea una publicacion BLOQUEADA';
     END IF;
 END$$
 
--- Aplica la decision y avisa al agricultor
+-- Aplica la decision, saca la publicacion de la cola y avisa al agricultor
 CREATE TRIGGER trg_revisiones_ai AFTER INSERT ON revisiones_publicacion
 FOR EACH ROW
 BEGIN
@@ -618,18 +638,28 @@ BEGIN
     JOIN cultivos c   ON c.id_cultivo = v.id_cultivo
     WHERE p.id_publicacion = NEW.id_publicacion;
 
+    -- Desbloquear una cosecha que vencio mientras estaba bloqueada la deja VENCIDA
     UPDATE publicaciones
-    SET estado = IF(NEW.decision = 'APROBADA', 'PUBLICADA', 'RECHAZADA')
+    SET estado = CASE NEW.decision
+                     WHEN 'BLOQUEO'    THEN 'BLOQUEADA'
+                     WHEN 'DESBLOQUEO' THEN IF(fecha_limite >= CURRENT_DATE, 'PUBLICADA', 'VENCIDA')
+                     ELSE estado
+                 END,
+        marca_revision = NULL
     WHERE id_publicacion = NEW.id_publicacion;
 
-    INSERT INTO notificaciones (id_usuario, tipo, titulo, contenido, id_referencia)
-    VALUES (v_agricultor,
-            IF(NEW.decision = 'APROBADA', 'PUBLICACION_APROBADA', 'PUBLICACION_RECHAZADA'),
-            IF(NEW.decision = 'APROBADA',
-               CONCAT('Su ', v_producto, ' fue aprobado. Ya está publicado.'),
-               CONCAT('Su ', v_producto, ' no fue publicado.')),
-            COALESCE(NEW.mensaje, 'Los compradores ya pueden ver su cosecha.'),
-            NEW.id_publicacion);
+    IF NEW.decision <> 'CONFORME' THEN
+        INSERT INTO notificaciones (id_usuario, tipo, titulo, contenido, id_referencia)
+        VALUES (v_agricultor,
+                'MODERACION',
+                CASE NEW.decision
+                    WHEN 'ADVERTENCIA' THEN CONCAT('Aviso sobre su ', v_producto, '.')
+                    WHEN 'BLOQUEO'     THEN CONCAT('Su ', v_producto, ' fue ocultado.')
+                    ELSE CONCAT('Su ', v_producto, ' ya está visible de nuevo.')
+                END,
+                COALESCE(NEW.mensaje, 'Los compradores ya pueden ver su cosecha.'),
+                NEW.id_publicacion);
+    END IF;
 END$$
 
 -- ----- Precios de mercado (RF-02) -----
@@ -672,6 +702,14 @@ BEGIN
           AND NEW.id_remitente IN (c.id_comprador, p.id_agricultor)
     ) THEN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El remitente no participa en la conversacion';
+    END IF;
+
+    -- Se puede seguir escribiendo para coordinar la entrega, pero no ofertar
+    IF NEW.tipo = 'OFERTA' AND (
+        SELECT p.estado FROM conversaciones c
+        JOIN publicaciones p ON p.id_publicacion = c.id_publicacion
+        WHERE c.id_conversacion = NEW.id_conversacion) <> 'PUBLICADA' THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Solo se hacen ofertas sobre una publicacion PUBLICADA';
     END IF;
 END$$
 
@@ -803,6 +841,9 @@ BEGIN
             OR (OLD.estado = 'PROPUESTA' AND NEW.estado = 'CANCELADA'
                     AND NEW.id_actualizado_por = v_comprador)
             OR (OLD.estado = 'ACORDADA'  AND NEW.estado IN ('RECOGIDO', 'CANCELADA'))
+            -- Recojo en chacra, sin transporte: el comprador recibe al recoger
+            OR (OLD.estado = 'ACORDADA'  AND NEW.estado = 'ENTREGADO'
+                    AND NEW.id_actualizado_por = v_comprador)
             OR (OLD.estado = 'RECOGIDO'  AND NEW.estado = 'EN_CAMINO')
             OR (OLD.estado = 'EN_CAMINO' AND NEW.estado = 'ENTREGADO'
                     AND NEW.id_actualizado_por = v_comprador)
@@ -901,8 +942,9 @@ BEGIN
     JOIN publicaciones p  ON p.id_publicacion = c.id_publicacion
     WHERE t.id_transaccion = NEW.id_transaccion;
 
-    IF v_estado IN ('PROPUESTA', 'RECHAZADA') THEN
-        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Solo se reclama sobre una venta acordada';
+    IF NOT EXISTS (SELECT 1 FROM transacciones_historial
+                   WHERE id_transaccion = NEW.id_transaccion AND estado = 'ACORDADA') THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Solo se reclama sobre una venta que llego a ACORDADA';
     END IF;
     IF NEW.id_reclamante NOT IN (v_comprador, v_agricultor) THEN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El reclamante no participa en la venta';
@@ -1277,12 +1319,14 @@ CREATE VIEW v_panel_admin AS
 SELECT (SELECT COUNT(*) FROM publicaciones WHERE estado = 'PUBLICADA')                    AS publicaciones_activas,
        (SELECT COUNT(*) FROM publicaciones
          WHERE estado = 'PUBLICADA' AND fecha_publicacion >= CURRENT_DATE - INTERVAL 7 DAY) AS publicadas_ultimos_7_dias,
-       (SELECT COUNT(*) FROM publicaciones WHERE estado = 'EN_REVISION')                  AS en_revision,
-       (SELECT MIN(fecha_publicacion) FROM publicaciones WHERE estado = 'EN_REVISION')    AS revision_mas_antigua,
+       (SELECT COUNT(*) FROM publicaciones
+         WHERE marca_revision IS NOT NULL AND estado IN ('PUBLICADA', 'BLOQUEADA'))       AS por_revisar,
+       (SELECT MIN(fecha_publicacion) FROM publicaciones
+         WHERE marca_revision IS NOT NULL AND estado IN ('PUBLICADA', 'BLOQUEADA'))       AS por_revisar_mas_antigua,
        (SELECT COUNT(*) FROM revisiones_publicacion
-         WHERE decision = 'APROBADA' AND DATE(fecha) = CURRENT_DATE)                      AS aprobadas_hoy,
+         WHERE decision = 'CONFORME' AND DATE(fecha) = CURRENT_DATE)                      AS conformes_hoy,
        (SELECT COUNT(*) FROM revisiones_publicacion
-         WHERE decision = 'RECHAZADA' AND DATE(fecha) = CURRENT_DATE)                     AS rechazadas_hoy,
+         WHERE decision = 'BLOQUEO' AND DATE(fecha) = CURRENT_DATE)                       AS bloqueadas_hoy,
        (SELECT COUNT(*) FROM precios_mercado WHERE fecha = CURRENT_DATE)                  AS precios_cargados_hoy,
        (SELECT COUNT(*) FROM cultivos WHERE activo)
          * (SELECT COUNT(*) FROM distritos WHERE es_zona_precio)                          AS precios_esperados_hoy,

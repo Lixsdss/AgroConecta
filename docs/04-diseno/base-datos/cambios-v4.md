@@ -1,6 +1,22 @@
-# AgroConecta — Modelo de datos v4
+# AgroConecta — Modelo de datos v4.1
 
-Revisión del modelo v3 contra las interfaces de Claude Design (7 módulos, RF-01 a RF-11). El script `modelo-bd.sql` v4 fue ejecutado y probado en MariaDB 10.11 con los datos de las pantallas.
+Revisión del modelo v3 contra las interfaces de Claude Design (7 módulos, RF-01 a RF-11). El script `modelo-bd.sql` v4.1 fue ejecutado y probado en MariaDB 10.11 con los datos de las pantallas.
+
+## Cambios de la versión 4.1 (27/09/2026)
+
+Decisiones tomadas tras el informe de Claude Code sobre v4:
+
+| Punto | Decisión | Efecto en el esquema |
+|---|---|---|
+| Moderación | **Posterior** (se mantiene lo decidido en el SRS v1.2) | La publicación nace PUBLICADA. Si el sistema la marca (primera publicación, precio o cantidad inusual), entra a la cola. El administrador la deja CONFORME, la ADVIERTE, la BLOQUEA o la DESBLOQUEA; advertir y bloquear exigen motivo de catálogo y mensaje. Si el agricultor corrige una publicación bloqueada, vuelve a la cola con la marca CORREGIDA |
+| B2 | Se permite el recojo en chacra | El comprador puede pasar de ACORDADA a ENTREGADO y luego a COMPLETADA |
+| B3 | Tras el recojo no se cancela | Solo ACORDADA pasa a CANCELADA; desde RECOGIDO o EN_CAMINO los problemas se resuelven con un reclamo |
+| B5 | Reparto proporcional | La cantidad de la propuesta conjunta se reparte en proporción a lo disponible de cada agricultor, redondeando hacia abajo a unidades enteras. Es una regla del service |
+| B1 | Corrección | La cabecera dice 36 FK |
+| B7 | Ajuste | La conversación no se cierra, pero solo se envían *ofertas* mientras la publicación está PUBLICADA |
+| B9 | Corrección | Solo se reclama una venta que llegó a ACORDADA (se verifica en su historial) |
+
+Las pantallas de Claude Design muestran moderación previa ("En revisión", "fue aprobado"). Deben ajustarse a la moderación posterior: la cola se llama "Por revisar" y las acciones son Conforme, Advertir, Ocultar y Volver a mostrar.
 
 ## 1. El problema de la "telaraña"
 
@@ -39,7 +55,7 @@ Resultado: de 24 a 20 tablas y de 42 a 36 claves foráneas, cubriendo además re
 | `agricultores.id_distrito` | `usuarios.id_distrito` | Comprador y administrador también tienen distrito |
 | — | `agricultores.nombre_chacra`, `compradores.nombre_negocio`, tipo `MOLINO` | Pantalla Usuarios y perfil |
 | `publicaciones.precio_referencial`, `fecha_disponible` | `precio_unitario`, `peso_unidad_kg`, `fecha_cosecha` + columnas generadas `cantidad_kg`, `precio_kg` | Unidad elegida por el agricultor y peso editable por jaba o saco; todo se compara en kg |
-| Estados ACTIVA/BLOQUEADA | EN_REVISION, PUBLICADA, RECHAZADA, VENDIDA, VENCIDA, RETIRADA + `marca_revision` | Cola de moderación |
+| Estados ACTIVA/BLOQUEADA | PUBLICADA, BLOQUEADA, VENDIDA, VENCIDA, RETIRADA + `marca_revision` | Moderación posterior con cola de revisión |
 | `cargas_precio` + `precios_mercado` (mín/máx/prom por provincia y unidad) | `precios_mercado` (precio por kilo, por distrito zona, fuente y admin) | El admin carga un solo precio por kilo; la unidad local y la tendencia se calculan |
 | `leads_whatsapp` | `conversaciones.canal_inicio`, `clics_whatsapp` | El lead es el inicio de la conversación |
 | `mensajes.contenido` | `tipo` TEXTO/OFERTA + `oferta_cantidad`, `oferta_precio_unitario` | Oferta estructurada del chat |
@@ -104,8 +120,8 @@ Resultado: de 24 a 20 tablas y de 42 a 36 claves foráneas, cubriendo además re
 | Panel | Activas, en revisión, ventas y kilos del mes | `v_panel_admin`, `v_ventas_mensuales_cultivo` |
 | Panel | "16 de 16 precios cargados" | `v_panel_admin.precios_cargados_hoy` / `precios_esperados_hoy` |
 | Precios de mercado | Cultivo, zona, precio/kilo, fuente | `precios_mercado` |
-| Moderación | Cola, marca del sistema | `publicaciones.estado = EN_REVISION`, `marca_revision` |
-| Rechazar | Motivo, mensaje al agricultor | `revisiones_publicacion.motivo_rechazo`, `mensaje` |
+| Moderación | Cola, marca del sistema | `publicaciones.marca_revision` no nulo |
+| Advertir u ocultar | Motivo, mensaje al agricultor | `revisiones_publicacion.decision`, `motivo`, `mensaje` |
 | Usuarios | Rol, distrito, calificación, ventas, estado | `v_resumen_usuario` |
 | Suspender | Motivo justificado | `suspensiones.motivo`, `detalle` |
 
