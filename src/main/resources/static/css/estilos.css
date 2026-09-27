@@ -256,3 +256,26 @@ body {
     font-weight: 600;
     text-align: right;
 }
+
+/* Asistente "Vender mi cosecha" (RF-01) */
+.ac-progreso {
+    color: var(--ac-texto-suave);
+    font-weight: 600;
+    margin-bottom: .5rem;
+}
+
+.ac-check {
+    width: 96px;
+    height: 96px;
+    margin: 0 auto;
+    border-radius: 50%;
+    background: var(--ac-verde);
+    color: #fff;
+    font-size: 3rem;
+    line-height: 96px;
+}
+
+.input-group-text {
+    font-size: 1.125rem;
+    border-radius: var(--ac-radio);
+}

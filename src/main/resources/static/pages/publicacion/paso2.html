@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Vender · Paso 2 · AgroConecta</title>
+    <link rel="stylesheet" href="/vendor/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/css/estilos.css">
+    <script type="module" src="/js/publicacion/paso2.js"></script>
+</head>
+<body>
+<main class="ac-pantalla">
+    <div class="ac-barra">
+        <a class="ac-atras" href="/pages/publicacion/paso1.html" aria-label="Volver al paso 1">&larr;</a>
+        <h1>Vender mi cosecha</h1>
+    </div>
+    <p class="ac-progreso">Paso 2 de 3 <span id="guardado" hidden>· Guardado</span></p>
+
+    <div id="alerta" class="ac-alerta" role="alert" tabindex="-1" hidden></div>
+
+    <h2 class="ac-titulo">¿Cuánto tiene?</h2>
+
+    <form id="formulario" novalidate>
+        <fieldset class="mb-3">
+            <legend class="form-label">¿Cómo lo vende?</legend>
+            <div id="unidades" role="group" aria-label="Unidad"></div>
+        </fieldset>
+
+        <div class="mb-3">
+            <label class="form-label" for="cantidad" id="etiqueta-cantidad">¿Cuántas tiene?</label>
+            <input class="form-control" id="cantidad" name="cantidad" type="number" inputmode="decimal"
+                   min="0.01" step="0.01" required>
+            <div class="invalid-feedback d-block" data-error-de="cantidad"></div>
+        </div>
+
+        <div class="mb-3" id="caja-peso" hidden>
+            <label class="form-label" for="pesoUnidadKg" id="etiqueta-peso">Cada unidad pesa</label>
+            <div class="input-group">
+                <input class="form-control" id="pesoUnidadKg" name="pesoUnidadKg" type="number"
+                       inputmode="decimal" min="0.001" step="0.001" aria-describedby="ayuda-peso">
+                <span class="input-group-text">kilos</span>
+            </div>
+            <div class="form-text" id="ayuda-peso" hidden>Sugerido por AgroConecta. Puede cambiarlo.</div>
+            <div class="invalid-feedback d-block" data-error-de="pesoUnidadKg"></div>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label" for="fechaCosecha">¿Cuándo cosechó?</label>
+            <input class="form-control" id="fechaCosecha" name="fechaCosecha" type="date" required
+                   aria-describedby="ayuda-fecha">
+            <div class="form-text" id="ayuda-fecha">Pusimos la fecha de hoy.</div>
+            <div class="invalid-feedback d-block" data-error-de="fechaCosecha"></div>
+        </div>
+
+        <p class="ac-alerta ac-alerta-exito" id="resumen" aria-live="polite" hidden></p>
+
+        <button class="btn btn-primary w-100" type="submit" id="siguiente">Siguiente &rarr;</button>
+    </form>
+</main>
+</body>
+</html>

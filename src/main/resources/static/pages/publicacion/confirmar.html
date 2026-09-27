@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Confirmar publicación · AgroConecta</title>
+    <link rel="stylesheet" href="/vendor/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/css/estilos.css">
+    <script type="module" src="/js/publicacion/confirmar.js"></script>
+</head>
+<body>
+<main class="ac-pantalla">
+    <div class="ac-barra">
+        <a class="ac-atras" href="/pages/publicacion/paso3.html" aria-label="Volver al paso 3">&larr;</a>
+        <h1>Vender mi cosecha</h1>
+    </div>
+
+    <h2 class="ac-titulo">¿Está todo bien?</h2>
+
+    <div id="alerta" class="ac-alerta" role="alert" tabindex="-1" hidden></div>
+
+    <dl class="mb-4">
+        <div class="ac-dato"><dt>Producto</dt><dd id="producto"></dd></div>
+        <div class="ac-dato"><dt>Cantidad</dt><dd id="cantidad"></dd></div>
+        <div class="ac-dato"><dt>Precio</dt><dd id="precio"></dd></div>
+        <div class="ac-dato"><dt>Por kilo</dt><dd id="precio-kilo"></dd></div>
+        <div class="ac-dato"><dt>Cosechado el</dt><dd id="cosecha"></dd></div>
+        <div class="ac-dato"><dt>Dónde</dt><dd id="lugar"></dd></div>
+    </dl>
+
+    <button class="btn btn-primary w-100 mb-3" type="button" id="publicar">Sí, publicar</button>
+    <a class="btn btn-outline-primary w-100" href="/pages/publicacion/paso1.html">Corregir</a>
+</main>
+</body>
+</html>

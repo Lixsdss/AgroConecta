@@ -25,6 +25,7 @@ async function cargar() {
         const nombre = perfil.nombreCompleto.split(' ')[0];
         document.getElementById('saludo').textContent = `Hola, ${nombre}`;
         document.getElementById('rol').textContent = `${ROLES[perfil.rol] ?? ''} · ${perfil.distrito}`;
+        document.getElementById('vender').hidden = perfil.rol !== 'AGRICULTOR';
     } catch (error) {
         if (error.estado === 401) {
             window.location.replace('/pages/usuario/ingresar.html');
