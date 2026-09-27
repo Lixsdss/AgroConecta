@@ -6,6 +6,7 @@ import java.util.Optional;
 import java.util.Set;
 
 import jakarta.persistence.PersistenceException;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
 
 import org.jspecify.annotations.Nullable;
@@ -21,6 +22,7 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.context.request.ServletWebRequest;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.method.annotation.HandlerMethodValidationException;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
@@ -28,17 +30,18 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 import pe.agroconecta.compartido.error.ErrorResponse.ErrorCampo;
 
 /**
- * Traduce las excepciones de todos los controladores al formato {@link ErrorResponse}.
+ * Traduce las excepciones de todos los controladores al formato {@link ErrorResponse} (SRS §9.2).
  *
  * <ul>
  * <li>Errores de Bean Validation: 400 con el mensaje de cada campo.</li>
  * <li>Errores de los triggers ({@code SIGNAL SQLSTATE '45000'}): 422 con el texto del trigger.</li>
- * <li>Violaciones de {@code CHECK}, clave única o clave foránea: 409 con un mensaje genérico, sin detalles de SQL.</li>
+ * <li>Violaciones de {@code CHECK} y {@link ReglaNegocioException}: 422.</li>
+ * <li>Clave única duplicada o clave foránea: 409 con un mensaje genérico, sin detalles de SQL.</li>
  * <li>Cualquier otro error: 500 con un mensaje genérico; el detalle solo va al log.</li>
  * </ul>
  *
- * <p>Las excepciones de Spring Security no se manejan aquí: se relanzan para que Spring Security
- * responda 401 o 403.</p>
+ * <p>Se evalúa el código de error del motor antes que el SQLSTATE. Las excepciones de Spring Security
+ * no se manejan aquí: se relanzan para que Spring Security responda 401 o 403.</p>
  */
 @RestControllerAdvice
 public class ManejadorGlobalExcepciones extends ResponseEntityExceptionHandler {
@@ -60,58 +63,84 @@ public class ManejadorGlobalExcepciones extends ResponseEntityExceptionHandler {
     static final String MENSAJE_INTERNO = "Ocurrió un error interno. Intente nuevamente más tarde.";
 
     /**
+     * Responde 422 cuando un servicio rechaza una regla de negocio.
+     *
+     * @param ex      excepción con el mensaje para el usuario
+     * @param request petición que falló
+     * @return 422 con el mensaje de la excepción
+     */
+    @ExceptionHandler(ReglaNegocioException.class)
+    public ResponseEntity<ErrorResponse> manejarReglaNegocio(ReglaNegocioException ex, HttpServletRequest request) {
+        return responder(HttpStatus.UNPROCESSABLE_CONTENT, ex.getMessage(), request.getRequestURI());
+    }
+
+    /**
      * Traduce los errores de acceso a datos según el error de base de datos que los originó.
      *
-     * @param ex excepción de Spring Data, JPA o Hibernate
-     * @return 422 si lo rechazó un trigger, 409 si violó una restricción de integridad, 500 en otro caso
+     * @param ex      excepción de Spring Data, JPA o Hibernate
+     * @param request petición que falló
+     * @return 409 si hay clave duplicada o foránea, 422 si lo rechazó un trigger o un {@code CHECK},
+     *         500 en otro caso
      */
     @ExceptionHandler({DataAccessException.class, PersistenceException.class})
-    public ResponseEntity<ErrorResponse> manejarErrorBaseDatos(RuntimeException ex) {
+    public ResponseEntity<ErrorResponse> manejarErrorBaseDatos(RuntimeException ex, HttpServletRequest request) {
+        String ruta = request.getRequestURI();
         Optional<SQLException> sql = buscarSqlException(ex);
-        if (sql.isPresent()) {
-            SQLException causa = sql.get();
-            if (SQLSTATE_TRIGGER.equals(causa.getSQLState())) {
-                LOG.debug("Regla de negocio rechazada por la base de datos: {}", causa.getMessage());
-                return responder(HttpStatus.UNPROCESSABLE_CONTENT, causa.getMessage());
-            }
-            Optional<String> mensajeIntegridad = mensajeIntegridad(causa.getErrorCode());
-            if (mensajeIntegridad.isPresent()) {
-                LOG.warn("Violación de integridad (código {}): {}", causa.getErrorCode(), causa.getMessage());
-                return responder(HttpStatus.CONFLICT, mensajeIntegridad.get());
-            }
+        if (sql.isEmpty()) {
+            return errorInterno(ex, ruta);
         }
-        return errorInterno(ex);
+        SQLException causa = sql.get();
+        int codigo = causa.getErrorCode();
+        if (codigo == MYSQL_CLAVE_DUPLICADA || MYSQL_CLAVE_FORANEA.contains(codigo)) {
+            LOG.warn("Violación de clave (código {}): {}", codigo, causa.getMessage());
+            String mensaje = codigo == MYSQL_CLAVE_DUPLICADA ? MENSAJE_DUPLICADO : MENSAJE_CLAVE_FORANEA;
+            return responder(HttpStatus.CONFLICT, mensaje, ruta);
+        }
+        if (MYSQL_CHECK.contains(codigo)) {
+            LOG.warn("Violación de CHECK (código {}): {}", codigo, causa.getMessage());
+            return responder(HttpStatus.UNPROCESSABLE_CONTENT, MENSAJE_CHECK, ruta);
+        }
+        if (SQLSTATE_TRIGGER.equals(causa.getSQLState())) {
+            LOG.debug("Regla de negocio rechazada por la base de datos: {}", causa.getMessage());
+            return responder(HttpStatus.UNPROCESSABLE_CONTENT, causa.getMessage(), ruta);
+        }
+        return errorInterno(ex, ruta);
     }
 
     /**
      * Traduce las violaciones de Bean Validation lanzadas fuera de los controladores (por ejemplo, en
      * servicios anotados con {@code @Validated}).
      *
-     * @param ex excepción con las violaciones
+     * @param ex      excepción con las violaciones
+     * @param request petición que falló
      * @return 400 con el mensaje de cada campo
      */
     @ExceptionHandler(ConstraintViolationException.class)
-    public ResponseEntity<ErrorResponse> manejarViolacionRestricciones(ConstraintViolationException ex) {
+    public ResponseEntity<ErrorResponse> manejarViolacionRestricciones(ConstraintViolationException ex,
+            HttpServletRequest request) {
         List<ErrorCampo> errores = ex.getConstraintViolations().stream()
                 .map(v -> new ErrorCampo(v.getPropertyPath().toString(), v.getMessage()))
                 .toList();
-        return ResponseEntity.badRequest().body(ErrorResponse.de(HttpStatus.BAD_REQUEST, MENSAJE_VALIDACION, errores));
+        return ResponseEntity.badRequest()
+                .body(ErrorResponse.de(HttpStatus.BAD_REQUEST, MENSAJE_VALIDACION, request.getRequestURI(), errores));
     }
 
     /**
      * Responde 500 ante cualquier error no previsto y lo registra en el log. Las excepciones de
      * Spring Security se relanzan para que las resuelva su propio filtro (401 o 403).
      *
-     * @param ex excepción no prevista
+     * @param ex      excepción no prevista
+     * @param request petición que falló
      * @return 500 con un mensaje genérico
      * @throws Exception la misma excepción, si es de Spring Security
      */
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorResponse> manejarErrorGeneral(Exception ex) throws Exception {
+    public ResponseEntity<ErrorResponse> manejarErrorGeneral(Exception ex, HttpServletRequest request)
+            throws Exception {
         if (ex instanceof AccessDeniedException || ex instanceof AuthenticationException) {
             throw ex;
         }
-        return errorInterno(ex);
+        return errorInterno(ex, request.getRequestURI());
     }
 
     /** {@inheritDoc} Responde 400 con el mensaje de cada campo del cuerpo inválido. */
@@ -122,7 +151,7 @@ public class ManejadorGlobalExcepciones extends ResponseEntityExceptionHandler {
                 .map(e -> new ErrorCampo(e.getField(), e.getDefaultMessage()))
                 .toList();
         return ResponseEntity.badRequest().headers(headers)
-                .body(ErrorResponse.de(HttpStatus.BAD_REQUEST, MENSAJE_VALIDACION, errores));
+                .body(ErrorResponse.de(HttpStatus.BAD_REQUEST, MENSAJE_VALIDACION, ruta(request), errores));
     }
 
     /** {@inheritDoc} Responde 400 con el mensaje de cada parámetro inválido del método del controlador. */
@@ -134,7 +163,7 @@ public class ManejadorGlobalExcepciones extends ResponseEntityExceptionHandler {
                         .map(e -> new ErrorCampo(r.getMethodParameter().getParameterName(), e.getDefaultMessage())))
                 .toList();
         return ResponseEntity.badRequest().headers(headers)
-                .body(ErrorResponse.de(HttpStatus.BAD_REQUEST, MENSAJE_VALIDACION, errores));
+                .body(ErrorResponse.de(HttpStatus.BAD_REQUEST, MENSAJE_VALIDACION, ruta(request), errores));
     }
 
     /**
@@ -148,7 +177,14 @@ public class ManejadorGlobalExcepciones extends ResponseEntityExceptionHandler {
             LOG.error("Error interno de Spring MVC", ex);
         }
         return ResponseEntity.status(statusCode).headers(headers)
-                .body(ErrorResponse.de(statusCode, mensajePorEstado(statusCode)));
+                .body(ErrorResponse.de(statusCode, mensajePorEstado(statusCode), ruta(request)));
+    }
+
+    private static String ruta(WebRequest request) {
+        if (request instanceof ServletWebRequest servlet) {
+            return servlet.getRequest().getRequestURI();
+        }
+        return request.getDescription(false).replaceFirst("^uri=", "");
     }
 
     private static Optional<SQLException> buscarSqlException(Throwable ex) {
@@ -159,19 +195,6 @@ public class ManejadorGlobalExcepciones extends ResponseEntityExceptionHandler {
             if (t.getCause() == t) {
                 break;
             }
-        }
-        return Optional.empty();
-    }
-
-    private static Optional<String> mensajeIntegridad(int codigoError) {
-        if (codigoError == MYSQL_CLAVE_DUPLICADA) {
-            return Optional.of(MENSAJE_DUPLICADO);
-        }
-        if (MYSQL_CLAVE_FORANEA.contains(codigoError)) {
-            return Optional.of(MENSAJE_CLAVE_FORANEA);
-        }
-        if (MYSQL_CHECK.contains(codigoError)) {
-            return Optional.of(MENSAJE_CHECK);
         }
         return Optional.empty();
     }
@@ -190,12 +213,12 @@ public class ManejadorGlobalExcepciones extends ResponseEntityExceptionHandler {
         };
     }
 
-    private static ResponseEntity<ErrorResponse> responder(HttpStatus status, String mensaje) {
-        return ResponseEntity.status(status).body(ErrorResponse.de(status, mensaje));
+    private static ResponseEntity<ErrorResponse> responder(HttpStatus status, String mensaje, String ruta) {
+        return ResponseEntity.status(status).body(ErrorResponse.de(status, mensaje, ruta));
     }
 
-    private static ResponseEntity<ErrorResponse> errorInterno(Exception ex) {
-        LOG.error("Error no controlado", ex);
-        return responder(HttpStatus.INTERNAL_SERVER_ERROR, MENSAJE_INTERNO);
+    private static ResponseEntity<ErrorResponse> errorInterno(Exception ex, String ruta) {
+        LOG.error("Error no controlado en {}", ruta, ex);
+        return responder(HttpStatus.INTERNAL_SERVER_ERROR, MENSAJE_INTERNO, ruta);
     }
 }
