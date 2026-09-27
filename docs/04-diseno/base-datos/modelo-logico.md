@@ -1,7 +1,7 @@
-# AgroConecta — Modelo lógico de datos (v4)
+# AgroConecta — Modelo lógico de datos (v4.1)
 
-**Fuente de verdad:** `modelo-bd.sql` v4. Si este documento y el script difieren, gana el script.
-**Cambios respecto a v3:** ver `cambios-v4.md`. **Reglas que el diagrama no expresa:** ver `notas-integridad-bd.md`.
+**Fuente de verdad:** `modelo-bd.sql` v4.1. Si este documento y el script difieren, gana el script.
+**Cambios respecto a v3 y v4:** ver `cambios-v4.md` (incluye "Cambios de la versión 4.1"). **Reglas que el diagrama no expresa:** ver `notas-integridad-bd.md`.
 
 El modelo tiene **20 tablas y 36 claves foráneas**. No se dibuja en una sola hoja: eso producía la "telaraña" observada por el docente (líneas cruzadas y un mismo dato alcanzable por dos rutas). Hay un diagrama por módulo, de 5 a 8 tablas cada uno:
 
@@ -134,8 +134,8 @@ erDiagram
         decimal precio_kg "GEN precio / peso"
         date fecha_cosecha
         date fecha_limite "si llega NULL la calcula el trigger"
-        varchar estado "EN_REVISION | PUBLICADA | RECHAZADA | VENDIDA | VENCIDA | RETIRADA"
-        varchar marca_revision "PRIMERA_PUBLICACION | PRECIO_FUERA_RANGO | CANTIDAD_INUSUAL"
+        varchar estado "PUBLICADA | BLOQUEADA | VENDIDA | VENCIDA | RETIRADA"
+        varchar marca_revision "no NULL = en cola: PRIMERA_PUBLICACION | PRECIO_FUERA_RANGO | CANTIDAD_INUSUAL | CORREGIDA"
         datetime fecha_publicacion
         datetime fecha_actualizacion
     }
@@ -155,8 +155,10 @@ erDiagram
 
 **Vistas del área:** `v_publicaciones_disponibles` (búsqueda y "Mis ventas"), `v_precios_vigentes` (precio del día en kilo y en unidad local, con tendencia), `v_rango_precio_plataforma` (rango de ventas completadas en 30 días).
 
-**Ciclo de la publicación** (lo controla `trg_publicaciones_bu`):
-EN_REVISION → PUBLICADA | RECHAZADA | RETIRADA · RECHAZADA → EN_REVISION | RETIRADA · PUBLICADA → VENDIDA | VENCIDA | RETIRADA · VENDIDA → PUBLICADA | VENCIDA · VENCIDA → PUBLICADA | RETIRADA.
+**Ciclo de la publicación** (moderación posterior; lo controla `trg_publicaciones_bu`). Nace PUBLICADA.
+PUBLICADA → BLOQUEADA | VENDIDA | VENCIDA | RETIRADA · BLOQUEADA → PUBLICADA | VENCIDA | RETIRADA · VENDIDA → PUBLICADA | VENCIDA · VENCIDA → PUBLICADA | RETIRADA.
+
+**Cola de moderación:** publicaciones con `marca_revision` no nula. La marca la pone `trg_publicaciones_bi` (PRIMERA_PUBLICACION), el service (PRECIO_FUERA_RANGO, CANTIDAD_INUSUAL) o `trg_publicaciones_bu` cuando el agricultor corrige una publicación BLOQUEADA (CORREGIDA). Cualquier decisión del administrador la borra (diagrama 4).
 
 ---
 
@@ -260,7 +262,9 @@ erDiagram
 
 **Ciclo de la transacción** (lo controlan `trg_transacciones_bi` y `trg_transacciones_bu`; cada cambio queda en `transacciones_historial`):
 
-- Acuerdo del chat: ACORDADA → RECOGIDO → EN_CAMINO → ENTREGADO → COMPLETADA. ACORDADA → CANCELADA.
+- Acuerdo del chat: ACORDADA → RECOGIDO → EN_CAMINO → ENTREGADO → COMPLETADA.
+- Recojo en chacra: ACORDADA → ENTREGADO → COMPLETADA (solo el comprador).
+- Cancelación: solo ACORDADA → CANCELADA; después del recojo los problemas van por reclamo (diagrama 4).
 - Venta agrupada: PROPUESTA → ACORDADA (sigue igual que el chat) | RECHAZADA (agricultor) | CANCELADA (comprador o proceso diario).
 
 ---
@@ -291,9 +295,9 @@ erDiagram
         bigint id_revision PK
         bigint id_publicacion FK
         bigint id_administrador FK
-        varchar decision "APROBADA | RECHAZADA"
-        varchar motivo_rechazo "PRECIO_NO_COINCIDE | CANTIDAD_INCORRECTA | PESO_UNIDAD_INCORRECTO | DATOS_INCORRECTOS | OTRO"
-        varchar mensaje "lo ve el agricultor"
+        varchar decision "CONFORME | ADVERTENCIA | BLOQUEO | DESBLOQUEO"
+        varchar motivo "obligatorio en ADVERTENCIA y BLOQUEO: PRECIO_NO_COINCIDE | CANTIDAD_INCORRECTA | PESO_UNIDAD_INCORRECTO | DATOS_INCORRECTOS | OTRO"
+        varchar mensaje "lo ve el agricultor; obligatorio en ADVERTENCIA y BLOQUEO"
         datetime fecha
     }
     reclamos {
@@ -320,7 +324,7 @@ erDiagram
     notificaciones {
         bigint id_notificacion PK
         bigint id_usuario FK
-        varchar tipo "POR_VENCER | OFERTA | MENSAJE | PUBLICACION_APROBADA | PUBLICACION_RECHAZADA | PROPUESTA_CONJUNTA | VENTA | CALIFICACION | RECLAMO | CUENTA"
+        varchar tipo "POR_VENCER | OFERTA | MENSAJE | MODERACION | PROPUESTA_CONJUNTA | VENTA | CALIFICACION | RECLAMO | CUENTA"
         varchar titulo
         varchar contenido
         bigint id_referencia "sin FK a proposito"
@@ -328,6 +332,17 @@ erDiagram
         datetime fecha_creacion
     }
 ```
+
+**Decisiones de moderación** (`trg_revisiones_bi` y `trg_revisiones_ai`):
+
+| Decisión | Estado requerido | Efecto en la publicación | Notificación |
+|---|---|---|---|
+| CONFORME | PUBLICADA | Sigue PUBLICADA; sale de la cola | — |
+| ADVERTENCIA | PUBLICADA | Sigue PUBLICADA; sale de la cola | MODERACION |
+| BLOQUEO | PUBLICADA | BLOQUEADA; sale de la cola | MODERACION |
+| DESBLOQUEO | BLOQUEADA | PUBLICADA (o VENCIDA si ya pasó su fecha límite); sale de la cola | MODERACION |
+
+**Reclamos:** solo sobre una venta que llegó a ACORDADA (se verifica en `transacciones_historial`).
 
 `notificaciones.id_referencia` no tiene FK a propósito: según el tipo, apunta a una publicación, una transacción, una conversación o una propuesta grupal.
 

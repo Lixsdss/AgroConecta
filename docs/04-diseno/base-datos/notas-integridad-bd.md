@@ -1,6 +1,6 @@
 # Notas de integridad — reglas que el diagrama ER no expresa
 
-Complementan `modelo-bd.sql` v4 (fuente de verdad) y `modelo-logico.md`. Indican
+Complementan `modelo-bd.sql` v4.1 (fuente de verdad) y `modelo-logico.md`. Indican
 qué garantiza la base de datos y qué debe validar además la capa `service`
 de Spring antes de escribir los repositorios y servicios de cada área.
 
@@ -29,7 +29,9 @@ estados de `transacciones`, y la línea de tiempo es `transacciones_historial`.
 
 **Lo que garantiza la BD:**
 - `trg_transacciones_bu` solo permite ACORDADA → RECOGIDO → EN_CAMINO →
-  ENTREGADO → COMPLETADA (sin saltos ni retrocesos), valida quién hace cada
+  ENTREGADO → COMPLETADA, o ACORDADA → ENTREGADO → COMPLETADA en el recojo
+  en chacra (solo el comprador), sin retrocesos. Solo ACORDADA pasa a
+  CANCELADA: desde RECOGIDO no hay cancelación. Valida quién hace cada
   cambio con `id_actualizado_por` y rechaza cualquier cambio en una venta
   COMPLETADA, RECHAZADA o CANCELADA.
 - `trg_transacciones_ai` y `trg_transacciones_au` insertan una fila en
@@ -41,7 +43,10 @@ directamente (no tiene triggers propios).
 **Regla en el service:** la aplicación nunca inserta, actualiza ni borra en
 `transacciones_historial`. Cada update a `transacciones` fija
 `id_actualizado_por`; "Confirmar que recibí" hace los dos updates
-(ENTREGADO y COMPLETADA) en un mismo método `@Transactional`.
+(ENTREGADO y COMPLETADA) en un mismo método `@Transactional`, tanto desde
+EN_CAMINO como desde ACORDADA (recojo en chacra). Un problema después del
+recojo se registra como reclamo (`reclamos`), que `trg_reclamos_bi` solo
+acepta si la venta llegó a ACORDADA según `transacciones_historial`.
 
 ## 3. `usuarios.password_hash` e inicio de sesión
 
@@ -65,7 +70,7 @@ InnoDB ya indexa cada FK. Además, `modelo-bd.sql` sección 8 define:
 | `publicaciones (estado, precio_kg)` | Orden por precio por kilo (RF-03) |
 | `publicaciones (estado, fecha_limite)` | Evento de alertas y vencimiento (RF-07) |
 | `publicaciones (id_agricultor, estado)` | Mis ventas |
-| `revisiones_publicacion (decision, fecha)` | Moderación (RF-09) |
+| `revisiones_publicacion (decision, fecha)` | Decisiones de moderación del día (RF-09) |
 | `precios_mercado (fecha)` | Precios de hoy (RF-09) |
 | `mensajes (id_conversacion, fecha_envio)` | Orden cronológico del chat (RF-04) |
 | `transacciones (id_conversacion, estado)` | Cantidad reservada / disponibilidad |
@@ -115,13 +120,45 @@ existencia de las entidades referenciadas (404) antes de insertar.
 
 ## 9. Mensajes y estado de la conversación
 
-En v4 `conversaciones` no tiene estado (ya no existen ABIERTA/CERRADA).
-`trg_conversaciones_bi` exige que la publicación esté PUBLICADA al crear la
-conversación y `trg_mensajes_bi` valida al remitente, pero ninguno impide
-enviar mensajes cuando la publicación ya no está PUBLICADA (VENDIDA, VENCIDA,
-RETIRADA). **Pendiente de decidir** si el service lo restringe.
+`conversaciones` no tiene estado: la conversación nunca se cierra porque
+sirve para coordinar la entrega. `trg_conversaciones_bi` exige que la
+publicación esté PUBLICADA al crear la conversación y `trg_mensajes_bi`
+valida al remitente y rechaza los mensajes de tipo OFERTA cuando la
+publicación ya no está PUBLICADA. Los mensajes de texto se aceptan siempre.
 
-## 10. Requisitos del servidor
+**Regla en el service:** validar lo mismo antes de insertar para devolver
+un mensaje claro (422).
+
+## 10. Moderación posterior
+
+La publicación nace PUBLICADA. La cola de moderación son las publicaciones
+con `marca_revision` no nula.
+
+**Lo que garantiza la BD:**
+- `trg_publicaciones_bi` marca PRIMERA_PUBLICACION la primera publicación
+  de cada agricultor.
+- `trg_publicaciones_bu` marca CORREGIDA una publicación BLOQUEADA cuyo
+  agricultor cambia sus datos (variedad, distrito, unidad, cantidad, peso,
+  precio o fechas).
+- `trg_revisiones_bi` solo acepta CONFORME, ADVERTENCIA y BLOQUEO sobre una
+  PUBLICADA y DESBLOQUEO sobre una BLOQUEADA; `chk_revision_coherencia` exige
+  motivo y mensaje en ADVERTENCIA y BLOQUEO.
+- `trg_revisiones_ai` aplica la decisión, borra la marca y notifica al
+  agricultor (MODERACION) salvo en CONFORME.
+
+**Lo que NO garantiza:**
+- Las marcas PRECIO_FUERA_RANGO y CANTIDAD_INUSUAL: las pone el service al
+  publicar (umbrales a definir en el slice de RF-09).
+- Que solo el administrador desbloquee: `trg_publicaciones_bu` también
+  admite BLOQUEADA → PUBLICADA con un UPDATE directo.
+- Que una publicación CORREGIDA que el administrador no acepta salga de la
+  cola: sobre una BLOQUEADA solo se admite DESBLOQUEO.
+
+**Regla en el service:** el módulo `publicacion` nunca cambia el estado de
+una BLOQUEADA (solo sus datos); el desbloqueo pasa siempre por
+`revisiones_publicacion`.
+
+## 11. Requisitos del servidor
 
 Las migraciones no ejecutan `SET GLOBAL`. El servidor debe tener
 `event_scheduler=ON` y el usuario de la aplicación los privilegios TRIGGER,
@@ -129,3 +166,8 @@ EVENT, CREATE ROUTINE y ALTER ROUTINE (ver CLAUDE.md §6). Con el binlog activo
 puede requerirse `log_bin_trust_function_creators=1` para crear
 `fn_rol_usuario`, `sp_sincronizar_publicacion` y los triggers — **pendiente de
 verificar en el servidor de despliegue**.
+
+En desarrollo local (MariaDB 11+), MySQL Connector/J no obtiene los metadatos
+JDBC (`INFORMATION_SCHEMA.KEYWORDS` no tiene la columna `RESERVED`), por lo que
+los perfiles `dev` y `test` fijan `spring.jpa.database-platform` a
+`MariaDBDialect`.
