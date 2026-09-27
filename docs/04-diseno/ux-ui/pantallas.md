@@ -1,6 +1,20 @@
 # Pantallas ↔ endpoints — AgroConecta
 
-Relaciona cada pantalla del prototipo de Claude Design (`AgroConecta.html`, numeración del diseño) con su archivo en `src/main/resources/static/` y los endpoints que usa (`docs/05-api/endpoints.md`). Las pantallas solo llaman endpoints documentados.
+## Fuente del diseño
+
+El prototipo de Claude Design **no se guarda en el repositorio** (decisión del equipo, 27/09/2026): es una exportación comprimida de 1,3 MB que Git no puede comparar entre versiones. Se consulta en su ubicación original:
+
+| Dato | Valor |
+|---|---|
+| Archivo exportado | `AgroConecta.html` (ignorado por `.gitignore` si se deja en esta carpeta) |
+| Ubicación compartida | Pendiente de registrar: enlace de Claude Design o carpeta compartida del equipo |
+| Versión usada en RF-08 | Exportación del 27/09/2026; todavía muestra moderación previa ("En revisión", "fue aprobado"), que debe cambiarse a moderación posterior (`cambios-v4.md`) |
+
+Cada vez que el diseño cambie, actualice esta tabla con la fecha de la exportación usada.
+
+## Pantallas
+
+Relaciona cada pantalla del prototipo (numeración del diseño) con su archivo en `src/main/resources/static/` y los endpoints que usa (`docs/05-api/endpoints.md`). Las pantallas solo llaman endpoints documentados.
 
 ## Público y acceso (RF-08, slice 1)
 

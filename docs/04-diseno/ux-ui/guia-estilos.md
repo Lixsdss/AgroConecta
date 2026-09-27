@@ -1,6 +1,6 @@
 # Guía de estilos — AgroConecta
 
-Tomada del prototipo de Claude Design (`AgroConecta.html`, en esta carpeta). La implementa `src/main/resources/static/css/estilos.css` sobre Bootstrap 5.3 servido localmente (`static/vendor/bootstrap/`).
+Tomada del prototipo de Claude Design (exportación del 27/09/2026, guardada fuera del repositorio; ver `pantallas.md`). La implementa `src/main/resources/static/css/estilos.css` sobre Bootstrap 5.3 servido localmente (`static/vendor/bootstrap/`).
 
 ## Principios (RNF-01, RNF-03)
 
