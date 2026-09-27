@@ -1,0 +1,491 @@
+<mxGraphModel dx="1422" dy="762" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+
+    <!-- ============ FICHA / LEYENDAS ============ -->
+    <mxCell id="ficha" value="&lt;b&gt;PARTE IV — MODELAMIENTO TO-BE (situación propuesta con AgroConecta)&lt;/b&gt;&lt;br&gt;&lt;br&gt;&lt;b&gt;Nombre:&lt;/b&gt; Publicación y venta directa de cosecha a través de la plataforma&lt;br&gt;&lt;b&gt;Objetivo:&lt;/b&gt; Conectar al agricultor con varios compradores reales el mismo día, con precio de referencia transparente y transacción trazable&lt;br&gt;&lt;b&gt;Participantes:&lt;/b&gt; Agricultor · Plataforma AgroConecta (sistema) · Comprador final · Administrador&lt;br&gt;&lt;b&gt;Inicio:&lt;/b&gt; La cosecha está lista para ser vendida&lt;br&gt;&lt;b&gt;Fin:&lt;/b&gt; (1) Venta directa concretada y registrada · (2) Publicación no aprobada · (3) Reportes de gestión emitidos&lt;br&gt;&lt;br&gt;&lt;b&gt;⚙&lt;/b&gt; = tarea de servicio (automática, ejecutada por el sistema)&amp;nbsp; ·&amp;nbsp; Las actividades sin ⚙ requieren intervención humana" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=10;fillColor=#f5f5f5;strokeColor=#666666;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="40" y="40" width="1600" height="200" as="geometry" />
+    </mxCell>
+
+    <mxCell id="leyenda" value="&lt;b&gt;CÓMO EL TO-BE CIERRA LOS PROBLEMAS DEL AS-IS&lt;/b&gt;&lt;br&gt;&lt;br&gt;&lt;b&gt;P1&lt;/b&gt; Sin precio de mercado&amp;nbsp; →&amp;nbsp; ⚙ Consultar y mostrar precio de referencia &lt;i&gt;(RF-02)&lt;/i&gt;&lt;br&gt;&lt;b&gt;P2&lt;/b&gt; Un solo comprador&amp;nbsp; →&amp;nbsp; ⚙ Publicación en catálogo + varias ofertas comparables &lt;i&gt;(RF-03)&lt;/i&gt;&lt;br&gt;&lt;b&gt;P3&lt;/b&gt; El acopiador fija el precio&amp;nbsp; →&amp;nbsp; El agricultor decide en «¿Acepta alguna oferta?» &lt;i&gt;(RF-04)&lt;/i&gt;&lt;br&gt;&lt;b&gt;P4&lt;/b&gt; Sin comprobante ni historial&amp;nbsp; →&amp;nbsp; ⚙ Registro de transacción + reputación &lt;i&gt;(RF-05, RF-06)&lt;/i&gt;&lt;br&gt;&lt;b&gt;P5&lt;/b&gt; Perecibilidad&amp;nbsp; →&amp;nbsp; ⚙ Alerta de vencimiento y sugerencia de ajuste &lt;i&gt;(RF-07)&lt;/i&gt;&lt;br&gt;&lt;b&gt;P6&lt;/b&gt; Canal informal sin registro&amp;nbsp; →&amp;nbsp; Mensajería interna trazable &lt;i&gt;(RF-04)&lt;/i&gt;&lt;br&gt;&lt;br&gt;&lt;i&gt;Control y gobierno de la plataforma: moderación, roles y reportes &lt;/i&gt;&lt;i&gt;(RF-08, RF-09)&lt;/i&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=10;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="1680" y="40" width="1790" height="200" as="geometry" />
+    </mxCell>
+
+    <!-- ============ POOL ============ -->
+    <mxCell id="pool" value="Publicación y venta directa de cosecha — TO-BE (con AgroConecta)" style="swimlane;html=1;horizontal=0;startSize=30;fillColor=#f5f5f5;strokeColor=#666666;swimlaneFillColor=none;fontSize=13;fontStyle=1;collapsible=0;" vertex="1" parent="1">
+      <mxGeometry x="40" y="280" width="3430" height="1150" as="geometry" />
+    </mxCell>
+
+    <mxCell id="lnAgr" value="AGRICULTOR&#10;(pequeño productor)" style="swimlane;html=1;horizontal=0;startSize=30;fillColor=#dae8fc;strokeColor=#6c8ebf;swimlaneFillColor=#ffffff;fontSize=11;fontStyle=1;collapsible=0;" vertex="1" parent="pool">
+      <mxGeometry x="30" y="0" width="3400" height="300" as="geometry" />
+    </mxCell>
+
+    <mxCell id="lnSis" value="PLATAFORMA AGROCONECTA&#10;(sistema)" style="swimlane;html=1;horizontal=0;startSize=30;fillColor=#e1d5e7;strokeColor=#9673a6;swimlaneFillColor=#ffffff;fontSize=11;fontStyle=1;collapsible=0;" vertex="1" parent="pool">
+      <mxGeometry x="30" y="300" width="3400" height="430" as="geometry" />
+    </mxCell>
+
+    <mxCell id="lnCom" value="COMPRADOR FINAL&#10;(mayorista / restaurante)" style="swimlane;html=1;horizontal=0;startSize=30;fillColor=#d5e8d4;strokeColor=#82b366;swimlaneFillColor=#ffffff;fontSize=11;fontStyle=1;collapsible=0;" vertex="1" parent="pool">
+      <mxGeometry x="30" y="730" width="3400" height="210" as="geometry" />
+    </mxCell>
+
+    <mxCell id="lnAdm" value="ADMINISTRADOR&#10;(gestor de la plataforma)" style="swimlane;html=1;horizontal=0;startSize=30;fillColor=#ffe6cc;strokeColor=#d79b00;swimlaneFillColor=#ffffff;fontSize=11;fontStyle=1;collapsible=0;" vertex="1" parent="pool">
+      <mxGeometry x="30" y="940" width="3400" height="210" as="geometry" />
+    </mxCell>
+
+    <!-- ============ CARRIL AGRICULTOR ============ -->
+    <mxCell id="evStart" value="Cosecha lista&#10;para vender" style="shape=mxgraph.bpmn.event;html=1;verticalLabelPosition=bottom;labelBackgroundColor=none;verticalAlign=top;align=center;perimeter=ellipsePerimeter;outlineConnect=0;outline=standard;symbol=general;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="lnAgr">
+      <mxGeometry x="60" y="60" width="40" height="40" as="geometry" />
+    </mxCell>
+
+    <mxCell id="A1" value="Registrar la publicación en 3 pasos: cultivo, cantidad, precio y ubicación" style="rounded=1;whiteSpace=wrap;html=1;arcSize=8;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="lnAgr">
+      <mxGeometry x="140" y="50" width="170" height="60" as="geometry" />
+    </mxCell>
+
+    <mxCell id="A2" value="Revisar y comparar las ofertas recibidas" style="rounded=1;whiteSpace=wrap;html=1;arcSize=8;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="lnAgr">
+      <mxGeometry x="1720" y="50" width="170" height="60" as="geometry" />
+    </mxCell>
+
+    <mxCell id="gwOf" value="¿Acepta alguna oferta?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;verticalLabelPosition=bottom;verticalAlign=top;labelBackgroundColor=none;fontSize=10;" vertex="1" parent="lnAgr">
+      <mxGeometry x="1930" y="55" width="50" height="50" as="geometry" />
+    </mxCell>
+
+    <mxCell id="A3" value="Confirmar la oferta y acordar la entrega" style="rounded=1;whiteSpace=wrap;html=1;arcSize=8;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="lnAgr">
+      <mxGeometry x="2040" y="50" width="170" height="60" as="geometry" />
+    </mxCell>
+
+    <mxCell id="A4" value="Entregar la cosecha al comprador" style="rounded=1;whiteSpace=wrap;html=1;arcSize=8;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="lnAgr">
+      <mxGeometry x="2460" y="50" width="170" height="60" as="geometry" />
+    </mxCell>
+
+    <mxCell id="A5" value="Calificar al comprador" style="rounded=1;whiteSpace=wrap;html=1;arcSize=8;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="lnAgr">
+      <mxGeometry x="2780" y="50" width="170" height="60" as="geometry" />
+    </mxCell>
+
+    <mxCell id="evTimer" value="Cosecha próxima&#10;a vencer (48 h)" style="shape=mxgraph.bpmn.event;html=1;verticalLabelPosition=bottom;labelBackgroundColor=none;verticalAlign=top;align=center;perimeter=ellipsePerimeter;outlineConnect=0;outline=catching;symbol=timer;fillColor=#ffffff;strokeColor=#b85450;fontSize=10;" vertex="1" parent="lnAgr">
+      <mxGeometry x="1935" y="170" width="40" height="40" as="geometry" />
+    </mxCell>
+
+    <mxCell id="nA1" value="&lt;b&gt;RF-01&lt;/b&gt; Publicación simplificada en máximo 3 pasos" style="rounded=0;whiteSpace=wrap;html=1;dashed=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;align=left;spacing=6;" vertex="1" parent="lnAgr">
+      <mxGeometry x="140" y="230" width="170" height="50" as="geometry" />
+    </mxCell>
+
+    <mxCell id="nA2" value="&lt;b&gt;RF-04&lt;/b&gt; La decisión de precio vuelve al agricultor" style="rounded=0;whiteSpace=wrap;html=1;dashed=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;align=left;spacing=6;" vertex="1" parent="lnAgr">
+      <mxGeometry x="1720" y="230" width="170" height="50" as="geometry" />
+    </mxCell>
+
+    <!-- ============ CARRIL PLATAFORMA (SISTEMA) ============ -->
+    <mxCell id="S1" value="⚙ Validar los datos de la publicación y el registro del usuario" style="rounded=1;whiteSpace=wrap;html=1;arcSize=8;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="lnSis">
+      <mxGeometry x="350" y="40" width="170" height="60" as="geometry" />
+    </mxCell>
+
+    <mxCell id="gwVal" value="¿Publicación válida?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;verticalLabelPosition=bottom;verticalAlign=top;labelBackgroundColor=none;fontSize=10;" vertex="1" parent="lnSis">
+      <mxGeometry x="560" y="45" width="50" height="50" as="geometry" />
+    </mxCell>
+
+    <mxCell id="S2" value="⚙ Consultar y mostrar el precio de referencia del mercado" style="rounded=1;whiteSpace=wrap;html=1;arcSize=8;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="lnSis">
+      <mxGeometry x="670" y="40" width="170" height="60" as="geometry" />
+    </mxCe<mxGraphModel dx="1422" dy="762" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+
+    <!-- ============ FICHA / LEYENDAS ============ -->
+    <mxCell id="ficha" value="&lt;b&gt;PARTE IV — MODELAMIENTO TO-BE (situación propuesta con AgroConecta)&lt;/b&gt;&lt;br&gt;&lt;br&gt;&lt;b&gt;Nombre:&lt;/b&gt; Publicación y venta directa de cosecha a través de la plataforma&lt;br&gt;&lt;b&gt;Objetivo:&lt;/b&gt; Conectar al agricultor con varios compradores reales el mismo día, con precio de referencia transparente y transacción trazable&lt;br&gt;&lt;b&gt;Participantes:&lt;/b&gt; Agricultor · Plataforma AgroConecta (sistema) · Comprador final · Administrador&lt;br&gt;&lt;b&gt;Inicio:&lt;/b&gt; La cosecha está lista para ser vendida&lt;br&gt;&lt;b&gt;Fin:&lt;/b&gt; (1) Venta directa concretada y registrada · (2) Publicación no aprobada · (3) Reportes de gestión emitidos&lt;br&gt;&lt;br&gt;&lt;b&gt;⚙&lt;/b&gt; = tarea de servicio (automática, ejecutada por el sistema)&amp;nbsp; ·&amp;nbsp; Las actividades sin ⚙ requieren intervención humana" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=10;fillColor=#f5f5f5;strokeColor=#666666;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="40" y="40" width="1600" height="200" as="geometry" />
+    </mxCell>
+
+    <mxCell id="leyenda" value="&lt;b&gt;CÓMO EL TO-BE CIERRA LOS PROBLEMAS DEL AS-IS&lt;/b&gt;&lt;br&gt;&lt;br&gt;&lt;b&gt;P1&lt;/b&gt; Sin precio de mercado&amp;nbsp; →&amp;nbsp; ⚙ Consultar y mostrar precio de referencia &lt;i&gt;(RF-02)&lt;/i&gt;&lt;br&gt;&lt;b&gt;P2&lt;/b&gt; Un solo comprador&amp;nbsp; →&amp;nbsp; ⚙ Publicación en catálogo + varias ofertas comparables &lt;i&gt;(RF-03)&lt;/i&gt;&lt;br&gt;&lt;b&gt;P3&lt;/b&gt; El acopiador fija el precio&amp;nbsp; →&amp;nbsp; El agricultor decide en «¿Acepta alguna oferta?» &lt;i&gt;(RF-04)&lt;/i&gt;&lt;br&gt;&lt;b&gt;P4&lt;/b&gt; Sin comprobante ni historial&amp;nbsp; →&amp;nbsp; ⚙ Registro de transacción + reputación &lt;i&gt;(RF-05, RF-06)&lt;/i&gt;&lt;br&gt;&lt;b&gt;P5&lt;/b&gt; Perecibilidad&amp;nbsp; →&amp;nbsp; ⚙ Alerta de vencimiento y sugerencia de ajuste &lt;i&gt;(RF-07)&lt;/i&gt;&lt;br&gt;&lt;b&gt;P6&lt;/b&gt; Canal informal sin registro&amp;nbsp; →&amp;nbsp; Mensajería interna trazable &lt;i&gt;(RF-04)&lt;/i&gt;&lt;br&gt;&lt;br&gt;&lt;i&gt;Control y gobierno de la plataforma: moderación, roles y reportes &lt;/i&gt;&lt;i&gt;(RF-08, RF-09)&lt;/i&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=10;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="1680" y="40" width="1790" height="200" as="geometry" />
+    </mxCell>
+
+    <!-- ============ POOL ============ -->
+    <mxCell id="pool" value="Publicación y venta directa de cosecha — TO-BE (con AgroConecta)" style="swimlane;html=1;horizontal=0;startSize=30;fillColor=#f5f5f5;strokeColor=#666666;swimlaneFillColor=none;fontSize=13;fontStyle=1;collapsible=0;" vertex="1" parent="1">
+      <mxGeometry x="40" y="280" width="3430" height="1150" as="geometry" />
+    </mxCell>
+
+    <mxCell id="lnAgr" value="AGRICULTOR&#10;(pequeño productor)" style="swimlane;html=1;horizontal=0;startSize=30;fillColor=#dae8fc;strokeColor=#6c8ebf;swimlaneFillColor=#ffffff;fontSize=11;fontStyle=1;collapsible=0;" vertex="1" parent="pool">
+      <mxGeometry x="30" y="0" width="3400" height="300" as="geometry" />
+    </mxCell>
+
+    <mxCell id="lnSis" value="PLATAFORMA AGROCONECTA&#10;(sistema)" style="swimlane;html=1;horizontal=0;startSize=30;fillColor=#e1d5e7;strokeColor=#9673a6;swimlaneFillColor=#ffffff;fontSize=11;fontStyle=1;collapsible=0;" vertex="1" parent="pool">
+      <mxGeometry x="30" y="300" width="3400" height="430" as="geometry" />
+    </mxCell>
+
+    <mxCell id="lnCom" value="COMPRADOR FINAL&#10;(mayorista / restaurante)" style="swimlane;html=1;horizontal=0;startSize=30;fillColor=#d5e8d4;strokeColor=#82b366;swimlaneFillColor=#ffffff;fontSize=11;fontStyle=1;collapsible=0;" vertex="1" parent="pool">
+      <mxGeometry x="30" y="730" width="3400" height="210" as="geometry" />
+    </mxCell>
+
+    <mxCell id="lnAdm" value="ADMINISTRADOR&#10;(gestor de la plataforma)" style="swimlane;html=1;horizontal=0;startSize=30;fillColor=#ffe6cc;strokeColor=#d79b00;swimlaneFillColor=#ffffff;fontSize=11;fontStyle=1;collapsible=0;" vertex="1" parent="pool">
+      <mxGeometry x="30" y="940" width="3400" height="210" as="geometry" />
+    </mxCell>
+
+    <!-- ============ CARRIL AGRICULTOR ============ -->
+    <mxCell id="evStart" value="Cosecha lista&#10;para vender" style="shape=mxgraph.bpmn.event;html=1;verticalLabelPosition=bottom;labelBackgroundColor=none;verticalAlign=top;align=center;perimeter=ellipsePerimeter;outlineConnect=0;outline=standard;symbol=general;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="lnAgr">
+      <mxGeometry x="60" y="60" width="40" height="40" as="geometry" />
+    </mxCell>
+
+    <mxCell id="A1" value="Registrar la publicación en 3 pasos: cultivo, cantidad, precio y ubicación" style="rounded=1;whiteSpace=wrap;html=1;arcSize=8;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="lnAgr">
+      <mxGeometry x="140" y="50" width="170" height="60" as="geometry" />
+    </mxCell>
+
+    <mxCell id="A2" value="Revisar y comparar las ofertas recibidas" style="rounded=1;whiteSpace=wrap;html=1;arcSize=8;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="lnAgr">
+      <mxGeometry x="1720" y="50" width="170" height="60" as="geometry" />
+    </mxCell>
+
+    <mxCell id="gwOf" value="¿Acepta alguna oferta?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;verticalLabelPosition=bottom;verticalAlign=top;labelBackgroundColor=none;fontSize=10;" vertex="1" parent="lnAgr">
+      <mxGeometry x="1930" y="55" width="50" height="50" as="geometry" />
+    </mxCell>
+
+    <mxCell id="A3" value="Confirmar la oferta y acordar la entrega" style="rounded=1;whiteSpace=wrap;html=1;arcSize=8;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="lnAgr">
+      <mxGeometry x="2040" y="50" width="170" height="60" as="geometry" />
+    </mxCell>
+
+    <mxCell id="A4" value="Entregar la cosecha al comprador" style="rounded=1;whiteSpace=wrap;html=1;arcSize=8;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="lnAgr">
+      <mxGeometry x="2460" y="50" width="170" height="60" as="geometry" />
+    </mxCell>
+
+    <mxCell id="A5" value="Calificar al comprador" style="rounded=1;whiteSpace=wrap;html=1;arcSize=8;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="lnAgr">
+      <mxGeometry x="2780" y="50" width="170" height="60" as="geometry" />
+    </mxCell>
+
+    <mxCell id="evTimer" value="Cosecha próxima&#10;a vencer (48 h)" style="shape=mxgraph.bpmn.event;html=1;verticalLabelPosition=bottom;labelBackgroundColor=none;verticalAlign=top;align=center;perimeter=ellipsePerimeter;outlineConnect=0;outline=catching;symbol=timer;fillColor=#ffffff;strokeColor=#b85450;fontSize=10;" vertex="1" parent="lnAgr">
+      <mxGeometry x="1935" y="170" width="40" height="40" as="geometry" />
+    </mxCell>
+
+    <mxCell id="nA1" value="&lt;b&gt;RF-01&lt;/b&gt; Publicación simplificada en máximo 3 pasos" style="rounded=0;whiteSpace=wrap;html=1;dashed=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;align=left;spacing=6;" vertex="1" parent="lnAgr">
+      <mxGeometry x="140" y="230" width="170" height="50" as="geometry" />
+    </mxCell>
+
+    <mxCell id="nA2" value="&lt;b&gt;RF-04&lt;/b&gt; La decisión de precio vuelve al agricultor" style="rounded=0;whiteSpace=wrap;html=1;dashed=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;align=left;spacing=6;" vertex="1" parent="lnAgr">
+      <mxGeometry x="1720" y="230" width="170" height="50" as="geometry" />
+    </mxCell>
+
+    <!-- ============ CARRIL PLATAFORMA (SISTEMA) ============ -->
+    <mxCell id="S1" value="⚙ Validar los datos de la publicación y el registro del usuario" style="rounded=1;whiteSpace=wrap;html=1;arcSize=8;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="lnSis">
+      <mxGeometry x="350" y="40" width="170" height="60" as="geometry" />
+    </mxCell>
+
+    <mxCell id="gwVal" value="¿Publicación válida?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;verticalLabelPosition=bottom;verticalAlign=top;labelBackgroundColor=none;fontSize=10;" vertex="1" parent="lnSis">
+      <mxGeometry x="560" y="45" width="50" height="50" as="geometry" />
+    </mxCell>
+
+    <mxCell id="S2" value="⚙ Consultar y mostrar el precio de referencia del mercado" style="rounded=1;whiteSpace=wrap;html=1;arcSize=8;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="lnSis">
+      <mxGeometry x="670" y="40" width="170" height="60" as="geometry" />
+    </mxCell>
+
+    <mxCell id="S3" value="⚙ Publicar en el catálogo y notificar a compradores del cultivo y zona" style="rounded=1;whiteSpace=wrap;html=1;arcSize=8;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="lnSis">
+      <mxGeometry x="880" y="40" width="170" height="60" as="geometry" />
+    </mxCell>
+
+    <mxCell id="S4" value="⚙ Registrar la oferta y notificar al agricultor" style="rounded=1;whiteSpace=wrap;html=1;arcSize=8;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="lnSis">
+      <mxGeometry x="1510" y="40" width="170" height="60" as="geometry" />
+    </mxCell>
+
+    <mxCell id="S6" value="⚙ Generar la orden y registrar la transacción en el historial" style="rounded=1;whiteSpace=wrap;html=1;arcSize=8;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="lnSis">
+      <mxGeometry x="2250" y="40" width="170" height="60" as="geometry" />
+    </mxCell>
+
+    <mxCell id="gwSplit" value="+" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=20;fontStyle=1;verticalLabelPosition=bottom;verticalAlign=top;labelBackgroundColor=none;" vertex="1" parent="lnSis">
+      <mxGeometry x="2670" y="45" width="50" height="50" as="geometry" />
+    </mxCell>
+
+    <mxCell id="gwJoin" value="+" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=20;fontStyle=1;verticalLabelPosition=bottom;verticalAlign=top;labelBackgroundColor=none;" vertex="1" parent="lnSis">
+      <mxGeometry x="2990" y="45" width="50" height="50" as="geometry" />
+    </mxCell>
+
+    <mxCell id="S7" value="⚙ Actualizar la reputación y el precio promedio del mercado" style="rounded=1;whiteSpace=wrap;html=1;arcSize=8;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="lnSis">
+      <mxGeometry x="3100" y="40" width="170" height="60" as="geometry" />
+    </mxCell>
+
+    <mxCell id="evEnd1" value="Venta directa concretada&#10;y registrada" style="shape=mxgraph.bpmn.event;html=1;verticalLabelPosition=bottom;labelBackgroundColor=none;verticalAlign=top;align=center;perimeter=ellipsePerimeter;outlineConnect=0;outline=end;symbol=general;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="lnSis">
+      <mxGeometry x="3310" y="50" width="40" height="40" as="geometry" />
+    </mxCell>
+
+    <mxCell id="S5" value="⚙ Enviar alerta de vencimiento y sugerir ajuste de precio" style="rounded=1;whiteSpace=wrap;html=1;arcSize=8;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="lnSis">
+      <mxGeometry x="1870" y="160" width="170" height="60" as="geometry" />
+    </mxCell>
+
+    <mxCell id="S9" value="⚙ Notificar al agricultor el motivo del rechazo" style="rounded=1;whiteSpace=wrap;html=1;arcSize=8;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="lnSis">
+      <mxGeometry x="350" y="270" width="170" height="60" as="geometry" />
+    </mxCell>
+
+    <mxCell id="evEnd2" value="Publicación&#10;no aprobada" style="shape=mxgraph.bpmn.event;html=1;verticalLabelPosition=bottom;labelBackgroundColor=none;verticalAlign=top;align=center;perimeter=ellipsePerimeter;outlineConnect=0;outline=end;symbol=general;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;" vertex="1" parent="lnSis">
+      <mxGeometry x="560" y="280" width="40" height="40" as="geometry" />
+    </mxCell>
+
+    <mxCell id="nInt1" value="&lt;b&gt;Integración&lt;/b&gt;&lt;br&gt;Base propia de precios + mercados mayoristas &lt;i&gt;(RF-02)&lt;/i&gt;" style="rounded=0;whiteSpace=wrap;html=1;dashed=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;align=left;spacing=6;" vertex="1" parent="lnSis">
+      <mxGeometry x="670" y="345" width="170" height="55" as="geometry" />
+    </mxCell>
+
+    <mxCell id="nInt2" value="&lt;b&gt;Integración&lt;/b&gt;&lt;br&gt;Notificaciones vía WhatsApp Business y correo" style="rounded=0;whiteSpace=wrap;html=1;dashed=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;align=left;spacing=6;" vertex="1" parent="lnSis">
+      <mxGeometry x="880" y="345" width="170" height="55" as="geometry" />
+    </mxCell>
+
+    <mxCell id="nInt3" value="&lt;b&gt;RF-06&lt;/b&gt; Historial de transacciones por usuario" style="rounded=0;whiteSpace=wrap;html=1;dashed=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;align=left;spacing=6;" vertex="1" parent="lnSis">
+      <mxGeometry x="2250" y="345" width="170" height="55" as="geometry" />
+    </mxCell>
+
+    <mxCell id="nInt4" value="&lt;b&gt;RF-05&lt;/b&gt; Reputación · alimenta el precio de referencia &lt;i&gt;(RF-02)&lt;/i&gt;" style="rounded=0;whiteSpace=wrap;html=1;dashed=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;align=left;spacing=6;" vertex="1" parent="lnSis">
+      <mxGeometry x="3100" y="345" width="170" height="55" as="geometry" />
+    </mxCell>
+
+    <mxCell id="nInt5" value="&lt;b&gt;RF-07&lt;/b&gt; Alerta de vencimiento" style="rounded=0;whiteSpace=wrap;html=1;dashed=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;align=left;spacing=6;" vertex="1" parent="lnSis">
+      <mxGeometry x="1870" y="240" width="170" height="45" as="geometry" />
+    </mxCell>
+
+    <!-- ============ CARRIL COMPRADOR ============ -->
+    <mxCell id="C1" value="Buscar y filtrar por cultivo, provincia y fecha" style="rounded=1;whiteSpace=wrap;html=1;arcSize=8;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="lnCom">
+      <mxGeometry x="1090" y="40" width="170" height="60" as="geometry" />
+    </mxCell>
+
+    <mxCell id="C2" value="Enviar oferta y negociar por la mensajería interna" style="rounded=1;whiteSpace=wrap;html=1;arcSize=8;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="lnCom">
+      <mxGeometry x="1300" y="40" width="170" height="60" as="geometry" />
+    </mxCell>
+
+    <mxCell id="C3" value="Recibir el lote y confirmar conformidad" style="rounded=1;whiteSpace=wrap;html=1;arcSize=8;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="lnCom">
+      <mxGeometry x="2460" y="40" width="170" height="60" as="geometry" />
+    </mxCell>
+
+    <mxCell id="C4" value="Calificar al agricultor" style="rounded=1;whiteSpace=wrap;html=1;arcSize=8;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="lnCom">
+      <mxGeometry x="2780" y="40" width="170" height="60" as="geometry" />
+    </mxCell>
+
+    <mxCell id="nC1" value="&lt;b&gt;RF-03&lt;/b&gt; Búsqueda y filtros multicriterio" style="rounded=0;whiteSpace=wrap;html=1;dashed=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;align=left;spacing=6;" vertex="1" parent="lnCom">
+      <mxGeometry x="1090" y="130" width="170" height="50" as="geometry" />
+    </mxCell>
+
+    <mxCell id="nC2" value="&lt;b&gt;RF-04&lt;/b&gt; Mensajería directa y trazable" style="rounded=0;whiteSpace=wrap;html=1;dashed=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;align=left;spacing=6;" vertex="1" parent="lnCom">
+      <mxGeometry x="1300" y="130" width="170" height="50" as="geometry" />
+    </mxCell>
+
+    <!-- ============ CARRIL ADMINISTRADOR ============ -->
+    <mxCell id="D1" value="Revisar y moderar la publicación observada" style="rounded=1;whiteSpace=wrap;html=1;arcSize=8;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" vertex="1" parent="lnAdm">
+      <mxGeometry x="500" y="40" width="170" height="60" as="geometry" />
+    </mxCell>
+
+    <mxCell id="gwMod" value="¿Aprueba la publicación?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;verticalLabelPosition=bottom;verticalAlign=top;labelBackgroundColor=none;fontSize=10;" vertex="1" parent="lnAdm">
+      <mxGeometry x="740" y="45" width="50" height="50" as="geometry" />
+    </mxCell>
+
+    <mxCell id="evStartAdm" value="Cierre de mes" style="shape=mxgraph.bpmn.event;html=1;verticalLabelPosition=bottom;labelBackgroundColor=none;verticalAlign=top;align=center;perimeter=ellipsePerimeter;outlineConnect=0;outline=standard;symbol=timer;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="lnAdm">
+      <mxGeometry x="1090" y="50" width="40" height="40" as="geometry" />
+    </mxCell>
+
+    <mxCell id="D2" value="Gestionar usuarios y roles, y generar los reportes de la plataforma" style="rounded=1;whiteSpace=wrap;html=1;arcSize=8;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" vertex="1" parent="lnAdm">
+      <mxGeometry x="1170" y="40" width="170" height="60" as="geometry" />
+    </mxCell>
+
+    <mxCell id="evEnd3" value="Reportes de gestión&#10;emitidos" style="shape=mxgraph.bpmn.event;html=1;verticalLabelPosition=bottom;labelBackgroundColor=none;verticalAlign=top;align=center;perimeter=ellipsePerimeter;outlineConnect=0;outline=end;symbol=general;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="lnAdm">
+      <mxGeometry x="1380" y="50" width="40" height="40" as="geometry" />
+    </mxCell>
+
+    <mxCell id="nD2" value="&lt;b&gt;RF-08&lt;/b&gt; Gestión de roles&amp;nbsp; ·&amp;nbsp; &lt;b&gt;RF-09&lt;/b&gt; Panel administrativo y reportes" style="rounded=0;whiteSpace=wrap;html=1;dashed=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;align=left;spacing=6;" vertex="1" parent="lnAdm">
+      <mxGeometry x="1170" y="130" width="170" height="50" as="geometry" />
+    </mxCell>
+
+    <!-- ============ FLUJOS DE SECUENCIA ============ -->
+    <mxCell id="m1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="evStart" target="A1"><mxGeometry relative="1" as="geometry" /></mxCell>
+    <mxCell id="m2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;exitX=1;exitY=0.5;entryX=0.5;entryY=0;" edge="1" parent="1" source="A1" target="S1"><mxGeometry relative="1" as="geometry" /></mxCell>
+    <mxCell id="m3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="S1" target="gwVal"><mxGeometry relative="1" as="geometry" /></mxCell>
+    <mxCell id="m4" value="Sí" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;fontSize=11;" edge="1" parent="1" source="gwVal" target="S2"><mxGeometry relative="1" as="geometry" /></mxCell>
+    <mxCell id="m5" value="No, requiere moderación" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;fontSize=11;" edge="1" parent="1" source="gwVal" target="D1"><mxGeometry relative="1" as="geometry" /></mxCell>
+    <mxCell id="m6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="D1" target="gwMod"><mxGeometry relative="1" as="geometry" /></mxCell>
+    <mxCell id="m7" value="Sí" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;exitX=0.5;exitY=0;entryX=0.5;entryY=1;fontSize=11;" edge="1" parent="1" source="gwMod" target="S2"><mxGeometry relative="1" as="geometry" /></mxCell>
+    <mxCell id="m8" value="No" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;exitX=0;exitY=0.5;entryX=0.5;entryY=1;fontSize=11;" edge="1" parent="1" source="gwMod" target="S9"><mxGeometry relative="1" as="geometry" /></mxCell>
+    <mxCell id="m9" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="S9" target="evEnd2"><mxGeometry relative="1" as="geometry" /></mxCell>
+    <mxCell id="m10" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="S2" target="S3"><mxGeometry relative="1" as="geometry" /></mxCell>
+    <mxCell id="m11" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;exitX=1;exitY=0.5;entryX=0.5;entryY=0;" edge="1" parent="1" source="S3" target="C1"><mxGeometry relative="1" as="geometry" /></mxCell>
+    <mxCell id="m12" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="C1" target="C2"><mxGeometry relative="1" as="geometry" /></mxCell>
+    <mxCell id="m13" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;exitX=1;exitY=0.5;entryX=0.5;entryY=1;" edge="1" parent="1" source="C2" target="S4"><mxGeometry relative="1" as="geometry" /></mxCell>
+    <mxCell id="m14" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;exitX=1;exitY=0.5;entryX=0.5;entryY=1;" edge="1" parent="1" source="S4" target="A2"><mxGeometry relative="1" as="geometry" /></mxCell>
+    <mxCell id="m15" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="A2" target="gwOf"><mxGeometry relative="1" as="geometry" /></mxCell>
+    <mxCell id="m16" value="Sí" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;fontSize=11;" edge="1" parent="1" source="gwOf" target="A3"><mxGeometry relative="1" as="geometry" /></mxCell>
+    <mxCell id="m17" value="No" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;fontSize=11;" edge="1" parent="1" source="gwOf" target="evTimer"><mxGeometry relative="1" as="geometry" /></mxCell>
+    <mxCell id="m18" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="evTimer" target="S5"><mxGeometry relative="1" as="geometry" /></mxCell>
+    <mxCell id="m19" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;exitX=0;exitY=0.5;entryX=0.5;entryY=1;" edge="1" parent="1" source="S5" target="A2"><mxGeometry relative="1" as="geometry" /></mxCell>
+    <mxCell id="m20" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;exitX=1;exitY=0.5;entryX=0.5;entryY=0;" edge="1" parent="1" source="A3" target="S6"><mxGeometry relative="1" as="geometry" /></mxCell>
+    <mxCell id="m21" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;exitX=1;exitY=0.5;entryX=0.5;entryY=1;" edge="1" parent="1" source="S6" target="A4"><mxGeometry relative="1" as="geometry" /></mxCell>
+    <mxCell id="m22" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="A4" target="C3"><mxGeometry relative="1" as="geometry" /></mxCell>
+    <mxCell id="m23" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;exitX=1;exitY=0.5;entryX=0.5;entryY=1;" edge="1" parent="1" source="C3" target="gwSplit"><mxGeometry relative="1" as="geometry" /></mxCell>
+    <mxCell id="m24" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;exitX=0.5;exitY=0;entryX=0;entryY=0.5;" edge="1" parent="1" source="gwSplit" target="A5"><mxGeometry relative="1" as="geometry" /></mxCell>
+    <mxCell id="m25" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;exitX=1;exitY=0.5;entryX=0.5;entryY=0;" edge="1" parent="1" source="gwSplit" target="C4"><mxGeometry relative="1" as="geometry" /></mxCell>
+    <mxCell id="m26" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;exitX=1;exitY=0.5;entryX=0.5;entryY=0;" edge="1" parent="1" source="A5" target="gwJoin"><mxGeometry relative="1" as="geometry" /></mxCell>
+    <mxCell id="m27" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;exitX=1;exitY=0.5;entryX=0.5;entryY=1;" edge="1" parent="1" source="C4" target="gwJoin"><mxGeometry relative="1" as="geometry" /></mxCell>
+    <mxCell id="m28" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="gwJoin" target="S7"><mxGeometry relative="1" as="geometry" /></mxCell>
+    <mxCell id="m29" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="S7" target="evEnd1"><mxGeometry relative="1" as="geometry" /></mxCell>
+    <mxCell id="m30" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="evStartAdm" target="D2"><mxGeometry relative="1" as="geometry" /></mxCell>
+    <mxCell id="m31" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="D2" target="evEnd3"><mxGeometry relative="1" as="geometry" /></mxCell>
+
+    <!-- ============ ASOCIACIONES ============ -->
+    <mxCell id="b1" style="edgeStyle=none;html=1;dashed=1;endArrow=none;strokeColor=#d6b656;exitX=0.5;exitY=0;entryX=0.5;entryY=1;" edge="1" parent="1" source="nA1" target="A1"><mxGeometry relative="1" as="geometry" /></mxCell>
+    <mxCell id="b2" style="edgeStyle=none;html=1;dashed=1;endArrow=none;strokeColor=#d6b656;exitX=0.5;exitY=0;entryX=0.5;entryY=1;" edge="1" parent="1" source="nA2" target="A2"><mxGeometry relative="1" as="geometry" /></mxCell>
+    <mxCell id="b3" style="edgeStyle=none;html=1;dashed=1;endArrow=none;strokeColor=#d6b656;exitX=0.5;exitY=0;entryX=0.5;entryY=1;" edge="1" parent="1" source="nInt1" target="S2"><mxGeometry relative="1" as="geometry" /></mxCell>
+    <mxCell id="b4" style="edgeStyle=none;html=1;dashed=1;endArrow=none;strokeColor=#d6b656;exitX=0.5;exitY=0;entryX=0.5;entryY=1;" edge="1" parent="1" source="nInt2" target="S3"><mxGeometry relative="1" as="geometry" /></mxCell>
+    <mxCell id="b5" style="edgeStyle=none;html=1;dashed=1;endArrow=none;strokeColor=#d6b656;exitX=0.5;exitY=0;entryX=0.5;entryY=1;" edge="1" parent="1" source="nInt3" target="S6"><mxGeometry relative="1" as="geometry" /></mxCell>
+    <mxCell id="b6" style="edgeStyle=none;html=1;dashed=1;endArrow=none;strokeColor=#d6b656;exitX=0.5;exitY=0;entryX=0.5;entryY=1;" edge="1" parent="1" source="nInt4" target="S7"><mxGeometry relative="1" as="geometry" /></mxCell>
+    <mxCell id="b7" style="edgeStyle=none;html=1;dashed=1;endArrow=none;strokeColor=#d6b656;exitX=0.5;exitY=0;entryX=0.5;entryY=1;" edge="1" parent="1" source="nInt5" target="S5"><mxGeometry relative="1" as="geometry" /></mxCell>
+    <mxCell id="b8" style="edgeStyle=none;html=1;dashed=1;endArrow=none;strokeColor=#d6b656;exitX=0.5;exitY=0;entryX=0.5;entryY=1;" edge="1" parent="1" source="nC1" target="C1"><mxGeometry relative="1" as="geometry" /></mxCell>
+    <mxCell id="b9" style="edgeStyle=none;html=1;dashed=1;endArrow=none;strokeColor=#d6b656;exitX=0.5;exitY=0;entryX=0.5;entryY=1;" edge="1" parent="1" source="nC2" target="C2"><mxGeometry relative="1" as="geometry" /></mxCell>
+    <mxCell id="b10" style="edgeStyle=none;html=1;dashed=1;endArrow=none;strokeColor=#d6b656;exitX=0.5;exitY=0;entryX=0.5;entryY=1;" edge="1" parent="1" source="nD2" target="D2"><mxGeometry relative="1" as="geometry" /></mxCell>
+
+  </root>
+</mxGraphModel>ll>
+
+    <mxCell id="S3" value="⚙ Publicar en el catálogo y notificar a compradores del cultivo y zona" style="rounded=1;whiteSpace=wrap;html=1;arcSize=8;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="lnSis">
+      <mxGeometry x="880" y="40" width="170" height="60" as="geometry" />
+    </mxCell>
+
+    <mxCell id="S4" value="⚙ Registrar la oferta y notificar al agricultor" style="rounded=1;whiteSpace=wrap;html=1;arcSize=8;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="lnSis">
+      <mxGeometry x="1510" y="40" width="170" height="60" as="geometry" />
+    </mxCell>
+
+    <mxCell id="S6" value="⚙ Generar la orden y registrar la transacción en el historial" style="rounded=1;whiteSpace=wrap;html=1;arcSize=8;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="lnSis">
+      <mxGeometry x="2250" y="40" width="170" height="60" as="geometry" />
+    </mxCell>
+
+    <mxCell id="gwSplit" value="+" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=20;fontStyle=1;verticalLabelPosition=bottom;verticalAlign=top;labelBackgroundColor=none;" vertex="1" parent="lnSis">
+      <mxGeometry x="2670" y="45" width="50" height="50" as="geometry" />
+    </mxCell>
+
+    <mxCell id="gwJoin" value="+" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=20;fontStyle=1;verticalLabelPosition=bottom;verticalAlign=top;labelBackgroundColor=none;" vertex="1" parent="lnSis">
+      <mxGeometry x="2990" y="45" width="50" height="50" as="geometry" />
+    </mxCell>
+
+    <mxCell id="S7" value="⚙ Actualizar la reputación y el precio promedio del mercado" style="rounded=1;whiteSpace=wrap;html=1;arcSize=8;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="lnSis">
+      <mxGeometry x="3100" y="40" width="170" height="60" as="geometry" />
+    </mxCell>
+
+    <mxCell id="evEnd1" value="Venta directa concretada&#10;y registrada" style="shape=mxgraph.bpmn.event;html=1;verticalLabelPosition=bottom;labelBackgroundColor=none;verticalAlign=top;align=center;perimeter=ellipsePerimeter;outlineConnect=0;outline=end;symbol=general;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="lnSis">
+      <mxGeometry x="3310" y="50" width="40" height="40" as="geometry" />
+    </mxCell>
+
+    <mxCell id="S5" value="⚙ Enviar alerta de vencimiento y sugerir ajuste de precio" style="rounded=1;whiteSpace=wrap;html=1;arcSize=8;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="lnSis">
+      <mxGeometry x="1870" y="160" width="170" height="60" as="geometry" />
+    </mxCell>
+
+    <mxCell id="S9" value="⚙ Notificar al agricultor el motivo del rechazo" style="rounded=1;whiteSpace=wrap;html=1;arcSize=8;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="lnSis">
+      <mxGeometry x="350" y="270" width="170" height="60" as="geometry" />
+    </mxCell>
+
+    <mxCell id="evEnd2" value="Publicación&#10;no aprobada" style="shape=mxgraph.bpmn.event;html=1;verticalLabelPosition=bottom;labelBackgroundColor=none;verticalAlign=top;align=center;perimeter=ellipsePerimeter;outlineConnect=0;outline=end;symbol=general;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;" vertex="1" parent="lnSis">
+      <mxGeometry x="560" y="280" width="40" height="40" as="geometry" />
+    </mxCell>
+
+    <mxCell id="nInt1" value="&lt;b&gt;Integración&lt;/b&gt;&lt;br&gt;Base propia de precios + mercados mayoristas &lt;i&gt;(RF-02)&lt;/i&gt;" style="rounded=0;whiteSpace=wrap;html=1;dashed=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;align=left;spacing=6;" vertex="1" parent="lnSis">
+      <mxGeometry x="670" y="345" width="170" height="55" as="geometry" />
+    </mxCell>
+
+    <mxCell id="nInt2" value="&lt;b&gt;Integración&lt;/b&gt;&lt;br&gt;Notificaciones vía WhatsApp Business y correo" style="rounded=0;whiteSpace=wrap;html=1;dashed=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;align=left;spacing=6;" vertex="1" parent="lnSis">
+      <mxGeometry x="880" y="345" width="170" height="55" as="geometry" />
+    </mxCell>
+
+    <mxCell id="nInt3" value="&lt;b&gt;RF-06&lt;/b&gt; Historial de transacciones por usuario" style="rounded=0;whiteSpace=wrap;html=1;dashed=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;align=left;spacing=6;" vertex="1" parent="lnSis">
+      <mxGeometry x="2250" y="345" width="170" height="55" as="geometry" />
+    </mxCell>
+
+    <mxCell id="nInt4" value="&lt;b&gt;RF-05&lt;/b&gt; Reputación · alimenta el precio de referencia &lt;i&gt;(RF-02)&lt;/i&gt;" style="rounded=0;whiteSpace=wrap;html=1;dashed=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;align=left;spacing=6;" vertex="1" parent="lnSis">
+      <mxGeometry x="3100" y="345" width="170" height="55" as="geometry" />
+    </mxCell>
+
+    <mxCell id="nInt5" value="&lt;b&gt;RF-07&lt;/b&gt; Alerta de vencimiento" style="rounded=0;whiteSpace=wrap;html=1;dashed=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;align=left;spacing=6;" vertex="1" parent="lnSis">
+      <mxGeometry x="1870" y="240" width="170" height="45" as="geometry" />
+    </mxCell>
+
+    <!-- ============ CARRIL COMPRADOR ============ -->
+    <mxCell id="C1" value="Buscar y filtrar por cultivo, provincia y fecha" style="rounded=1;whiteSpace=wrap;html=1;arcSize=8;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="lnCom">
+      <mxGeometry x="1090" y="40" width="170" height="60" as="geometry" />
+    </mxCell>
+
+    <mxCell id="C2" value="Enviar oferta y negociar por la mensajería interna" style="rounded=1;whiteSpace=wrap;html=1;arcSize=8;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="lnCom">
+      <mxGeometry x="1300" y="40" width="170" height="60" as="geometry" />
+    </mxCell>
+
+    <mxCell id="C3" value="Recibir el lote y confirmar conformidad" style="rounded=1;whiteSpace=wrap;html=1;arcSize=8;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="lnCom">
+      <mxGeometry x="2460" y="40" width="170" height="60" as="geometry" />
+    </mxCell>
+
+    <mxCell id="C4" value="Calificar al agricultor" style="rounded=1;whiteSpace=wrap;html=1;arcSize=8;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="lnCom">
+      <mxGeometry x="2780" y="40" width="170" height="60" as="geometry" />
+    </mxCell>
+
+    <mxCell id="nC1" value="&lt;b&gt;RF-03&lt;/b&gt; Búsqueda y filtros multicriterio" style="rounded=0;whiteSpace=wrap;html=1;dashed=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;align=left;spacing=6;" vertex="1" parent="lnCom">
+      <mxGeometry x="1090" y="130" width="170" height="50" as="geometry" />
+    </mxCell>
+
+    <mxCell id="nC2" value="&lt;b&gt;RF-04&lt;/b&gt; Mensajería directa y trazable" style="rounded=0;whiteSpace=wrap;html=1;dashed=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;align=left;spacing=6;" vertex="1" parent="lnCom">
+      <mxGeometry x="1300" y="130" width="170" height="50" as="geometry" />
+    </mxCell>
+
+    <!-- ============ CARRIL ADMINISTRADOR ============ -->
+    <mxCell id="D1" value="Revisar y moderar la publicación observada" style="rounded=1;whiteSpace=wrap;html=1;arcSize=8;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" vertex="1" parent="lnAdm">
+      <mxGeometry x="500" y="40" width="170" height="60" as="geometry" />
+    </mxCell>
+
+    <mxCell id="gwMod" value="¿Aprueba la publicación?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;verticalLabelPosition=bottom;verticalAlign=top;labelBackgroundColor=none;fontSize=10;" vertex="1" parent="lnAdm">
+      <mxGeometry x="740" y="45" width="50" height="50" as="geometry" />
+    </mxCell>
+
+    <mxCell id="evStartAdm" value="Cierre de mes" style="shape=mxgraph.bpmn.event;html=1;verticalLabelPosition=bottom;labelBackgroundColor=none;verticalAlign=top;align=center;perimeter=ellipsePerimeter;outlineConnect=0;outline=standard;symbol=timer;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="lnAdm">
+      <mxGeometry x="1090" y="50" width="40" height="40" as="geometry" />
+    </mxCell>
+
+    <mxCell id="D2" value="Gestionar usuarios y roles, y generar los reportes de la plataforma" style="rounded=1;whiteSpace=wrap;html=1;arcSize=8;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" vertex="1" parent="lnAdm">
+      <mxGeometry x="1170" y="40" width="170" height="60" as="geometry" />
+    </mxCell>
+
+    <mxCell id="evEnd3" value="Reportes de gestión&#10;emitidos" style="shape=mxgraph.bpmn.event;html=1;verticalLabelPosition=bottom;labelBackgroundColor=none;verticalAlign=top;align=center;perimeter=ellipsePerimeter;outlineConnect=0;outline=end;symbol=general;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="lnAdm">
+      <mxGeometry x="1380" y="50" width="40" height="40" as="geometry" />
+    </mxCell>
+
+    <mxCell id="nD2" value="&lt;b&gt;RF-08&lt;/b&gt; Gestión de roles&amp;nbsp; ·&amp;nbsp; &lt;b&gt;RF-09&lt;/b&gt; Panel administrativo y reportes" style="rounded=0;whiteSpace=wrap;html=1;dashed=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;align=left;spacing=6;" vertex="1" parent="lnAdm">
+      <mxGeometry x="1170" y="130" width="170" height="50" as="geometry" />
+    </mxCell>
+
+    <!-- ============ FLUJOS DE SECUENCIA ============ -->
+    <mxCell id="m1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="evStart" target="A1"><mxGeometry relative="1" as="geometry" /></mxCell>
+    <mxCell id="m2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;exitX=1;exitY=0.5;entryX=0.5;entryY=0;" edge="1" parent="1" source="A1" target="S1"><mxGeometry relative="1" as="geometry" /></mxCell>
+    <mxCell id="m3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="S1" target="gwVal"><mxGeometry relative="1" as="geometry" /></mxCell>
+    <mxCell id="m4" value="Sí" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;fontSize=11;" edge="1" parent="1" source="gwVal" target="S2"><mxGeometry relative="1" as="geometry" /></mxCell>
+    <mxCell id="m5" value="No, requiere moderación" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;fontSize=11;" edge="1" parent="1" source="gwVal" target="D1"><mxGeometry relative="1" as="geometry" /></mxCell>
+    <mxCell id="m6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="D1" target="gwMod"><mxGeometry relative="1" as="geometry" /></mxCell>
+    <mxCell id="m7" value="Sí" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;exitX=0.5;exitY=0;entryX=0.5;entryY=1;fontSize=11;" edge="1" parent="1" source="gwMod" target="S2"><mxGeometry relative="1" as="geometry" /></mxCell>
+    <mxCell id="m8" value="No" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;exitX=0;exitY=0.5;entryX=0.5;entryY=1;fontSize=11;" edge="1" parent="1" source="gwMod" target="S9"><mxGeometry relative="1" as="geometry" /></mxCell>
+    <mxCell id="m9" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="S9" target="evEnd2"><mxGeometry relative="1" as="geometry" /></mxCell>
+    <mxCell id="m10" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="S2" target="S3"><mxGeometry relative="1" as="geometry" /></mxCell>
+    <mxCell id="m11" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;exitX=1;exitY=0.5;entryX=0.5;entryY=0;" edge="1" parent="1" source="S3" target="C1"><mxGeometry relative="1" as="geometry" /></mxCell>
+    <mxCell id="m12" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="C1" target="C2"><mxGeometry relative="1" as="geometry" /></mxCell>
+    <mxCell id="m13" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;exitX=1;exitY=0.5;entryX=0.5;entryY=1;" edge="1" parent="1" source="C2" target="S4"><mxGeometry relative="1" as="geometry" /></mxCell>
+    <mxCell id="m14" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;exitX=1;exitY=0.5;entryX=0.5;entryY=1;" edge="1" parent="1" source="S4" target="A2"><mxGeometry relative="1" as="geometry" /></mxCell>
+    <mxCell id="m15" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="A2" target="gwOf"><mxGeometry relative="1" as="geometry" /></mxCell>
+    <mxCell id="m16" value="Sí" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;fontSize=11;" edge="1" parent="1" source="gwOf" target="A3"><mxGeometry relative="1" as="geometry" /></mxCell>
+    <mxCell id="m17" value="No" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;fontSize=11;" edge="1" parent="1" source="gwOf" target="evTimer"><mxGeometry relative="1" as="geometry" /></mxCell>
+    <mxCell id="m18" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="evTimer" target="S5"><mxGeometry relative="1" as="geometry" /></mxCell>
+    <mxCell id="m19" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;exitX=0;exitY=0.5;entryX=0.5;entryY=1;" edge="1" parent="1" source="S5" target="A2"><mxGeometry relative="1" as="geometry" /></mxCell>
+    <mxCell id="m20" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;exitX=1;exitY=0.5;entryX=0.5;entryY=0;" edge="1" parent="1" source="A3" target="S6"><mxGeometry relative="1" as="geometry" /></mxCell>
+    <mxCell id="m21" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;exitX=1;exitY=0.5;entryX=0.5;entryY=1;" edge="1" parent="1" source="S6" target="A4"><mxGeometry relative="1" as="geometry" /></mxCell>
+    <mxCell id="m22" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="A4" target="C3"><mxGeometry relative="1" as="geometry" /></mxCell>
+    <mxCell id="m23" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;exitX=1;exitY=0.5;entryX=0.5;entryY=1;" edge="1" parent="1" source="C3" target="gwSplit"><mxGeometry relative="1" as="geometry" /></mxCell>
+    <mxCell id="m24" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;exitX=0.5;exitY=0;entryX=0;entryY=0.5;" edge="1" parent="1" source="gwSplit" target="A5"><mxGeometry relative="1" as="geometry" /></mxCell>
+    <mxCell id="m25" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;exitX=1;exitY=0.5;entryX=0.5;entryY=0;" edge="1" parent="1" source="gwSplit" target="C4"><mxGeometry relative="1" as="geometry" /></mxCell>
+    <mxCell id="m26" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;exitX=1;exitY=0.5;entryX=0.5;entryY=0;" edge="1" parent="1" source="A5" target="gwJoin"><mxGeometry relative="1" as="geometry" /></mxCell>
+    <mxCell id="m27" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;exitX=1;exitY=0.5;entryX=0.5;entryY=1;" edge="1" parent="1" source="C4" target="gwJoin"><mxGeometry relative="1" as="geometry" /></mxCell>
+    <mxCell id="m28" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="gwJoin" target="S7"><mxGeometry relative="1" as="geometry" /></mxCell>
+    <mxCell id="m29" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="S7" target="evEnd1"><mxGeometry relative="1" as="geometry" /></mxCell>
+    <mxCell id="m30" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="evStartAdm" target="D2"><mxGeometry relative="1" as="geometry" /></mxCell>
+    <mxCell id="m31" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="D2" target="evEnd3"><mxGeometry relative="1" as="geometry" /></mxCell>
+
+    <!-- ============ ASOCIACIONES ============ -->
+    <mxCell id="b1" style="edgeStyle=none;html=1;dashed=1;endArrow=none;strokeColor=#d6b656;exitX=0.5;exitY=0;entryX=0.5;entryY=1;" edge="1" parent="1" source="nA1" target="A1"><mxGeometry relative="1" as="geometry" /></mxCell>
+    <mxCell id="b2" style="edgeStyle=none;html=1;dashed=1;endArrow=none;strokeColor=#d6b656;exitX=0.5;exitY=0;entryX=0.5;entryY=1;" edge="1" parent="1" source="nA2" target="A2"><mxGeometry relative="1" as="geometry" /></mxCell>
+    <mxCell id="b3" style="edgeStyle=none;html=1;dashed=1;endArrow=none;strokeColor=#d6b656;exitX=0.5;exitY=0;entryX=0.5;entryY=1;" edge="1" parent="1" source="nInt1" target="S2"><mxGeometry relative="1" as="geometry" /></mxCell>
+    <mxCell id="b4" style="edgeStyle=none;html=1;dashed=1;endArrow=none;strokeColor=#d6b656;exitX=0.5;exitY=0;entryX=0.5;entryY=1;" edge="1" parent="1" source="nInt2" target="S3"><mxGeometry relative="1" as="geometry" /></mxCell>
+    <mxCell id="b5" style="edgeStyle=none;html=1;dashed=1;endArrow=none;strokeColor=#d6b656;exitX=0.5;exitY=0;entryX=0.5;entryY=1;" edge="1" parent="1" source="nInt3" target="S6"><mxGeometry relative="1" as="geometry" /></mxCell>
+    <mxCell id="b6" style="edgeStyle=none;html=1;dashed=1;endArrow=none;strokeColor=#d6b656;exitX=0.5;exitY=0;entryX=0.5;entryY=1;" edge="1" parent="1" source="nInt4" target="S7"><mxGeometry relative="1" as="geometry" /></mxCell>
+    <mxCell id="b7" style="edgeStyle=none;html=1;dashed=1;endArrow=none;strokeColor=#d6b656;exitX=0.5;exitY=0;entryX=0.5;entryY=1;" edge="1" parent="1" source="nInt5" target="S5"><mxGeometry relative="1" as="geometry" /></mxCell>
+    <mxCell id="b8" style="edgeStyle=none;html=1;dashed=1;endArrow=none;strokeColor=#d6b656;exitX=0.5;exitY=0;entryX=0.5;entryY=1;" edge="1" parent="1" source="nC1" target="C1"><mxGeometry relative="1" as="geometry" /></mxCell>
+    <mxCell id="b9" style="edgeStyle=none;html=1;dashed=1;endArrow=none;strokeColor=#d6b656;exitX=0.5;exitY=0;entryX=0.5;entryY=1;" edge="1" parent="1" source="nC2" target="C2"><mxGeometry relative="1" as="geometry" /></mxCell>
+    <mxCell id="b10" style="edgeStyle=none;html=1;dashed=1;endArrow=none;strokeColor=#d6b656;exitX=0.5;exitY=0;entryX=0.5;entryY=1;" edge="1" parent="1" source="nD2" target="D2"><mxGeometry relative="1" as="geometry" /></mxCell>
+
+  </root>
+</mxGraphModel>
