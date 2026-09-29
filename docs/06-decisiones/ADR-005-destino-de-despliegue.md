@@ -26,6 +26,7 @@ El walking skeleton (RF-08) debía quedar desplegado apenas funcionara, pero la 
 | 7 | HTTPS con certificado gratuito (Let's Encrypt) | SRS §9.3 |
 | 8 | Acceso para verificar `/actuator/health` con un monitor externo gratuito | RNF-06 |
 | 9 | Zona horaria configurable a America/Lima | El evento corre a las 06:00 hora del servidor |
+| 10 | Compresión gzip en Tomcat para HTML, CSS, JS, JSON y SVG (`compression="on"` en el conector, o en el proxy HTTPS delante de Tomcat) | RNF-01: carga en menos de 3 s con 4G. En un WAR la propiedad `server.compression` de Spring Boot no se aplica; la configura el servidor |
 
 ## Alternativas a evaluar
 

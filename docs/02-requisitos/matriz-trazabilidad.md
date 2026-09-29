@@ -9,7 +9,7 @@ Relaciona cada requisito funcional con su caso de uso, módulo, tablas, endpoint
 | RF | Nombre | UC | Módulo | Slice | Estado |
 |---|---|---|---|---|---|
 | **RF-01** | **Publicación de cosecha** | **UC-01** | **publicacion (+ catalogo)** | **2** | **Implementado** (referencia de precio: slice 4; marcas PRECIO_FUERA_RANGO y CANTIDAD_INUSUAL: slice 3) |
-| RF-02 | Precios de mercado | UC-02 | precio | 4 | Pendiente |
+| **RF-02** | **Precios de mercado** | **UC-02** | **precio** | **4** | **Implementado (slice 4)**; también activa la marca PRECIO_FUERA_RANGO de RF-01 |
 | RF-03 | Búsqueda multi-criterio | UC-03 | publicacion | 5 | Pendiente |
 | RF-04 | Mensajería directa | UC-04 | mensajeria | 6 | Pendiente |
 | RF-05 | Calificación | UC-07 | venta | 8 | Pendiente |
@@ -47,6 +47,19 @@ Relaciona cada requisito funcional con su caso de uso, módulo, tablas, endpoint
 | Pantallas | 07 Paso 1 (`paso1.html`), 08 Paso 2 (`paso2.html`), 09 Paso 3 (`paso3.html`), 10 Confirmar (`confirmar.html`), 11 Publicada (`publicada.html`) |
 | Pruebas | Unitarias: `PublicacionServiceTest`, `CatalogoServiceTest`. Integración (MariaDB): `PublicacionIntegracionTest` (jaba, quintal con 46 kg, fecha límite calculada, PRIMERA_PUBLICACION solo en la primera, 400/401/403/404/422, catálogo). Arquitectura: `ArquitecturaTest` |
 | RNF | RNF-01 (páginas livianas, borrador en `sessionStorage`), RNF-03 (una pregunta por bloque, botones ≥ 56 px), RNF-05 (trigger y CHECK como última barrera) |
+
+### RF-02 — Precios de referencia (slice 4)
+
+| Elemento | Trazas |
+|---|---|
+| Caso de uso | UC-02: flujo básico (precios vigentes por cultivo y zona con unidad local, fuente, fecha y tendencia; rango de la plataforma en el paso 3; historial de 30 días); A1 sin datos ("No hay precios de referencia para este cultivo", 204 en la referencia); A2 carga por formulario (409 si ya existe, con "Editar") o por archivo Excel/CSV (filas válidas guardadas, inválidas informadas); A3 filtro sin resultados. UC-01: referencia ±15 % y veredicto en el paso 3; marca PRECIO_FUERA_RANGO |
+| Módulos | `precio` (dueño); `catalogo` (cultivos, unidades, zonas); `publicacion` (usa `precio.aplicacion.ReferenciaPrecioService` para la marca) |
+| Tablas | precios_mercado (escritura); `v_precios_vigentes`, `v_rango_precio_plataforma` (lectura); cultivos, unidades_medida, distritos (lectura) |
+| Triggers y restricciones | `trg_precios_mercado_bi` (solo ADMINISTRADOR, distrito zona de precio), `trg_precios_mercado_bu` (solo ADMINISTRADOR); `chk_precio_valor`, `chk_precio_fuente`, `chk_precio_metodo`; UK cultivo + distrito + fecha |
+| Endpoints | `GET /api/v1/precios/vigentes`, `GET /api/v1/precios/historial`, `GET /api/v1/precios/referencia`, `POST /api/v1/precios`, `PUT /api/v1/precios/{id}`, `POST /api/v1/precios/archivo` |
+| Pantallas | 01 Inicio público (`index.html`, con gráfico SVG de 30 días), 06/14 Inicio del agricultor y del comprador (`inicio.html`, "Precios de hoy"), 09 Paso 3 (`paso3.html`, referencia y veredicto), 11b Precios de mercado (`pages/administracion/precios.html`) |
+| Pruebas | Unitarias: `ReferenciaPrecioServiceTest` (zona, promedio de zonas, 7 días, bajo/dentro/alto), `PublicacionServiceTest` (prioridad PRECIO_FUERA_RANGO). Integración (MariaDB): `PrecioIntegracionTest` (tendencia tras editar, duplicado 409, zona 422, fecha futura 400, 403/404, referencia de zona/promedio/204, CSV con filas rechazadas, Excel, formato inválido 400, marca PRECIO_FUERA_RANGO). Arquitectura: `ArquitecturaTest` |
+| RNF | RNF-01 (gráfico SVG propio sin librerías, página pública liviana), RNF-03 (chips ≥ 48 px, veredicto con ícono y texto, no solo color), RNF-05 (triggers y CHECK como última barrera) |
 
 ### RF-09 — Moderación posterior (slice 3)
 
