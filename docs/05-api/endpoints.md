@@ -41,6 +41,12 @@ Base: `/api/v1`. Formato JSON (UTF-8). Autenticación con JWT en la cabecera `Au
 | PUT | `/api/v1/usuarios/me/contrasena` | Autenticado | RF-08 | usuario |
 | POST | `/api/v1/publicaciones` | AGRICULTOR | RF-01 | publicacion |
 | GET | `/api/v1/publicaciones/{id}` | Público | RF-01 | publicacion |
+| GET | `/api/v1/precios/vigentes` | Público | RF-02 | precio |
+| GET | `/api/v1/precios/historial` | Público | RF-02 | precio |
+| GET | `/api/v1/precios/referencia` | Público | RF-02, RF-01 | precio |
+| POST | `/api/v1/precios` | ADMINISTRADOR | RF-02 | precio |
+| PUT | `/api/v1/precios/{id}` | ADMINISTRADOR | RF-02 | precio |
+| POST | `/api/v1/precios/archivo` | ADMINISTRADOR | RF-02 | precio |
 | GET | `/api/v1/moderacion/publicaciones` | ADMINISTRADOR | RF-09 | administracion |
 | GET | `/api/v1/moderacion/decisiones` | ADMINISTRADOR | RF-09 | administracion |
 | POST | `/api/v1/moderacion/publicaciones/{id}/decisiones` | ADMINISTRADOR | RF-09 | administracion |
@@ -322,10 +328,119 @@ Público. Devuelve la publicación si está **PUBLICADA**, o en cualquier estado
 **Marcas de moderación al publicar** (SRS RF-09; umbrales aprobados en el plan del slice 3). La columna guarda una sola marca, con prioridad PRECIO_FUERA_RANGO > CANTIDAD_INUSUAL > PRIMERA_PUBLICACION:
 
 - `CANTIDAD_INUSUAL`: los kilos superan 3 veces el promedio de las publicaciones del mismo cultivo en el mismo distrito de los últimos 90 días (solo si hay al menos 3 para comparar).
-- `PRECIO_FUERA_RANGO` (slice 4): el precio por kilo se aleja más de ±15 % del precio de mercado de hoy (de la zona, o el promedio de las 4 zonas).
+- `PRECIO_FUERA_RANGO`: el precio por kilo se aleja más de ±15 % de la referencia de `GET /api/v1/precios/referencia` (ver abajo). Sin referencia no se marca.
 - `PRIMERA_PUBLICACION`: la pone `trg_publicaciones_bi` si no hay otra marca.
 
 **Errores:** 404 "La publicación no existe." (inexistente, o no PUBLICADA y quien la pide no es su dueño).
+
+---
+
+## Precios de referencia (`precio`)
+
+Precios del mercado real, **por kilo**, por cultivo y **zona de precio** (Piura, Tambogrande, Chulucanas, Sullana). Fuentes: `MERCADO_MAYORISTA_PIURA`, `MERCADO_SULLANA`, `ENCUESTA_ACOPIADORES`.
+
+### GET `/api/v1/precios/vigentes?idCultivo=&idDistrito=`
+
+Público. Último precio de cada cultivo y zona (`v_precios_vigentes`); ambos filtros son opcionales.
+
+**200**
+```json
+[
+  {
+    "idPrecio": 31, "idCultivo": 1, "cultivo": "Mango", "idDistrito": 9, "zona": "Tambogrande",
+    "fecha": "2026-09-28", "precioKg": 1.40, "unidadLocal": "Jaba", "precioUnidadLocal": 28.00,
+    "tendencia": "SUBE", "fuente": "MERCADO_MAYORISTA_PIURA", "actualizado": "2026-09-28T07:30:00"
+  }
+]
+```
+
+`tendencia`: `SUBE`, `BAJA`, `IGUAL` o `SIN_DATO` frente a la carga anterior. `precioUnidadLocal` usa el factor de la unidad local o el peso sugerido del cultivo (jaba, saco).
+
+### GET `/api/v1/precios/historial?idCultivo=&idDistrito=&dias=30`
+
+Público. Serie de precios por kilo de un cultivo en una zona, del más antiguo al más reciente. `dias` entre 1 y 365 (por defecto 30).
+
+**200**
+```json
+[ { "fecha": "2026-08-30", "precioKg": 1.20 }, { "fecha": "2026-09-28", "precioKg": 1.40 } ]
+```
+
+**Errores:** 400 si falta `idCultivo` o `idDistrito`.
+
+### GET `/api/v1/precios/referencia?idCultivo=&idDistrito=`
+
+Público. Referencia que ve el agricultor al poner su precio (paso 3) y que usa la marca PRECIO_FUERA_RANGO:
+
+- Si el distrito es una zona de precio y tiene un precio de **7 días o menos**, se usa ese precio.
+- Si no, el **promedio** de los precios de 7 días o menos de las zonas que tengan ese cultivo.
+- `minimoKg` y `maximoKg` son la referencia ±15 %: dentro de ese rango, "Buen precio".
+- `rangoPlataforma` sale de las ventas COMPLETADA de los últimos 30 días en ese cultivo y distrito (`v_rango_precio_plataforma`); es `null` si no hay ventas.
+
+**200**
+```json
+{
+  "idCultivo": 1, "cultivo": "Mango", "zona": "Tambogrande", "esPromedioDeZonas": false, "fecha": "2026-09-28",
+  "precioKg": 1.40, "minimoKg": 1.19, "maximoKg": 1.61, "unidadLocal": "Jaba", "precioUnidadLocal": 28.00,
+  "rangoPlataforma": { "minimoKg": 1.30, "maximoKg": 1.50, "promedioKg": 1.42, "ventas": 6 }
+}
+```
+
+**204** sin cuerpo si no hay referencia (ningún precio de 7 días o menos).
+
+### POST `/api/v1/precios`
+
+Rol **ADMINISTRADOR**. Carga el precio del día (UC-02 A2, formulario).
+
+| Campo | Obligatorio | Regla |
+|---|---|---|
+| `idCultivo` | Sí | Cultivo activo |
+| `idDistrito` | Sí | Una de las 4 zonas de precio |
+| `fecha` | No | `AAAA-MM-DD`, hoy por defecto; no puede ser futura |
+| `precioKg` | Sí | > 0, hasta 2 decimales |
+| `fuente` | Sí | Una de las 3 fuentes |
+
+**201** — cabecera `Location: /api/v1/precios/{id}`
+```json
+{ "id": 31, "idCultivo": 1, "cultivo": "Mango", "idDistrito": 9, "zona": "Tambogrande", "fecha": "2026-09-28",
+  "precioKg": 1.40, "fuente": "MERCADO_MAYORISTA_PIURA", "metodo": "FORMULARIO" }
+```
+
+**Errores**
+
+| Código | Cuándo | `mensaje` |
+|---|---|---|
+| 400 | Campo inválido o fecha futura | "Los datos enviados no son válidos." |
+| 403 | No es administrador | "No tiene permiso para realizar esta acción." |
+| 409 | Ya hay precio de ese cultivo, zona y fecha | "Ya hay un precio de {cultivo} en {zona} para esa fecha. Use Editar para cambiarlo." |
+| 422 | El cultivo no existe o no está activo | "El cultivo elegido no existe." |
+| 422 | El distrito no es zona de precio | "El distrito elegido no es una zona de precio." |
+
+### PUT `/api/v1/precios/{id}`
+
+Rol **ADMINISTRADOR**. "Editar" de la tabla: cambia `precioKg` y `fuente`. El administrador que edita queda como responsable (`id_administrador`) y la base de datos registra `fecha_actualizacion`.
+
+**200** — igual que el POST. **Errores:** 400 · 403 · 404 "El precio no existe."
+
+### POST `/api/v1/precios/archivo`
+
+Rol **ADMINISTRADOR**. `multipart/form-data` con `archivo` (`.xlsx` o `.csv`, máx. 1 MB y 500 filas) y `fuente` (una para todo el archivo).
+
+**Formato:** primera fila con las columnas `cultivo, zona, fecha, precio_kg` (en ese orden). Nombres del catálogo (`Mango`, `Tambogrande`; se ignoran mayúsculas y tildes); fecha `AAAA-MM-DD` o `dd/mm/aaaa` (o celda de fecha en Excel); precio con punto o coma decimal. En CSV el separador puede ser coma o punto y coma.
+
+Se importan las filas válidas y se informan las inválidas con su motivo (UC-02 A2); el administrador puede corregir y volver a subir solo esas.
+
+**200**
+```json
+{
+  "importadas": 14,
+  "rechazadas": [
+    { "fila": 5, "motivo": "La zona \"Paita\" no es una zona de precio." },
+    { "fila": 9, "motivo": "Ya hay un precio de Mango en Piura para el 28/09/2026." }
+  ]
+}
+```
+
+**Errores:** 400 archivo vacío, formato no soportado o columnas distintas · 403 · 413 "El archivo es demasiado grande (máximo 1 MB)."
 
 ---
 
