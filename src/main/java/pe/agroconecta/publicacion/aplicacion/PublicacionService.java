@@ -1,6 +1,7 @@
 package pe.agroconecta.publicacion.aplicacion;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.Clock;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -25,6 +26,7 @@ import pe.agroconecta.catalogo.aplicacion.DistritoDto;
 import pe.agroconecta.catalogo.aplicacion.UnidadDto;
 import pe.agroconecta.catalogo.aplicacion.VariedadDto;
 import pe.agroconecta.compartido.error.RecursoNoEncontradoException;
+import pe.agroconecta.precio.aplicacion.ReferenciaPrecioService;
 import pe.agroconecta.compartido.error.ReglaNegocioException;
 import pe.agroconecta.publicacion.dominio.EstadoPublicacion;
 import pe.agroconecta.publicacion.dominio.MarcaRevision;
@@ -64,6 +66,7 @@ public class PublicacionService {
 
     private final PublicacionRepository publicaciones;
     private final CatalogoService catalogo;
+    private final ReferenciaPrecioService referencias;
     private final EntityManager entityManager;
     private final Clock reloj;
 
@@ -72,13 +75,15 @@ public class PublicacionService {
      *
      * @param publicaciones repositorio de publicaciones
      * @param catalogo      catálogo de variedades, unidades y distritos
+     * @param referencias   referencia de precio del módulo {@code precio} (marca PRECIO_FUERA_RANGO)
      * @param entityManager contexto de persistencia (para refrescar lo que calcula la base de datos)
      * @param reloj         reloj de la aplicación
      */
     public PublicacionService(PublicacionRepository publicaciones, CatalogoService catalogo,
-            EntityManager entityManager, Clock reloj) {
+            ReferenciaPrecioService referencias, EntityManager entityManager, Clock reloj) {
         this.publicaciones = publicaciones;
         this.catalogo = catalogo;
+        this.referencias = referencias;
         this.entityManager = entityManager;
         this.reloj = reloj;
     }
@@ -107,7 +112,11 @@ public class PublicacionService {
 
         Publicacion nueva = new Publicacion(idAgricultor, variedad.id(), distrito.id(), unidad.id(), datos.cantidad(),
                 peso, datos.precioUnitario(), datos.fechaCosecha(), datos.fechaLimite());
-        if (esCantidadInusual(variedad.idCultivo(), distrito.id(), datos.cantidad().multiply(peso))) {
+        // Prioridad aprobada: PRECIO_FUERA_RANGO > CANTIDAD_INUSUAL > PRIMERA_PUBLICACION (esta última, del trigger)
+        BigDecimal precioKg = datos.precioUnitario().divide(peso, 4, RoundingMode.HALF_UP);
+        if (referencias.evaluar(variedad.idCultivo(), distrito.id(), precioKg).fueraDeRango()) {
+            nueva.marcarParaRevision(MarcaRevision.PRECIO_FUERA_RANGO);
+        } else if (esCantidadInusual(variedad.idCultivo(), distrito.id(), datos.cantidad().multiply(peso))) {
             nueva.marcarParaRevision(MarcaRevision.CANTIDAD_INUSUAL);
         }
         Publicacion publicacion = publicaciones.saveAndFlush(nueva);

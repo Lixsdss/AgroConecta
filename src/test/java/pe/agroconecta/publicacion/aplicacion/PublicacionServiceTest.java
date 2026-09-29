@@ -3,6 +3,8 @@ package pe.agroconecta.publicacion.aplicacion;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -31,6 +33,8 @@ import pe.agroconecta.catalogo.aplicacion.UnidadDto;
 import pe.agroconecta.catalogo.aplicacion.VariedadDto;
 import pe.agroconecta.compartido.error.RecursoNoEncontradoException;
 import pe.agroconecta.compartido.error.ReglaNegocioException;
+import pe.agroconecta.precio.aplicacion.EvaluacionPrecio;
+import pe.agroconecta.precio.aplicacion.ReferenciaPrecioService;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 
@@ -52,13 +56,15 @@ class PublicacionServiceTest {
     @Mock private PublicacionRepository publicaciones;
     @Mock private CatalogoService catalogo;
     @Mock private EntityManager entityManager;
+    @Mock private ReferenciaPrecioService referencias;
 
     private PublicacionService servicio;
 
     @BeforeEach
     void preparar() {
         Clock reloj = Clock.fixed(Instant.parse("2026-09-27T15:00:00Z"), ZoneId.of("America/Lima"));
-        servicio = new PublicacionService(publicaciones, catalogo, entityManager, reloj);
+        servicio = new PublicacionService(publicaciones, catalogo, referencias, entityManager, reloj);
+        lenient().when(referencias.evaluar(anyInt(), anyInt(), any())).thenReturn(EvaluacionPrecio.SIN_REFERENCIA);
     }
 
     @Test
@@ -163,6 +169,20 @@ class PublicacionServiceTest {
         ArgumentCaptor<Publicacion> guardada = ArgumentCaptor.forClass(Publicacion.class);
         verify(publicaciones).saveAndFlush(guardada.capture());
         assertThat(guardada.getValue().getMarcaRevision()).isEqualTo(MarcaRevision.CANTIDAD_INUSUAL);
+    }
+
+    @Test
+    void elPrecioFueraDeRangoTienePrioridadSobreLaCantidadInusual() {
+        catalogoCon(JABA);
+        when(referencias.evaluar(1, 9, new BigDecimal("1.4000"))).thenReturn(EvaluacionPrecio.ALTO);
+        when(publicaciones.saveAndFlush(any(Publicacion.class))).thenAnswer(i -> conId(i.getArgument(0), 19L));
+
+        servicio.publicar(3L, datos(2, "20", null, HOY));
+
+        ArgumentCaptor<Publicacion> guardada = ArgumentCaptor.forClass(Publicacion.class);
+        verify(publicaciones).saveAndFlush(guardada.capture());
+        assertThat(guardada.getValue().getMarcaRevision()).isEqualTo(MarcaRevision.PRECIO_FUERA_RANGO);
+        verify(publicaciones, never()).estadisticaCantidad(any(), any(), any());
     }
 
     @Test

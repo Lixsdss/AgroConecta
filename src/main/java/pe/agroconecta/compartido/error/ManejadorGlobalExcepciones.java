@@ -37,7 +37,7 @@ import pe.agroconecta.compartido.error.ErrorResponse.ErrorCampo;
  * <li>Errores de los triggers ({@code SIGNAL SQLSTATE '45000'}): 422 con el texto del trigger.</li>
  * <li>Violaciones de {@code CHECK} y {@link ReglaNegocioException}: 422.</li>
  * <li>{@link ConflictoException}: 409; {@link AutenticacionFallidaException}: 401;
- * {@link RecursoNoEncontradoException}: 404.</li>
+ * {@link RecursoNoEncontradoException}: 404; {@link SolicitudInvalidaException}: 400.</li>
  * <li>Clave única duplicada o clave foránea: 409 con un mensaje genérico, sin detalles de SQL.</li>
  * <li>Cualquier otro error: 500 con un mensaje genérico; el detalle solo va al log.</li>
  * </ul>
@@ -86,6 +86,19 @@ public class ManejadorGlobalExcepciones extends ResponseEntityExceptionHandler {
     @ExceptionHandler(ConflictoException.class)
     public ResponseEntity<ErrorResponse> manejarConflicto(ConflictoException ex, HttpServletRequest request) {
         return responder(HttpStatus.CONFLICT, ex.getMessage(), request.getRequestURI());
+    }
+
+    /**
+     * Responde 400 cuando la solicitud tiene una forma que no se puede procesar.
+     *
+     * @param ex      excepción con el mensaje para el usuario
+     * @param request petición que falló
+     * @return 400 con el mensaje de la excepción
+     */
+    @ExceptionHandler(SolicitudInvalidaException.class)
+    public ResponseEntity<ErrorResponse> manejarSolicitudInvalida(SolicitudInvalidaException ex,
+            HttpServletRequest request) {
+        return responder(HttpStatus.BAD_REQUEST, ex.getMessage(), request.getRequestURI());
     }
 
     /**
@@ -248,6 +261,7 @@ public class ManejadorGlobalExcepciones extends ResponseEntityExceptionHandler {
             case 404 -> "El recurso solicitado no existe.";
             case 405 -> "Método HTTP no permitido para este recurso.";
             case 406 -> "No se puede generar la respuesta en el formato solicitado.";
+            case 413 -> "El archivo es demasiado grande (máximo 1 MB).";
             case 415 -> "Tipo de contenido no soportado.";
             default -> "La solicitud no se pudo procesar.";
         };
