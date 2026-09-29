@@ -9,10 +9,7 @@
     <script type="module" src="/js/usuario/inicio.js"></script>
 </head>
 <body>
-<!--
-    Inicio mínimo (RF-08, RF-01). Los inicios reales del diseño (06 agricultor, 14 comprador) muestran precios
-    y se construyen en el slice de RF-02.
--->
+<!-- Inicio del agricultor (diseño 06) y del comprador (diseño 14), versión sencilla con los precios de hoy (RF-02). -->
 <main class="ac-pantalla">
     <p class="ac-marca mb-0">AgroConecta</p>
     <h1 class="ac-titulo" id="saludo">Hola</h1>
@@ -22,6 +19,13 @@
 
     <a class="btn btn-primary w-100 mb-3" href="/pages/publicacion/paso1.html" id="vender" hidden><svg class="ac-icono" aria-hidden="true" focusable="false"><use href="/img/iconos.svg#sprout"></use></svg> <span>Vender mi cosecha</span></a>
     <a class="btn btn-outline-primary w-100 mb-3" href="/pages/usuario/perfil.html"><svg class="ac-icono" aria-hidden="true" focusable="false"><use href="/img/iconos.svg#user"></use></svg> <span>Mi perfil</span></a>
+
+    <section class="my-4" aria-labelledby="titulo-precios">
+        <h2 class="h4" id="titulo-precios">Precios de hoy</h2>
+        <div class="ac-precios mb-2" id="precios" aria-live="polite"></div>
+        <a class="btn btn-link px-0" href="/index.html"><svg class="ac-icono" aria-hidden="true" focusable="false"><use href="/img/iconos.svg#chart-line"></use></svg> <span>Ver todos los precios y su historial</span></a>
+    </section>
+
     <button class="btn btn-link w-100" type="button" id="salir"><svg class="ac-icono" aria-hidden="true" focusable="false"><use href="/img/iconos.svg#log-out"></use></svg> <span>Salir</span></button>
 </main>
 </body>

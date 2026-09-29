@@ -590,3 +590,116 @@ body {
         display: flex;
     }
 }
+
+/* ===== Precios de referencia (RF-02) ===== */
+.ac-precios {
+    display: grid;
+    gap: .75rem;
+}
+
+.ac-tarjeta-precio {
+    background: var(--ac-superficie);
+    border: 1px solid var(--ac-linea);
+    border-radius: 12px;
+    padding: .875rem 1rem;
+}
+
+.ac-precio-kilo {
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.ac-tendencia {
+    display: inline-flex;
+    align-items: center;
+    gap: .25rem;
+    font-size: .9375rem;
+    font-weight: 600;
+    color: var(--ac-texto-suave);
+}
+
+.ac-tendencia-sube { color: var(--ac-verde); }
+.ac-tendencia-baja { color: var(--ac-error); }
+
+.ac-veredicto {
+    border: 2px solid;
+    border-radius: var(--ac-radio);
+    padding: .75rem .875rem;
+    margin-bottom: 1rem;
+}
+
+.ac-veredicto-dentro { border-color: var(--ac-verde); background: var(--ac-verde-claro); color: var(--ac-verde-oscuro); }
+.ac-veredicto-bajo { border-color: var(--ac-ambar); background: var(--ac-ambar-claro); color: var(--ac-texto); }
+.ac-veredicto-alto { border-color: var(--ac-error); background: var(--ac-error-claro); color: var(--ac-error); }
+
+/* Gráfico de línea (js/comun/grafico.js) */
+.ac-grafico-marco {
+    position: relative;
+}
+
+.ac-grafico {
+    width: 100%;
+    height: auto;
+    display: block;
+    touch-action: pan-y;
+}
+
+.ac-grafico:focus-visible {
+    outline: 3px solid var(--ac-ambar);
+    outline-offset: 2px;
+}
+
+.ac-grafico-rejilla { stroke: var(--ac-linea); stroke-width: 1; }
+.ac-grafico-eje { fill: var(--ac-texto-suave); font-size: 13px; }
+.ac-grafico-valor { fill: var(--ac-texto); font-size: 14px; font-weight: 700; }
+.ac-grafico-linea { fill: none; stroke: var(--ac-verde); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.ac-grafico-area { fill: var(--ac-verde); fill-opacity: .1; stroke: none; }
+.ac-grafico-punto { fill: var(--ac-verde); stroke: var(--ac-superficie); stroke-width: 2; }
+.ac-grafico-guia { stroke: var(--ac-texto-suave); stroke-width: 1; }
+
+.ac-grafico-detalle {
+    position: absolute;
+    top: 0;
+    transform: translateX(-50%);
+    background: var(--ac-texto);
+    color: #fff;
+    border-radius: 8px;
+    padding: .25rem .5rem;
+    font-size: .875rem;
+    white-space: nowrap;
+    pointer-events: none;
+}
+
+/* Portada pública (diseño 01) */
+.ac-portada-hero {
+    background: var(--ac-verde);
+    color: #fff;
+    border-radius: 12px;
+    padding: 1.5rem 1.25rem;
+    margin-bottom: 1.5rem;
+}
+
+.ac-portada-hero .ac-titulo {
+    color: #fff;
+}
+
+.ac-portada-hero .btn-light {
+    color: var(--ac-verde-oscuro);
+}
+
+.ac-portada-hero .btn-outline-light:hover {
+    color: var(--ac-verde-oscuro);
+}
+
+/* Precios de mercado del administrador (diseño 11b) */
+.ac-admin-precios {
+    display: grid;
+    gap: 1.5rem;
+}
+
+@media (min-width: 992px) {
+    .ac-admin-precios {
+        grid-template-columns: minmax(360px, 5fr) 7fr;
+        align-items: start;
+    }
+}

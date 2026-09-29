@@ -1,10 +1,11 @@
 /**
  * "Vender · Paso 3" (diseño 09, UC-01): precio por unidad con su equivalente por kilo, y distrito de la cosecha
  * (tomado del perfil, se puede cambiar). GET /api/v1/usuarios/me y GET /api/v1/catalogo/distritos.
- * La referencia de precio y el veredicto de color llegan con RF-02 (slice 4).
+ * RF-02: GET /api/v1/precios/referencia da el rango de hoy (±15 %) y el veredicto se calcula con el precio por kilo.
  */
 import { api } from '../api.js';
 import { mostrarAlerta, limpiarErrores } from '../comun/formulario.js';
+import { icono } from '../comun/iconos.js';
 import { exigirAgricultor, leerBorrador, guardarBorrador, volverSiFalta, soles, RUTA } from './borrador.js';
 
 const formulario = document.getElementById('formulario');
@@ -13,6 +14,14 @@ const campos = formulario.elements;
 const precioKilo = document.getElementById('precio-kilo');
 const selectDistrito = campos.idDistrito;
 let distritos = [];
+let referencia = null;
+
+/** Veredictos del diseño (VV): título, detalle, ícono y estilo. El color nunca va solo. */
+const VEREDICTOS = {
+    dentro: ['Buen precio', 'Está dentro de lo que pagan hoy.', 'circle-check'],
+    bajo: ['Precio bajo, podría ganar más', 'Otros venden más caro hoy. Pruebe subir un poco.', 'triangle-alert'],
+    alto: ['Precio muy alto, puede tardar en vender', 'Pruebe un precio más cerca del mercado.', 'circle-alert']
+};
 
 function kilosPorUnidad(b) {
     return Number(b.factorKg ?? b.pesoUnidadKg);
@@ -25,8 +34,68 @@ function actualizarPrecioKilo() {
         precioKilo.hidden = true;
         return;
     }
-    precioKilo.textContent = `Por kilo sale a ≈ ${soles(precio / kilosPorUnidad(b))}`;
+    const porKilo = precio / kilosPorUnidad(b);
+    precioKilo.textContent = `Por kilo sale a ≈ ${soles(porKilo)}`;
     precioKilo.hidden = false;
+    mostrarVeredicto(porKilo);
+}
+
+/** Muestra el veredicto frente a la referencia; sin referencia no se muestra (UC-01 A3). */
+function mostrarVeredicto(porKilo) {
+    const caja = document.getElementById('veredicto');
+    if (!referencia || !(porKilo > 0)) {
+        caja.hidden = true;
+        return;
+    }
+    const redondeado = Math.round(porKilo * 10000) / 10000;
+    let tipo = 'dentro';
+    if (redondeado < Number(referencia.minimoKg)) {
+        tipo = 'bajo';
+    } else if (redondeado > Number(referencia.maximoKg)) {
+        tipo = 'alto';
+    }
+    const [titulo, detalle, nombreIcono] = VEREDICTOS[tipo];
+    const textoTitulo = document.createElement('span');
+    textoTitulo.textContent = titulo;
+    document.getElementById('veredicto-titulo').replaceChildren(icono(nombreIcono), textoTitulo);
+    document.getElementById('veredicto-detalle').textContent = detalle;
+    caja.className = `ac-veredicto ac-veredicto-${tipo}`;
+    caja.hidden = false;
+}
+
+/** Pide la referencia del cultivo en el distrito elegido y escribe "Hoy en {zona} pagan entre …". */
+async function cargarReferencia() {
+    const b = leerBorrador();
+    const caja = document.getElementById('referencia');
+    referencia = null;
+    caja.hidden = true;
+    if (!b.idCultivo || !b.idDistrito) {
+        actualizarPrecioKilo();
+        return;
+    }
+    try {
+        referencia = await api.get(`/precios/referencia?idCultivo=${b.idCultivo}&idDistrito=${b.idDistrito}`);
+    } catch {
+        referencia = null; // La referencia orienta, no bloquea la publicación
+    }
+    if (referencia) {
+        const kilos = kilosPorUnidad(b);
+        const unidad = b.unidad.toLowerCase();
+        const minimo = Number(referencia.minimoKg);
+        const maximo = Number(referencia.maximoKg);
+        document.getElementById('referencia-texto').textContent = `Hoy en ${referencia.zona} pagan entre `
+            + `${soles(minimo * kilos)} y ${soles(maximo * kilos)} por ${unidad} `
+            + `(${soles(minimo)} a ${soles(maximo)} por kilo).`;
+        const plataforma = document.getElementById('referencia-plataforma');
+        const rango = referencia.rangoPlataforma;
+        plataforma.hidden = !rango;
+        if (rango) {
+            plataforma.textContent = `En AgroConecta se vendió entre ${soles(rango.minimoKg)} y `
+                + `${soles(rango.maximoKg)} por kilo (${rango.ventas} ventas en 30 días).`;
+        }
+        caja.hidden = false;
+    }
+    actualizarPrecioKilo();
 }
 
 function mostrarDistrito(id) {
@@ -35,6 +104,7 @@ function mostrarDistrito(id) {
     selectDistrito.value = d ? String(d.id) : '';
     if (d) {
         guardarBorrador({ idDistrito: d.id, distrito: d.nombre, provincia: d.provincia });
+        cargarReferencia();
     }
 }
 

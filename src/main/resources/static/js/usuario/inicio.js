@@ -1,10 +1,12 @@
 /**
- * Inicio mínimo del walking skeleton: saluda al usuario de la sesión según su rol.
- * GET /api/v1/usuarios/me confirma que el token sigue válido y que el usuario está ACTIVO.
+ * Inicio del agricultor (diseño 06) y del comprador (diseño 14): saludo según el rol y precios de hoy (RF-02).
+ * GET /api/v1/usuarios/me confirma que el token sigue válido y que el usuario está ACTIVO; GET
+ * /api/v1/precios/vigentes da los precios de la zona del usuario, o de todas las zonas si su distrito no es zona.
  */
 import { api } from '../api.js';
 import { requerirSesion, cerrarSesion } from '../comun/sesion.js';
 import { mostrarAlerta } from '../comun/formulario.js';
+import { mostrarTarjetas } from '../comun/precios.js';
 
 const ROLES = {
     AGRICULTOR: 'Cuenta de Agricultor',
@@ -31,6 +33,7 @@ async function cargar() {
         document.getElementById('saludo').textContent = `Hola, ${nombre}`;
         document.getElementById('rol').textContent = `${ROLES[perfil.rol] ?? ''} · ${perfil.distrito}`;
         document.getElementById('vender').hidden = perfil.rol !== 'AGRICULTOR';
+        await cargarPrecios(perfil);
     } catch (error) {
         if (error.estado === 401) {
             window.location.replace('/pages/usuario/ingresar.html');
@@ -38,6 +41,16 @@ async function cargar() {
         }
         mostrarAlerta(document.getElementById('alerta'), error.message, 'error');
     }
+}
+
+async function cargarPrecios(perfil) {
+    let precios = await api.get(`/precios/vigentes?idDistrito=${perfil.idDistrito}`);
+    if (precios.length > 0) {
+        document.getElementById('titulo-precios').textContent = `Precios de hoy en ${perfil.distrito}`;
+    } else {
+        precios = await api.get('/precios/vigentes');
+    }
+    mostrarTarjetas(document.getElementById('precios'), precios);
 }
 
 if (sesion) {

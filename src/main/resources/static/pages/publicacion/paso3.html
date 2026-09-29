@@ -31,7 +31,16 @@
             <div class="invalid-feedback d-block" data-error-de="precioUnitario"></div>
         </div>
 
-        <p class="ac-alerta ac-alerta-exito" id="precio-kilo" aria-live="polite" hidden></p>
+        <p class="fw-semibold mb-3" id="precio-kilo" aria-live="polite" hidden></p>
+
+        <div class="ac-veredicto" id="veredicto" aria-live="polite" hidden>
+            <p class="d-flex align-items-center gap-2 fw-bold mb-1" id="veredicto-titulo"></p>
+            <p class="mb-0" id="veredicto-detalle"></p>
+        </div>
+        <div class="mb-4" id="referencia" hidden>
+            <p class="mb-1" id="referencia-texto"></p>
+            <p class="ac-suave small mb-0" id="referencia-plataforma" hidden></p>
+        </div>
 
         <fieldset class="mb-4">
             <legend class="form-label">¿Dónde está su cosecha?</legend>

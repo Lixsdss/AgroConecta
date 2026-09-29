@@ -3,18 +3,41 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>AgroConecta</title>
-    <meta name="description" content="Venda su cosecha directamente a compradores de Piura, sin intermediarios.">
+    <title>AgroConecta · Precios de hoy en Piura</title>
+    <meta name="description" content="Venda su cosecha directamente a compradores de Piura, sin intermediarios. Precios de hoy de los mercados de Piura.">
     <link rel="stylesheet" href="/vendor/bootstrap/css/bootstrap.min.css">
     <link rel="stylesheet" href="/css/estilos.css">
+    <script type="module" src="/js/portada.js"></script>
 </head>
 <body>
-<main class="ac-pantalla d-flex flex-column justify-content-center">
-    <p class="ac-marca text-center mb-1">AgroConecta</p>
-    <p class="text-center mb-5">Venda y compre cosechas de Piura, sin intermediarios.</p>
+<!-- Inicio público (diseño 01, RF-02): los precios se ven sin cuenta. -->
+<main class="ac-pantalla">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <p class="ac-marca mb-0">AgroConecta</p>
+        <a class="btn btn-link px-2" href="/pages/usuario/ingresar.html"><svg class="ac-icono" aria-hidden="true" focusable="false"><use href="/img/iconos.svg#log-in"></use></svg> <span>Ingresar</span></a>
+    </div>
 
-    <a class="btn btn-primary w-100 mb-3" href="/pages/usuario/ingresar.html"><svg class="ac-icono" aria-hidden="true" focusable="false"><use href="/img/iconos.svg#log-in"></use></svg> <span>Ingresar</span></a>
-    <a class="btn btn-outline-primary w-100" href="/pages/usuario/rol.html"><svg class="ac-icono" aria-hidden="true" focusable="false"><use href="/img/iconos.svg#user-plus"></use></svg> <span>Crear cuenta</span></a>
+    <section class="ac-portada-hero">
+        <h1 class="ac-titulo">Venda su cosecha sin intermediarios</h1>
+        <p>Publique en 3 pasos y hable directo con compradores de Piura.</p>
+        <a class="btn btn-light w-100 mb-2" href="/pages/usuario/registro.html?rol=AGRICULTOR"><svg class="ac-icono" aria-hidden="true" focusable="false"><use href="/img/iconos.svg#sprout"></use></svg> <span>Publicar mi cosecha gratis</span></a>
+        <a class="btn btn-outline-light w-100" href="/pages/usuario/registro.html?rol=COMPRADOR"><svg class="ac-icono" aria-hidden="true" focusable="false"><use href="/img/iconos.svg#store"></use></svg> <span>Soy comprador</span></a>
+    </section>
+
+    <section aria-labelledby="titulo-precios">
+        <h2 class="h4 mb-0" id="titulo-precios">Precios de hoy</h2>
+        <p class="ac-suave">Mercados de Piura. No necesita cuenta.</p>
+
+        <div id="alerta" class="ac-alerta" role="alert" tabindex="-1" hidden></div>
+
+        <p class="fw-semibold mb-2" id="etiqueta-cultivos">Cultivo</p>
+        <div class="ac-chips mb-3" id="cultivos" role="radiogroup" aria-labelledby="etiqueta-cultivos"></div>
+        <p class="fw-semibold mb-2" id="etiqueta-zonas">Zona</p>
+        <div class="ac-chips mb-3" id="zonas" role="radiogroup" aria-labelledby="etiqueta-zonas"></div>
+
+        <div class="ac-precios mb-3" id="tarjetas" aria-live="polite"></div>
+        <div class="ac-tarjeta-precio" id="grafico" hidden></div>
+    </section>
 </main>
 </body>
 </html>

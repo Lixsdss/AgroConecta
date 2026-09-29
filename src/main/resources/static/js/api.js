@@ -27,7 +27,7 @@ export class ErrorApi extends Error {
  *
  * @param {string} metodo GET, POST, PUT, PATCH o DELETE
  * @param {string} ruta ruta relativa a /api/v1 (por ejemplo, '/auth/login')
- * @param {object} [cuerpo] objeto que se envía como JSON
+ * @param {object|FormData} [cuerpo] objeto que se envía como JSON, o FormData para subir archivos
  * @returns {Promise<any>} cuerpo de la respuesta, o null si no tiene
  * @throws {ErrorApi} si la API responde con error o no hay conexión
  */
@@ -37,7 +37,8 @@ export async function solicitar(metodo, ruta, cuerpo) {
     if (token) {
         cabeceras['Authorization'] = `Bearer ${token}`;
     }
-    if (cuerpo !== undefined) {
+    const esFormulario = cuerpo instanceof FormData;
+    if (cuerpo !== undefined && !esFormulario) {
         cabeceras['Content-Type'] = 'application/json';
     }
 
@@ -46,14 +47,19 @@ export async function solicitar(metodo, ruta, cuerpo) {
         respuesta = await fetch(URL_BASE + ruta, {
             method: metodo,
             headers: cabeceras,
-            body: cuerpo === undefined ? undefined : JSON.stringify(cuerpo)
+            body: cuerpo === undefined || esFormulario ? cuerpo : JSON.stringify(cuerpo)
         });
     } catch {
         throw new ErrorApi(0, 'No hay conexión. Revise su internet e intente de nuevo.');
     }
 
     const texto = await respuesta.text();
-    const datos = texto ? JSON.parse(texto) : null;
+    let datos = null;
+    try {
+        datos = texto ? JSON.parse(texto) : null;
+    } catch {
+        datos = null; // Respuesta que no es JSON (por ejemplo, una página de error del servidor)
+    }
 
     if (!respuesta.ok) {
         if (respuesta.status === 401 && token) {

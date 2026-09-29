@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Precios de mercado · AgroConecta</title>
+    <link rel="stylesheet" href="/vendor/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/css/estilos.css">
+    <script type="module" src="/js/administracion/precios.js"></script>
+</head>
+<body>
+<!-- Formato escritorio del administrador (diseño 11b, 1440×900, RF-02) -->
+<div class="ac-escritorio">
+    <aside class="ac-lateral" aria-label="Menú de administración">
+        <div>
+            <p class="ac-marca mb-1">AgroConecta</p>
+            <p class="ac-suave mb-0">Administración</p>
+        </div>
+        <nav>
+            <a href="/pages/administracion/moderacion.html">
+                <svg class="ac-icono" aria-hidden="true" focusable="false"><use href="/img/iconos.svg#shield-check"></use></svg>
+                <span>Moderación</span>
+            </a>
+            <a href="/pages/administracion/precios.html" aria-current="page">
+                <svg class="ac-icono" aria-hidden="true" focusable="false"><use href="/img/iconos.svg#chart-line"></use></svg>
+                <span>Precios de mercado</span>
+            </a>
+        </nav>
+        <div class="ac-usuario-lateral">
+            <span class="ac-iniciales" id="iniciales" aria-hidden="true"></span>
+            <div>
+                <strong id="nombre-admin"></strong>
+                <div class="ac-suave">Administración</div>
+            </div>
+        </div>
+        <button class="btn btn-outline-primary w-100" type="button" id="salir">
+            <svg class="ac-icono" aria-hidden="true" focusable="false"><use href="/img/iconos.svg#log-out"></use></svg>
+            <span>Salir</span>
+        </button>
+    </aside>
+
+    <main class="ac-contenido">
+        <p class="ac-alerta ac-alerta-info ac-solo-escritorio">Esta sección está pensada para una computadora.</p>
+        <div class="d-flex justify-content-between align-items-baseline flex-wrap gap-2 mb-3">
+            <h1 class="mb-0">Precios de mercado</h1>
+            <p class="ac-suave mb-0" id="avance" aria-live="polite"></p>
+        </div>
+
+        <div class="ac-admin-precios">
+            <div>
+                <section class="ac-panel mb-3" aria-labelledby="titulo-form">
+                    <h2 class="h4 fw-semibold" id="titulo-form">Cargar precio del día</h2>
+                    <div id="alerta" class="ac-alerta" role="alert" tabindex="-1" hidden></div>
+                    <form id="formulario" novalidate>
+                        <fieldset class="mb-3">
+                            <legend class="form-label">Cultivo</legend>
+                            <div class="ac-chips" id="cultivos"></div>
+                            <div class="invalid-feedback d-block" data-error-de="idCultivo"></div>
+                        </fieldset>
+                        <fieldset class="mb-3">
+                            <legend class="form-label">Zona</legend>
+                            <div class="ac-chips" id="zonas"></div>
+                            <div class="invalid-feedback d-block" data-error-de="idDistrito"></div>
+                        </fieldset>
+                        <fieldset class="mb-3">
+                            <legend class="form-label">Fuente</legend>
+                            <div class="ac-chips" id="fuentes"></div>
+                            <div class="invalid-feedback d-block" data-error-de="fuente"></div>
+                        </fieldset>
+                        <div class="row g-3 mb-2">
+                            <div class="col-sm-6">
+                                <label class="form-label" for="precioKg">Precio por kilo</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">S/</span>
+                                    <input class="form-control" id="precioKg" name="precioKg" type="number"
+                                           inputmode="decimal" min="0.01" step="0.01" required>
+                                </div>
+                                <div class="invalid-feedback d-block" data-error-de="precioKg"></div>
+                            </div>
+                            <div class="col-sm-6">
+                                <label class="form-label" for="fecha">Fecha</label>
+                                <input class="form-control" id="fecha" name="fecha" type="date" required>
+                                <div class="invalid-feedback d-block" data-error-de="fecha"></div>
+                            </div>
+                        </div>
+                        <p class="fw-semibold" id="equivalente" aria-live="polite"></p>
+                        <p class="ac-suave small">El precio se guarda por kilo. La página pública lo muestra también en la unidad local.</p>
+                        <div class="d-flex gap-2 flex-wrap">
+                            <button class="btn btn-primary" type="submit" id="guardar">
+                                <svg class="ac-icono" aria-hidden="true" focusable="false"><use href="/img/iconos.svg#save"></use></svg>
+                                <span>Guardar precio</span>
+                            </button>
+                            <button class="btn btn-outline-primary" type="button" id="editar-existente" hidden>
+                                <svg class="ac-icono" aria-hidden="true" focusable="false"><use href="/img/iconos.svg#refresh-cw"></use></svg>
+                                <span>Editar ese precio</span>
+                            </button>
+                            <button class="btn btn-link" type="button" id="cancelar" hidden>Cancelar edición</button>
+                        </div>
+                    </form>
+                </section>
+
+                <section class="ac-panel" aria-labelledby="titulo-archivo">
+                    <h2 class="h4 fw-semibold" id="titulo-archivo">Cargar archivo</h2>
+                    <p class="ac-suave">Excel (.xlsx) o CSV, máximo 1 MB y 500 filas. Primera fila:
+                        <code>cultivo, zona, fecha, precio_kg</code>. Se guardan las filas válidas y se listan las demás.</p>
+                    <div id="alerta-archivo" class="ac-alerta" role="alert" tabindex="-1" hidden></div>
+                    <form id="form-archivo" novalidate>
+                        <div class="mb-3">
+                            <label class="form-label" for="archivo">Archivo</label>
+                            <input class="form-control" id="archivo" name="archivo" type="file" accept=".xlsx,.csv" required>
+                            <div class="invalid-feedback d-block" data-error-de="archivo"></div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" for="fuente-archivo">Fuente de todo el archivo</label>
+                            <select class="form-select" id="fuente-archivo" name="fuente"></select>
+                        </div>
+                        <button class="btn btn-primary" type="submit" id="subir">
+                            <svg class="ac-icono" aria-hidden="true" focusable="false"><use href="/img/iconos.svg#send"></use></svg>
+                            <span>Subir archivo</span>
+                        </button>
+                    </form>
+                    <ul class="mt-3 mb-0" id="rechazadas" hidden></ul>
+                </section>
+            </div>
+
+            <section class="ac-panel" aria-labelledby="titulo-tabla">
+                <h2 class="h4 fw-semibold" id="titulo-tabla">Precios vigentes</h2>
+                <div class="table-responsive">
+                    <table class="table align-middle mb-0">
+                        <thead>
+                        <tr>
+                            <th scope="col">Cultivo</th>
+                            <th scope="col">Zona</th>
+                            <th scope="col">Por kilo</th>
+                            <th scope="col">En unidad local</th>
+                            <th scope="col">Tendencia</th>
+                            <th scope="col">Actualizado</th>
+                            <th scope="col"><span class="visually-hidden">Acciones</span></th>
+                        </tr>
+                        </thead>
+                        <tbody id="tabla"></tbody>
+                    </table>
+                </div>
+            </section>
+        </div>
+    </main>
+</div>
+</body>
+</html>
