@@ -48,6 +48,13 @@ Base: `/api/v1`. Formato JSON (UTF-8). Autenticación con JWT en la cabecera `Au
 | POST | `/api/v1/precios` | ADMINISTRADOR | RF-02 | precio |
 | PUT | `/api/v1/precios/{id}` | ADMINISTRADOR | RF-02 | precio |
 | POST | `/api/v1/precios/archivo` | ADMINISTRADOR | RF-02 | precio |
+| POST | `/api/v1/conversaciones` | COMPRADOR | RF-04 | mensajeria |
+| POST | `/api/v1/conversaciones/whatsapp` | COMPRADOR | RF-04 | mensajeria |
+| GET | `/api/v1/conversaciones` | AGRICULTOR, COMPRADOR | RF-04 | mensajeria |
+| GET | `/api/v1/conversaciones/no-leidos` | AGRICULTOR, COMPRADOR | RF-04 | mensajeria |
+| GET | `/api/v1/conversaciones/{id}` | Participante | RF-04 | mensajeria |
+| GET | `/api/v1/conversaciones/{id}/mensajes` | Participante | RF-04 | mensajeria |
+| POST | `/api/v1/conversaciones/{id}/mensajes` | Participante | RF-04 | mensajeria |
 | GET | `/api/v1/moderacion/publicaciones` | ADMINISTRADOR | RF-09 | administracion |
 | GET | `/api/v1/moderacion/decisiones` | ADMINISTRADOR | RF-09 | administracion |
 | POST | `/api/v1/moderacion/publicaciones/{id}/decisiones` | ADMINISTRADOR | RF-09 | administracion |
@@ -493,6 +500,115 @@ Se importan las filas válidas y se informan las inválidas con su motivo (UC-02
 ```
 
 **Errores:** 400 archivo vacío, formato no soportado o columnas distintas · 403 · 413 "El archivo es demasiado grande (máximo 1 MB)."
+
+---
+
+## Mensajería (`mensajeria`)
+
+Chat entre el comprador y el agricultor de una publicación (RF-04, UC-04). Una conversación por publicación y comprador; **nunca se cierra** (sirve después para coordinar la entrega). "Participante" = el comprador de la conversación o el agricultor de la publicación; cualquier otro usuario recibe **403**. El frontend consulta periódicamente (cada 10 s en el chat, cada 30 s en la lista y el inicio).
+
+**Conversación** (respuesta de `POST /conversaciones`, `GET /conversaciones/{id}` y cada elemento de la lista):
+```json
+{
+  "id": 7, "idPublicacion": 15, "canalInicio": "CHAT", "fechaInicio": "2026-10-06T09:58:00",
+  "soyAgricultor": false,
+  "otraParte": { "id": 3, "nombre": "Juan Carlos Chunga", "negocio": null },
+  "publicacion": {
+    "cultivo": "Mango", "variedad": "Kent", "distrito": "Tambogrande", "estado": "PUBLICADA",
+    "unidad": "Jaba", "unidadPlural": "jabas", "pesoUnidadKg": 20.000,
+    "precioUnitario": 28.00, "precioKg": 1.4000,
+    "disponibleKg": 600.00, "unidadesDisponibles": 30.00, "diasRestantes": 5
+  },
+  "ultimoMensaje": { "tipo": "OFERTA", "contenido": null, "ofertaCantidad": 30.00, "ofertaPrecioUnitario": 27.00,
+                     "mio": true, "fechaEnvio": "2026-10-06T10:02:00" },
+  "noLeidos": 0
+}
+```
+
+- `otraParte.negocio`: nombre del negocio cuando la otra parte es el comprador (por ejemplo, "Restaurante El Chalán"); `null` para el agricultor.
+- `ultimoMensaje` es `null` si aún no hay mensajes. `noLeidos`: mensajes de la otra parte que no he leído.
+
+### POST `/api/v1/conversaciones`
+
+Rol **COMPRADOR**. "Escribir" (UC-04 pasos 1–3). Cuerpo `{ "idPublicacion": 15 }`. Si el comprador ya tiene conversación con esa publicación, devuelve la misma.
+
+**201** (creada, `canalInicio` = CHAT, con `Location: /api/v1/conversaciones/{id}`) o **200** (ya existía) — una conversación.
+
+**Errores:** 400 sin `idPublicacion` · 403 no es comprador · 404 "La publicación no existe." · 422 "Solo se puede contactar una publicación disponible." (no está PUBLICADA y no había conversación).
+
+### POST `/api/v1/conversaciones/whatsapp`
+
+Rol **COMPRADOR**. "WhatsApp" (UC-04 A1). Cuerpo `{ "idPublicacion": 15 }`. Crea la conversación si no existía (`canalInicio` = WHATSAPP), **suma 1 a `clics_whatsapp`** y devuelve el enlace para abrir WhatsApp con el celular del agricultor y un texto sugerido. El celular solo se entrega dentro de este enlace.
+
+**200**
+```json
+{ "idConversacion": 7, "enlace": "https://wa.me/51987654321?text=Hola%2C%20Juan%20Carlos%20Chunga.%20Vi%20su%20Mango%20Kent%20en%20AgroConecta%20(30%20jabas%20a%20S%2F%2028.00%20por%20jaba).%20%C2%BFSigue%20disponible%3F" }
+```
+
+Texto: "Hola, {agricultor}. Vi su {cultivo variedad} en AgroConecta ({unidades disponibles} {unidad} a S/ {precio} por {unidad}). ¿Sigue disponible?"
+
+**Errores:** los mismos que `POST /conversaciones`.
+
+### GET `/api/v1/conversaciones?page=0`
+
+Roles **AGRICULTOR** y **COMPRADOR**. "Mensajes": las conversaciones del usuario (como comprador, o de sus publicaciones como agricultor), con actividad más reciente primero. 20 por página.
+
+**200** — lista paginada de conversaciones (`content` y `page`, como la búsqueda).
+
+### GET `/api/v1/conversaciones/no-leidos`
+
+Roles **AGRICULTOR** y **COMPRADOR**. Total de mensajes no leídos en todas sus conversaciones (aviso del inicio).
+
+**200** `{ "total": 3 }`
+
+### GET `/api/v1/conversaciones/{id}`
+
+**Participante**. Cabecera del chat. **200** — una conversación. **Errores:** 403 · 404 "La conversación no existe."
+
+### GET `/api/v1/conversaciones/{id}/mensajes?despuesDe={idMensaje}`
+
+**Participante**. Mensajes del más antiguo al más reciente; con `despuesDe`, solo los posteriores a ese id (consulta periódica). Marca como **leídos** los mensajes de la otra parte.
+
+**200**
+```json
+[
+  { "id": 40, "idRemitente": 12, "mio": true, "tipo": "TEXTO", "contenido": "Buenos días, me interesa su mango.",
+    "ofertaCantidad": null, "ofertaPrecioUnitario": null, "ofertaKg": null, "ofertaTotal": null,
+    "fechaEnvio": "2026-10-06T09:58:00" },
+  { "id": 41, "idRemitente": 12, "mio": true, "tipo": "OFERTA", "contenido": null,
+    "ofertaCantidad": 30.00, "ofertaPrecioUnitario": 27.00, "ofertaKg": 600.00, "ofertaTotal": 810.00,
+    "fechaEnvio": "2026-10-06T10:02:00" }
+]
+```
+
+`ofertaKg` = cantidad × peso por unidad de la publicación; `ofertaTotal` = cantidad × precio por unidad.
+
+**Errores:** 403 · 404.
+
+### POST `/api/v1/conversaciones/{id}/mensajes`
+
+**Participante**. Envía un mensaje de texto o una oferta (UC-04 pasos 4–6). Ambas partes pueden ofertar (contraofertas).
+
+| Campo | Obligatorio | Regla |
+|---|---|---|
+| `tipo` | Sí | `TEXTO` u `OFERTA` |
+| `contenido` | Con TEXTO | 1 a 1000 caracteres, no vacío |
+| `ofertaCantidad` | Con OFERTA | > 0, hasta 2 decimales, en la unidad de la publicación; no mayor que `unidadesDisponibles` |
+| `ofertaPrecioUnitario` | Con OFERTA | > 0, hasta 2 decimales, soles por unidad |
+
+**201** — el mensaje (mismo formato que en la lista).
+
+Crea un aviso para la otra parte (`notificaciones`, `id_referencia` = id de la conversación): **OFERTA** siempre ("Nueva oferta": "{nombre} le ofrece S/ 27.00 por jaba por su Mango Kent."); **MENSAJE** solo si la otra parte no tiene ya un aviso MENSAJE sin leer de esa conversación ("Nuevo mensaje": "{nombre} le escribió sobre Mango Kent."). El aviso no copia el texto del mensaje.
+
+**Errores**
+
+| Código | Cuándo | `mensaje` |
+|---|---|---|
+| 400 | Falta el texto o los datos de la oferta | "Los datos enviados no son válidos." (con `errores` por campo) |
+| 403 | No participa en la conversación (UC-04 A4) | "No tiene permiso para realizar esta acción." |
+| 404 | La conversación no existe | "La conversación no existe." |
+| 422 | Oferta sobre una publicación que ya no está PUBLICADA (UC-04 A3) | "Solo se hacen ofertas mientras la publicación está disponible." |
+| 422 | La oferta supera lo disponible | "La oferta supera lo disponible (≈ 25 jabas)." |
 
 ---
 
