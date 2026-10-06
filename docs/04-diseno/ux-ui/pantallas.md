@@ -20,12 +20,12 @@ Relaciona cada pantalla del prototipo (numeración del diseño) con su archivo e
 
 | # | Pantalla del diseño | Archivo | JS | Endpoints | Navegación |
 |---|---|---|---|---|---|
-| 01 | Inicio público con precios (RF-02, slice 4) | `index.html` | `js/portada.js` | `GET /api/v1/catalogo/cultivos`, `GET /api/v1/catalogo/distritos`, `GET /api/v1/precios/vigentes`, `GET /api/v1/precios/historial` | Ingresar → 02 · Publicar mi cosecha gratis → 04 (agricultor) · Soy comprador → 04 (comprador) |
+| 01 | Inicio público con precios (RF-02, slice 4) | `index.html` | `js/portada.js` | `GET /api/v1/catalogo/cultivos`, `GET /api/v1/catalogo/distritos`, `GET /api/v1/precios/vigentes`, `GET /api/v1/precios/historial` | Ingresar → 02 · Publicar mi cosecha gratis → 04 (agricultor) · Soy comprador → 04 (comprador) · Ver productos disponibles → Buscar (slice 5) |
 | 02 | Ingresar | `pages/usuario/ingresar.html` | `js/usuario/ingresar.js` | `POST /api/v1/auth/login` | Éxito → inicio · "Crear cuenta nueva" → 03 · "¿Olvidó su contraseña?" muestra el aviso de UC-10 A4 |
 | 03 | Crear cuenta · ¿Quién es usted? | `pages/usuario/rol.html` | `js/usuario/rol.js` | — | Continuar → 04 con `?rol=AGRICULTOR` o `COMPRADOR` |
 | 04 | Crear cuenta · datos | `pages/usuario/registro.html` | `js/usuario/registro.js` | `GET /api/v1/catalogo/distritos`, `POST /api/v1/auth/registro` | Agricultor → 05 · Comprador → inicio |
 | 05 | Bienvenida (3 tarjetas) | `pages/usuario/bienvenida.html` | `js/usuario/bienvenida.js` | — | "Saltar" o "Empezar" → inicio |
-| 06 / 14 | Inicio del agricultor / del comprador (versión sencilla) | `pages/usuario/inicio.html` | `js/usuario/inicio.js` | `GET /api/v1/usuarios/me`, `GET /api/v1/precios/vigentes` (slice 4) | Vender mi cosecha → 07 (agricultor) · Ver todos los precios → 01 · Mi perfil · Salir → 02 |
+| 06 / 14 | Inicio del agricultor / del comprador (versión sencilla) | `pages/usuario/inicio.html` | `js/usuario/inicio.js` | `GET /api/v1/usuarios/me`, `GET /api/v1/precios/vigentes` (slice 4) | Vender mi cosecha → 07 (agricultor) · Buscar productos (slice 5) · Ver todos los precios → 01 · Mi perfil · Salir → 02 |
 | — | Mi perfil (datos y contraseña) | `pages/usuario/perfil.html` | `js/usuario/perfil.js` | `GET /api/v1/catalogo/distritos`, `GET` y `PUT /api/v1/usuarios/me`, `PUT /api/v1/usuarios/me/contrasena` | Atrás → inicio |
 
 ### Diferencias con el diseño (aprobadas en el plan del slice 1)
@@ -72,6 +72,24 @@ El administrador entra por la misma pantalla "Ingresar"; el inicio lo lleva dire
 - **Marcas:** la marca del diseño "Peso por unidad inusual" no existe en el esquema; se muestran PRIMERA_PUBLICACION, CANTIDAD_INUSUAL, PRECIO_FUERA_RANGO (desde el slice 4) y CORREGIDA.
 - **Detalle:** la línea "Hoy en … pagan entre …" todavía no se muestra en moderación (el endpoint `GET /api/v1/precios/referencia` ya existe desde el slice 4); la calificación y las ventas del agricultor, con RF-05 y RF-06.
 - **Motivos y mensajes sugeridos:** son los 5 del diseño, que coinciden con `chk_revision_motivo`.
+
+## Búsqueda (RF-03, slice 5)
+
+| # | Pantalla del diseño | Archivo | JS | Endpoints | Navegación |
+|---|---|---|---|---|---|
+| — | Buscar (diseño "buscar") | `pages/publicacion/buscar.html` | `js/publicacion/buscar.js` | `GET /api/v1/publicaciones`, `GET /api/v1/catalogo/cultivos`, `/variedades`, `/provincias`, `/distritos`, `/unidades` | Resultado → Detalle · Volver → inicio (con sesión) o portada |
+| — | Hoja "Filtrar" | `<dialog>` de la misma página | — | — | Limpiar · Ver resultados · Cerrar |
+| — | Detalle de la cosecha (no está en el diseño) | `pages/publicacion/detalle.html` | `js/publicacion/detalle.js` | `GET /api/v1/publicaciones/{id}` | Volver → la búsqueda con sus filtros |
+
+Se entra desde "Ver productos disponibles" en la portada (01) y "Buscar productos" en el inicio (botón principal del comprador, secundario del agricultor). Los filtros quedan en la dirección de la página, así que "atrás" desde el detalle vuelve a la misma búsqueda. La tarjeta de resultado está en `js/publicacion/resultado.js`.
+
+### Diferencias con el diseño (aprobadas en el plan del slice 5)
+
+- **Caja de texto "Mango, limón, arroz…":** no se incluye; el SRS no pide búsqueda por texto. El cultivo se elige con los chips de "Categoría".
+- **Filtros:** se agrega **Variedad** (aparece al elegir cultivo, SRS RF-03). "Provincia o distrito" es una lista con "Toda la provincia de …" y sus distritos. Fecha de cosecha: Cualquier fecha / Esta semana (últimos 7 días) / Este mes (últimos 30).
+- **Calificación:** se muestra "★ 4.8" o "Sin calificaciones"; el número de ventas "(23 ventas)" llega con el módulo `venta` (slices 7 y 8).
+- **Escribir y WhatsApp:** llegan con RF-04 (slice 6). Por ahora cada resultado abre el **detalle**.
+- **Cantidad:** "≈ 25 jabas disponibles (≈ 500 kg)", con los kilos aún no comprometidos en ventas, redondeado hacia abajo.
 
 ## Precios de referencia (RF-02, slice 4)
 

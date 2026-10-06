@@ -10,7 +10,7 @@ Relaciona cada requisito funcional con su caso de uso, módulo, tablas, endpoint
 |---|---|---|---|---|---|
 | **RF-01** | **Publicación de cosecha** | **UC-01** | **publicacion (+ catalogo)** | **2** | **Implementado** (referencia de precio: slice 4; marcas PRECIO_FUERA_RANGO y CANTIDAD_INUSUAL: slice 3) |
 | **RF-02** | **Precios de mercado** | **UC-02** | **precio** | **4** | **Implementado (slice 4)**; también activa la marca PRECIO_FUERA_RANGO de RF-01 |
-| RF-03 | Búsqueda multi-criterio | UC-03 | publicacion | 5 | Pendiente |
+| **RF-03** | **Búsqueda multi-criterio** | **UC-03** | **publicacion** | **5** | **Implementado (slice 5)**; "Escribir" y "WhatsApp" del resultado llegan con RF-04 (slice 6) |
 | RF-04 | Mensajería directa | UC-04 | mensajeria | 6 | Pendiente |
 | RF-05 | Calificación | UC-07 | venta | 8 | Pendiente |
 | RF-06 | Registro e historial de transacciones | UC-05, UC-06 A1, UC-08 | venta | 7 | Pendiente |
@@ -60,6 +60,21 @@ Relaciona cada requisito funcional con su caso de uso, módulo, tablas, endpoint
 | Pantallas | 01 Inicio público (`index.html`, con gráfico SVG de 30 días), 06/14 Inicio del agricultor y del comprador (`inicio.html`, "Precios de hoy"), 09 Paso 3 (`paso3.html`, referencia y veredicto), 11b Precios de mercado (`pages/administracion/precios.html`) |
 | Pruebas | Unitarias: `ReferenciaPrecioServiceTest` (zona, promedio de zonas, 7 días, bajo/dentro/alto), `PublicacionServiceTest` (prioridad PRECIO_FUERA_RANGO). Integración (MariaDB): `PrecioIntegracionTest` (tendencia tras editar, duplicado 409, zona 422, fecha futura 400, 403/404, referencia de zona/promedio/204, CSV con filas rechazadas, Excel, formato inválido 400, marca PRECIO_FUERA_RANGO). Arquitectura: `ArquitecturaTest` |
 | RNF | RNF-01 (gráfico SVG propio sin librerías, página pública liviana), RNF-03 (chips ≥ 48 px, veredicto con ícono y texto, no solo color), RNF-05 (triggers y CHECK como última barrera) |
+
+### RF-03 — Búsqueda multicriterio (slice 5)
+
+| Elemento | Trazas |
+|---|---|
+| Caso de uso | UC-03: flujo básico (filtros opcionales de cultivo, variedad, provincia/distrito, unidad y fecha de cosecha; orden por precio por kilo, fecha de cosecha o calificación; 20 por página; resultado con cantidad disponible, precios, ubicación, días restantes y calificación; detalle); A1 sin resultados ("No encontramos productos" y "Quitar filtros"); A2 visitante sin sesión (búsqueda y detalle públicos; contactar llega con RF-04); A3 paginación ("Ver más") |
+| Módulos | `publicacion` (dueño de `v_publicaciones_disponibles`); `catalogo` (filtros y nombre de la unidad) |
+| Tablas | `v_publicaciones_disponibles` (lectura; ya incluye `v_reputacion_usuario`); publicaciones, cultivos, variedades, provincias, distritos, unidades_medida (lectura) |
+| Triggers y restricciones | Ninguno (solo lectura). Índices `idx_publicacion_busqueda` e `idx_publicacion_precio_kg` |
+| Endpoints | `GET /api/v1/publicaciones` (búsqueda), `GET /api/v1/publicaciones/{id}` (detalle, con agricultor, calificación, disponibilidad y días restantes) |
+| Pantallas | Buscar productos (`pages/publicacion/buscar.html`, con hoja de filtros) y Detalle de la cosecha (`pages/publicacion/detalle.html`); entradas desde la portada (01) y el inicio (06/14) |
+| Pruebas | Unitarias: `BusquedaServiceTest` (orden por defecto, 20 por página, orden por calificación, unidades disponibles redondeadas hacia abajo, rango de fechas y página inválidos), `PublicacionServiceTest`. Integración (MariaDB): `BusquedaIntegracionTest` (datos de cada resultado, filtros combinados y orden por precio, provincia y fecha de cosecha, excluye BLOQUEADA y VENCIDA, paginación de 20, página vacía, errores 400, detalle). Arquitectura: `ArquitecturaTest` |
+| RNF | RNF-01 (20 resultados por página y "Ver más", sin librerías), RNF-03 (chips ≥ 48 px, "Vence en N días" con ícono y texto) |
+
+Reglas aprobadas en el plan del slice 5: solo publicaciones con fecha límite hoy o después; desempates (precio por kilo → la más reciente; fecha de cosecha y calificación → menor precio por kilo; al final el id); los agricultores sin calificación van al final en el orden por calificación.
 
 ### RF-09 — Moderación posterior (slice 3)
 
