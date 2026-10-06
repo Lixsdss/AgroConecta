@@ -40,7 +40,8 @@ Base: `/api/v1`. Formato JSON (UTF-8). Autenticación con JWT en la cabecera `Au
 | PUT | `/api/v1/usuarios/me` | Autenticado | RF-08 | usuario |
 | PUT | `/api/v1/usuarios/me/contrasena` | Autenticado | RF-08 | usuario |
 | POST | `/api/v1/publicaciones` | AGRICULTOR | RF-01 | publicacion |
-| GET | `/api/v1/publicaciones/{id}` | Público | RF-01 | publicacion |
+| GET | `/api/v1/publicaciones` | Público | RF-03 | publicacion |
+| GET | `/api/v1/publicaciones/{id}` | Público | RF-01, RF-03 | publicacion |
 | GET | `/api/v1/precios/vigentes` | Público | RF-02 | precio |
 | GET | `/api/v1/precios/historial` | Público | RF-02 | precio |
 | GET | `/api/v1/precios/referencia` | Público | RF-02, RF-01 | precio |
@@ -292,9 +293,52 @@ Rol **AGRICULTOR**. Publica una cosecha (RF-01, UC-01). La publicación nace **P
 | 422 | Fecha límite anterior a hoy o a la cosecha | "La fecha límite no puede ser anterior a hoy." / "La fecha límite no puede ser anterior a la fecha de cosecha." |
 | 422 | Sin fecha límite y la cosecha ya pasó la vida útil del cultivo | "Con esa fecha de cosecha, el producto ya pasó su tiempo de venta. Revise la fecha." |
 
+### GET `/api/v1/publicaciones?idCultivo=&idVariedad=&idProvincia=&idDistrito=&idUnidad=&cosechaDesde=&cosechaHasta=&orden=PRECIO_KG&page=0`
+
+Público (UC-03, también sin sesión). Búsqueda multicriterio en `v_publicaciones_disponibles`. Siempre devuelve solo publicaciones **PUBLICADA**, con **kilos disponibles > 0** y **fecha límite hoy o después**; las de la cola de moderación también aparecen (moderación posterior).
+
+| Parámetro | Obligatorio | Regla |
+|---|---|---|
+| `idCultivo` | No | Cultivo (el filtro "Categoría") |
+| `idVariedad` | No | Variedad |
+| `idProvincia` | No | Todos los distritos de la provincia |
+| `idDistrito` | No | Un distrito |
+| `idUnidad` | No | Unidad en que vende el agricultor |
+| `cosechaDesde`, `cosechaHasta` | No | `AAAA-MM-DD`; `cosechaDesde` no puede ser posterior a `cosechaHasta` |
+| `orden` | No | `PRECIO_KG` (por defecto): menor precio por kilo primero, empate la más reciente · `FECHA_COSECHA`: cosecha más reciente primero, empate menor precio por kilo · `CALIFICACION`: mejor calificado primero, sin calificación al final, empate menor precio por kilo |
+| `page` | No | Desde 0. Siempre **20 por página** (`size` y `sort` no se usan) |
+
+Los filtros se combinan (todos deben cumplirse). Un id que no existe no es error: simplemente no hay resultados.
+
+**200** — lista paginada:
+```json
+{
+  "content": [
+    {
+      "id": 15, "idAgricultor": 3, "agricultor": "Juan Carlos Chunga", "calificacionAgricultor": 4.8,
+      "idCultivo": 1, "cultivo": "Mango", "idVariedad": 1, "variedad": "Kent",
+      "idUnidad": 2, "unidad": "Jaba", "unidadPlural": "jabas",
+      "cantidad": 30.00, "pesoUnidadKg": 20.000, "cantidadKg": 600.00,
+      "disponibleKg": 500.00, "unidadesDisponibles": 25.00,
+      "precioUnitario": 28.00, "precioKg": 1.4000,
+      "idDistrito": 9, "distrito": "Tambogrande", "idProvincia": 1, "provincia": "Piura",
+      "fechaCosecha": "2026-09-27", "fechaLimite": "2026-10-11", "diasRestantes": 5, "porVencer": false,
+      "fechaPublicacion": "2026-09-27T12:30:00"
+    }
+  ],
+  "page": { "size": 20, "number": 0, "totalElements": 1, "totalPages": 1 }
+}
+```
+
+- `calificacionAgricultor`: promedio de 1 a 5 con un decimal; `null` si aún no tiene calificaciones.
+- `unidadesDisponibles`: `disponibleKg / pesoUnidadKg`, redondeado hacia abajo a 2 decimales.
+- `porVencer`: `true` si faltan 3 días o menos (`diasRestantes ≤ 3`).
+
+**Errores:** 400 si `cosechaDesde` es posterior a `cosechaHasta` ("La fecha «desde» no puede ser posterior a la fecha «hasta»."), si `page` es negativo, si `orden` no es válido o si una fecha no tiene el formato `AAAA-MM-DD`.
+
 ### GET `/api/v1/publicaciones/{id}`
 
-Público. Devuelve la publicación si está **PUBLICADA**, o en cualquier estado si la pide su propio agricultor (con su token). En otro caso, 404.
+Público. Devuelve la publicación si está **PUBLICADA**, o en cualquier estado si la pide su propio agricultor (con su token). En otro caso, 404. Es también el detalle que se abre desde la búsqueda (UC-03 paso 7).
 
 **200**
 ```json
@@ -319,9 +363,17 @@ Público. Devuelve la publicación si está **PUBLICADA**, o en cualquier estado
   "fechaCosecha": "2026-09-27",
   "fechaLimite": "2026-10-11",
   "estado": "PUBLICADA",
-  "fechaPublicacion": "2026-09-27T12:30:00"
+  "fechaPublicacion": "2026-09-27T12:30:00",
+  "agricultor": "Juan Carlos Chunga",
+  "calificacionAgricultor": 4.8,
+  "disponibleKg": 600.00,
+  "unidadesDisponibles": 30.00,
+  "diasRestantes": 14,
+  "porVencer": false
 }
 ```
+
+Desde el slice 5 (RF-03) agrega `agricultor`, `calificacionAgricultor`, `disponibleKg`, `unidadesDisponibles`, `diasRestantes` y `porVencer`, con las mismas reglas que la búsqueda. También los devuelve el `POST` (201).
 
 `marca_revision` (cola de moderación) no se expone aquí: es interna de la moderación (RF-09).
 
