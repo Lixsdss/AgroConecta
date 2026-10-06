@@ -2,6 +2,7 @@
  * Inicio del agricultor (diseño 06) y del comprador (diseño 14): saludo según el rol y precios de hoy (RF-02).
  * GET /api/v1/usuarios/me confirma que el token sigue válido y que el usuario está ACTIVO; GET
  * /api/v1/precios/vigentes da los precios de la zona del usuario, o de todas las zonas si su distrito no es zona.
+ * GET /api/v1/conversaciones/no-leidos muestra los mensajes sin leer (cada 30 segundos, RF-04).
  */
 import { api } from '../api.js';
 import { requerirSesion, cerrarSesion } from '../comun/sesion.js';
@@ -35,6 +36,12 @@ async function cargar() {
         document.getElementById('vender').hidden = perfil.rol !== 'AGRICULTOR';
         // "Buscar productos" es la acción principal del comprador (diseño 14); el agricultor también puede buscar
         document.getElementById('buscar').classList.add(perfil.rol === 'COMPRADOR' ? 'btn-primary' : 'btn-outline-primary');
+        contarNoLeidos();
+        setInterval(() => {
+            if (!document.hidden) {
+                contarNoLeidos();
+            }
+        }, 30_000);
         await cargarPrecios(perfil);
     } catch (error) {
         if (error.estado === 401) {
@@ -42,6 +49,18 @@ async function cargar() {
             return;
         }
         mostrarAlerta(document.getElementById('alerta'), error.message, 'error');
+    }
+}
+
+async function contarNoLeidos() {
+    try {
+        const { total } = await api.get('/conversaciones/no-leidos');
+        const insignia = document.getElementById('no-leidos');
+        insignia.textContent = String(total);
+        insignia.setAttribute('aria-label', `${total} sin leer`);
+        insignia.hidden = total === 0;
+    } catch {
+        // El aviso es opcional: se reintenta en la próxima consulta
     }
 }
 

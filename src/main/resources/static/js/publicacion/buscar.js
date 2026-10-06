@@ -1,11 +1,12 @@
 /**
  * "Buscar productos" (diseño "buscar", RF-03 / UC-03). Pública.
  * GET /api/v1/publicaciones con filtros, orden y página; GET /api/v1/catalogo/cultivos, /variedades, /distritos,
- * /provincias y /unidades para los filtros. Los filtros quedan en la dirección de la página, así que "atrás" desde
+ * /provincias y /unidades para los filtros; "Escribir" y "WhatsApp" con js/mensajeria/contacto.js (RF-04). Los filtros quedan en la dirección de la página, así que "atrás" desde
  * el detalle vuelve a la misma búsqueda.
  */
 import { api } from '../api.js';
 import { obtenerSesion } from '../comun/sesion.js';
+import { mostrarAlerta } from '../comun/formulario.js';
 import { crearChips } from '../comun/precios.js';
 import { tarjetaResultado } from './resultado.js';
 
@@ -28,6 +29,13 @@ const error = document.getElementById('error');
 const verMas = document.getElementById('ver-mas');
 const dialogo = document.getElementById('filtros');
 const selectLugar = document.getElementById('f-lugar');
+const alerta = document.getElementById('alerta');
+
+/** Muestra el error de "Escribir" o "WhatsApp" (por ejemplo, la cosecha ya se vendió). */
+function errorContacto(mensaje) {
+    mostrarAlerta(alerta, mensaje, 'error');
+    alerta.focus();
+}
 
 /** Criterios de la búsqueda; se leen y se guardan en la dirección de la página. */
 let criterios = leerDireccion();
@@ -105,7 +113,7 @@ async function buscar(agregar = false) {
         if (!agregar) {
             resultados.replaceChildren();
         }
-        respuesta.content.forEach((p) => resultados.append(tarjetaResultado(p)));
+        respuesta.content.forEach((p) => resultados.append(tarjetaResultado(p, errorContacto)));
         const total = respuesta.page.totalElements;
         const orden = ORDENES.find((o) => o.valor === criterios.orden).descripcion;
         conteo.textContent = total === 0 ? '' : `${total} ${total === 1 ? 'oferta' : 'ofertas'} · ordenadas por ${orden}`;
@@ -113,7 +121,7 @@ async function buscar(agregar = false) {
         verMas.hidden = pagina + 1 >= respuesta.page.totalPages;
         if (agregar) {
             // Lleva el foco al primer resultado nuevo (navegación con teclado)
-            resultados.children[pagina * respuesta.page.size]?.focus();
+            resultados.children[pagina * respuesta.page.size]?.querySelector('a')?.focus();
         }
     } catch (e) {
         pagina = Math.max(0, pagina - (agregar ? 1 : 0));

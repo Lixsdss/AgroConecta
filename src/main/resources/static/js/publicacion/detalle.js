@@ -1,11 +1,12 @@
 /**
  * Detalle de una publicación (UC-03 paso 7). Pública. GET /api/v1/publicaciones/{id}.
- * "Escribir" y "WhatsApp" llegan con RF-04 (slice 6).
+ * "Escribir" y "WhatsApp" (RF-04) para el comprador o el visitante, mientras la cosecha está PUBLICADA.
  */
 import { api } from '../api.js';
 import { mostrarAlerta } from '../comun/formulario.js';
 import { fechaCorta, soles } from './borrador.js';
 import { etiquetaVence, textoCalificacion, textoDisponible, titulo } from './resultado.js';
+import { botonesContacto, puedeContactar } from '../mensajeria/contacto.js';
 
 const id = new URLSearchParams(window.location.search).get('id');
 
@@ -37,6 +38,12 @@ async function cargar() {
         poner('cosecha', fechaCorta(p.fechaCosecha));
         poner('limite', fechaCorta(p.fechaLimite));
         poner('agricultor', `${p.agricultor} · ${textoCalificacion(p)}`);
+        if (p.estado === 'PUBLICADA' && puedeContactar()) {
+            document.getElementById('contacto').replaceChildren(botonesContacto(p.id, (mensaje) => {
+                mostrarAlerta(document.getElementById('alerta'), mensaje, 'error');
+                document.getElementById('alerta').focus();
+            }));
+        }
         document.getElementById('detalle').hidden = false;
     } catch (e) {
         mostrarAlerta(document.getElementById('alerta'), e.message, 'error');

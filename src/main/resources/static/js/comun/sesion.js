@@ -52,17 +52,41 @@ export function cerrarSesion() {
 }
 
 /**
- * Exige una sesión vigente; si no hay, lleva a "Ingresar".
+ * Exige una sesión vigente; si no hay, lleva a "Ingresar" y, al entrar, vuelve a esta misma página.
  *
  * @returns {object | null} la sesión, o null si se redirigió
  */
 export function requerirSesion() {
     const sesion = obtenerSesion();
     if (!sesion) {
-        window.location.replace(`${RAIZ}/ingresar.html`);
+        window.location.replace(rutaIngresar(window.location.pathname + window.location.search));
         return null;
     }
     return sesion;
+}
+
+/**
+ * Dirección de "Ingresar" que, al entrar, vuelve a {@code volver}.
+ *
+ * @param {string} volver ruta de esta aplicación (por ejemplo, '/pages/publicacion/detalle.html?id=15')
+ * @returns {string} dirección de "Ingresar"
+ */
+export function rutaIngresar(volver) {
+    return `${RAIZ}/ingresar.html?volver=${encodeURIComponent(volver)}`;
+}
+
+/**
+ * Devuelve la ruta a la que se puede volver después de ingresar: solo rutas de esta aplicación (empiezan con
+ * una sola "/"), para no llevar al usuario a otro sitio.
+ *
+ * @param {string | null} volver valor del parámetro "volver"
+ * @returns {string | null} ruta segura, o null
+ */
+export function rutaDeVuelta(volver) {
+    if (!volver || !volver.startsWith('/') || volver.startsWith('//') || volver.includes('\\')) {
+        return null;
+    }
+    return volver;
 }
 
 /** Lleva al usuario a su inicio (la página muestra lo que corresponde a su rol). */

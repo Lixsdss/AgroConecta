@@ -4,6 +4,7 @@
  */
 import { icono } from '../comun/iconos.js';
 import { numero, soles, fechaCorta } from './borrador.js';
+import { botonesContacto, puedeContactar } from '../mensajeria/contacto.js';
 
 /** @returns {string} "Vence hoy", "Vence mañana" o "Vence en N días" */
 export function textoVence(dias) {
@@ -60,15 +61,19 @@ function linea(nombreIcono, texto, clase = '') {
 }
 
 /**
- * Crea la tarjeta de un resultado: enlace al detalle de la publicación.
+ * Crea la tarjeta de un resultado: enlace al detalle y, para el comprador o el visitante, "Escribir" y
+ * "WhatsApp" (RF-04).
  *
  * @param {object} p publicación disponible de GET /api/v1/publicaciones
- * @returns {HTMLAnchorElement} tarjeta
+ * @param {(mensaje: string) => void} alFallar muestra el error de un contacto
+ * @returns {HTMLElement} tarjeta
  */
-export function tarjetaResultado(p) {
-    const tarjeta = document.createElement('a');
+export function tarjetaResultado(p, alFallar) {
+    const tarjeta = document.createElement('article');
     tarjeta.className = 'ac-resultado';
-    tarjeta.href = `/pages/publicacion/detalle.html?id=${encodeURIComponent(p.id)}`;
+    const enlace = document.createElement('a');
+    enlace.className = 'ac-resultado-enlace';
+    enlace.href = `/pages/publicacion/detalle.html?id=${encodeURIComponent(p.id)}`;
 
     const cabecera = document.createElement('div');
     cabecera.className = 'd-flex justify-content-between align-items-start gap-2 mb-1';
@@ -77,10 +82,14 @@ export function tarjetaResultado(p) {
     nombre.textContent = titulo(p);
     cabecera.append(nombre, etiquetaVence(p));
 
-    tarjeta.append(cabecera,
+    enlace.append(cabecera,
         linea(null, textoDisponible(p)),
         linea(null, textoPrecio(p), 'fw-semibold'),
         linea('map-pin', `${p.distrito}, ${p.provincia} · Cosecha ${fechaCorta(p.fechaCosecha)}`, 'ac-suave mt-1'),
         linea('user', `${p.agricultor} · ${textoCalificacion(p)}`, 'ac-suave'));
+    tarjeta.append(enlace);
+    if (puedeContactar()) {
+        tarjeta.append(botonesContacto(p.id, alFallar));
+    }
     return tarjeta;
 }
