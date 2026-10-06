@@ -17,12 +17,14 @@ import pe.agroconecta.catalogo.aplicacion.CatalogoService;
 import pe.agroconecta.catalogo.aplicacion.DistritoDto;
 import pe.agroconecta.usuario.dominio.Rol;
 import pe.agroconecta.usuario.dominio.Usuario;
+import pe.agroconecta.usuario.infraestructura.CompradorRepository;
 import pe.agroconecta.usuario.infraestructura.UsuarioRepository;
 
 @ExtendWith(MockitoExtension.class)
 class UsuarioConsultaServiceTest {
 
     @Mock private UsuarioRepository usuarios;
+    @Mock private CompradorRepository compradores;
     @Mock private CatalogoService catalogo;
     @InjectMocks private UsuarioConsultaService servicio;
 

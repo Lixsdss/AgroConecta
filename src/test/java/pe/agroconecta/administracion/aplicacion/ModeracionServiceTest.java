@@ -39,9 +39,9 @@ import pe.agroconecta.usuario.aplicacion.UsuarioResumenDto;
 class ModeracionServiceTest {
 
     private static final UsuarioResumenDto JUAN =
-            new UsuarioResumenDto(3L, "Juan Chunga", "987654321", "Tambogrande", LocalDateTime.now());
+            new UsuarioResumenDto(3L, "Juan Chunga", "987654321", "Tambogrande", LocalDateTime.now(), "AGRICULTOR", null);
     private static final UsuarioResumenDto LUCIA =
-            new UsuarioResumenDto(1L, "Lucía Farfán", "900000009", "Piura", LocalDateTime.now());
+            new UsuarioResumenDto(1L, "Lucía Farfán", "900000009", "Piura", LocalDateTime.now(), "AGRICULTOR", null);
 
     @Mock private RevisionPublicacionRepository revisiones;
     @Mock private PublicacionService publicaciones;

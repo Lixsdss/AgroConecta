@@ -2,6 +2,7 @@ package pe.agroconecta.publicacion.infraestructura;
 
 import java.time.LocalDateTime;
 import java.util.Collection;
+import java.util.List;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -48,4 +49,13 @@ public interface PublicacionRepository extends JpaRepository<Publicacion, Long> 
     @Query("select p from Publicacion p where p.estado = pe.agroconecta.publicacion.dominio.EstadoPublicacion.BLOQUEADA "
             + "order by p.fechaActualizacion desc, p.id desc")
     Page<Publicacion> buscarOcultas(Pageable pagina);
+
+    /**
+     * Ids de todas las publicaciones de un agricultor, en cualquier estado.
+     *
+     * @param idAgricultor id del agricultor
+     * @return ids de sus publicaciones
+     */
+    @Query("select p.id from Publicacion p where p.idAgricultor = :idAgricultor")
+    List<Long> idsDeAgricultor(Long idAgricultor);
 }

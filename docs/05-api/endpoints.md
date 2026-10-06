@@ -542,7 +542,7 @@ Rol **COMPRADOR**. "WhatsApp" (UC-04 A1). Cuerpo `{ "idPublicacion": 15 }`. Crea
 
 **200**
 ```json
-{ "idConversacion": 7, "enlace": "https://wa.me/51987654321?text=Hola%2C%20Juan%20Carlos%20Chunga.%20Vi%20su%20Mango%20Kent%20en%20AgroConecta%20(30%20jabas%20a%20S%2F%2028.00%20por%20jaba).%20%C2%BFSigue%20disponible%3F" }
+{ "idConversacion": 7, "enlace": "https://wa.me/51987654321?text=Hola%2C%20Juan%20Carlos%20Chunga.%20Vi%20su%20Mango%20Kent%20en%20AgroConecta%20%2830%20jabas%20a%20S%2F%2028.00%20por%20jaba%29.%20%C2%BFSigue%20disponible%3F" }
 ```
 
 Texto: "Hola, {agricultor}. Vi su {cultivo variedad} en AgroConecta ({unidades disponibles} {unidad} a S/ {precio} por {unidad}). ¿Sigue disponible?"
@@ -630,7 +630,7 @@ Todos los endpoints exigen rol **ADMINISTRADOR** (403 para los demás roles).
   "cantidad": 30.00, "pesoUnidadKg": 20.000, "cantidadKg": 600.00, "precioUnitario": 28.00, "precioKg": 1.4000,
   "distrito": "Tambogrande", "provincia": "Piura", "fechaCosecha": "2026-09-27", "fechaLimite": "2026-10-11",
   "estado": "PUBLICADA", "marcaRevision": "PRIMERA_PUBLICACION", "fechaPublicacion": "2026-09-27T12:30:00",
-  "agricultor": { "id": 3, "nombreCompleto": "Juan Carlos Chunga", "celular": "987654321", "distrito": "Tambogrande", "fechaRegistro": "2026-09-27T09:00:00" }
+  "agricultor": { "id": 3, "nombreCompleto": "Juan Carlos Chunga", "celular": "987654321", "distrito": "Tambogrande", "fechaRegistro": "2026-09-27T09:00:00", "rol": "AGRICULTOR", "nombreNegocio": null }
 }
 ```
 

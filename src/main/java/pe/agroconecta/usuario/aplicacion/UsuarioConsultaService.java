@@ -10,7 +10,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import pe.agroconecta.catalogo.aplicacion.CatalogoService;
 import pe.agroconecta.catalogo.aplicacion.DistritoDto;
+import pe.agroconecta.usuario.dominio.Comprador;
 import pe.agroconecta.usuario.dominio.Usuario;
+import pe.agroconecta.usuario.infraestructura.CompradorRepository;
 import pe.agroconecta.usuario.infraestructura.UsuarioRepository;
 
 /**
@@ -21,16 +23,20 @@ import pe.agroconecta.usuario.infraestructura.UsuarioRepository;
 public class UsuarioConsultaService {
 
     private final UsuarioRepository usuarios;
+    private final CompradorRepository compradores;
     private final CatalogoService catalogo;
 
     /**
      * Crea el servicio.
      *
-     * @param usuarios repositorio de usuarios
-     * @param catalogo catálogo de distritos
+     * @param usuarios    repositorio de usuarios
+     * @param compradores repositorio de compradores (nombre del negocio)
+     * @param catalogo    catálogo de distritos
      */
-    public UsuarioConsultaService(UsuarioRepository usuarios, CatalogoService catalogo) {
+    public UsuarioConsultaService(UsuarioRepository usuarios, CompradorRepository compradores,
+            CatalogoService catalogo) {
         this.usuarios = usuarios;
+        this.compradores = compradores;
         this.catalogo = catalogo;
     }
 
@@ -46,13 +52,15 @@ public class UsuarioConsultaService {
         }
         Map<Integer, String> distritos = catalogo.listarDistritos(null).stream()
                 .collect(Collectors.toMap(DistritoDto::id, DistritoDto::nombre));
+        Map<Long, String> negocios = compradores.findAllById(ids).stream()
+                .collect(Collectors.toMap(Comprador::getId, Comprador::getNombreNegocio));
         return usuarios.findAllById(ids).stream()
-                .map(u -> aDto(u, distritos.get(u.getIdDistrito())))
+                .map(u -> aDto(u, distritos.get(u.getIdDistrito()), negocios.get(u.getId())))
                 .collect(Collectors.toMap(UsuarioResumenDto::id, Function.identity()));
     }
 
-    private static UsuarioResumenDto aDto(Usuario u, String distrito) {
+    private static UsuarioResumenDto aDto(Usuario u, String distrito, String negocio) {
         return new UsuarioResumenDto(u.getId(), u.getNombreCompleto(), u.getCelular(), distrito,
-                u.getFechaRegistro());
+                u.getFechaRegistro(), u.getRol().name(), negocio);
     }
 }
