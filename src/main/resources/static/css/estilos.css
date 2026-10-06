@@ -703,3 +703,86 @@ body {
         align-items: start;
     }
 }
+
+/* ===== Búsqueda (RF-03) ===== */
+.ac-resultados {
+    display: grid;
+    gap: .75rem;
+}
+
+.ac-resultado {
+    display: block;
+    background: var(--ac-superficie);
+    border: 1px solid var(--ac-linea);
+    border-radius: 12px;
+    padding: .875rem 1rem;
+    color: var(--ac-texto);
+    text-decoration: none;
+}
+
+.ac-resultado:hover {
+    border-color: var(--ac-verde);
+}
+
+.ac-resultado:focus-visible {
+    outline: 3px solid var(--ac-ambar);
+    outline-offset: 2px;
+}
+
+.ac-resultado-titulo {
+    font-size: 1.125rem;
+    font-weight: 700;
+}
+
+.ac-vence {
+    display: inline-flex;
+    align-items: center;
+    gap: .25rem;
+    border-radius: 999px;
+    padding: .125rem .625rem;
+    font-size: .875rem;
+    font-weight: 600;
+    white-space: nowrap;
+    background: var(--ac-verde-claro);
+    color: var(--ac-verde-oscuro);
+}
+
+.ac-vence-pronto {
+    background: var(--ac-error-claro);
+    color: var(--ac-error);
+}
+
+.ac-icono-grande {
+    width: 2.5rem;
+    height: 2.5rem;
+}
+
+/* Hoja de filtros: en el celular se pega abajo, como en el diseño */
+.ac-hoja {
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+@media (max-width: 575.98px) {
+    .ac-hoja {
+        width: 100vw;
+        max-width: 100vw;
+        margin: auto 0 0;
+        border-radius: 16px 16px 0 0;
+    }
+}
+
+.ac-datos {
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    gap: .5rem 1rem;
+    font-size: 1.0625rem;
+}
+
+.ac-datos dt {
+    font-weight: 600;
+}
+
+.ac-datos dd {
+    margin: 0;
+}
