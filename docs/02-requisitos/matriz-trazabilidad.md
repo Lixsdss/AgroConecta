@@ -11,7 +11,7 @@ Relaciona cada requisito funcional con su caso de uso, módulo, tablas, endpoint
 | **RF-01** | **Publicación de cosecha** | **UC-01** | **publicacion (+ catalogo)** | **2** | **Implementado** (referencia de precio: slice 4; marcas PRECIO_FUERA_RANGO y CANTIDAD_INUSUAL: slice 3) |
 | **RF-02** | **Precios de mercado** | **UC-02** | **precio** | **4** | **Implementado (slice 4)**; también activa la marca PRECIO_FUERA_RANGO de RF-01 |
 | **RF-03** | **Búsqueda multi-criterio** | **UC-03** | **publicacion** | **5** | **Implementado (slice 5)**; "Escribir" y "WhatsApp" del resultado llegan con RF-04 (slice 6) |
-| RF-04 | Mensajería directa | UC-04 | mensajeria | 6 | Pendiente |
+| **RF-04** | **Mensajería directa** | **UC-04** | **mensajeria** | **6** | **Implementado (slice 6)**; "Registrar acuerdo" del chat llega con RF-06 (slice 7) |
 | RF-05 | Calificación | UC-07 | venta | 8 | Pendiente |
 | RF-06 | Registro e historial de transacciones | UC-05, UC-06 A1, UC-08 | venta | 7 | Pendiente |
 | RF-07 | Alertas de vencimiento | UC-09 | notificacion, publicacion | 9 | Pendiente |
@@ -75,6 +75,21 @@ Relaciona cada requisito funcional con su caso de uso, módulo, tablas, endpoint
 | RNF | RNF-01 (20 resultados por página y "Ver más", sin librerías), RNF-03 (chips ≥ 48 px, "Vence en N días" con ícono y texto) |
 
 Reglas aprobadas en el plan del slice 5: solo publicaciones con fecha límite hoy o después; desempates (precio por kilo → la más reciente; fecha de cosecha y calificación → menor precio por kilo; al final el id); los agricultores sin calificación van al final en el orden por calificación.
+
+### RF-04 — Mensajería, ofertas y WhatsApp (slice 6)
+
+| Elemento | Trazas |
+|---|---|
+| Caso de uso | UC-04: flujo básico (Escribir abre o reutiliza la conversación; mensajes y ofertas; aviso a la otra parte; consulta periódica; la conversación no se cierra); A1 WhatsApp (crea la conversación, suma el clic y abre `wa.me`); A2 sin acuerdo (la conversación queda); A3 oferta sobre publicación no disponible (422; el texto sigue); A4 remitente no autorizado (403). Paso 8 "Registrar acuerdo" → UC-05 (slice 7). UC-03 A2: el visitante va a "Ingresar" y vuelve a la cosecha |
+| Módulos | `mensajeria` (dueño); `publicacion` (`PublicacionConsultaService`: publicación en cualquier estado, ids del agricultor); `usuario` (`UsuarioConsultaService`: nombre, negocio y celular); `notificacion` (`NotificacionService.crear`, avisos MENSAJE y OFERTA) |
+| Tablas | conversaciones, mensajes, notificaciones (escritura); `v_publicaciones_disponibles`, usuarios, compradores (lectura) |
+| Triggers y restricciones | `trg_conversaciones_bi` (solo PUBLICADA), `trg_mensajes_bi` (remitente participa; OFERTA solo con PUBLICADA); `uk_conversacion_pub_comprador`, `chk_conversacion_canal`, `chk_conversacion_clics`, `chk_mensaje_tipo`, `chk_notificacion_tipo` |
+| Endpoints | `POST /api/v1/conversaciones`, `POST /api/v1/conversaciones/whatsapp`, `GET /api/v1/conversaciones`, `GET /api/v1/conversaciones/no-leidos`, `GET /api/v1/conversaciones/{id}`, `GET` y `POST /api/v1/conversaciones/{id}/mensajes` |
+| Pantallas | Mensajes (`pages/mensajeria/conversaciones.html`), Chat con hoja "Hacer oferta" (`pages/mensajeria/chat.html`); botones Escribir y WhatsApp en la búsqueda y el detalle; "Mensajes" con no leídos en el inicio |
+| Pruebas | Unitarias: `ConversacionServiceTest` (enlace wa.me codificado, publicación no disponible, 404, 403, oferta mayor que lo disponible, agricultor sin publicaciones, página negativa), `NotificacionServiceTest` (recorte del texto, avisos sin repetir), `UsuarioConsultaServiceTest`. Integración (MariaDB): `MensajeriaIntegracionTest` (una conversación por par, agricultor 403, publicación no disponible 422, texto y oferta con avisos MENSAJE sin repetir y OFERTA, no leídos y leídos, lista, consulta con `despuesDe`, oferta mayor que lo disponible y sobre publicación vencida 422 con texto aceptado, tercero 403, validación por campo, WhatsApp con canal y clics, sin sesión 401). Arquitectura: `ArquitecturaTest` |
+| RNF | RNF-01 (consulta periódica cada 10 s / 30 s, sin WebSockets ni librerías), RNF-02 (API sin estado), RNF-03 (botones ≥ 48 px, ofertas con ícono y texto), RNF-05 (triggers como última barrera) |
+
+Reglas aprobadas en el plan del slice 6: ambas partes pueden ofertar; la oferta no supera las unidades disponibles (422); aviso OFERTA siempre y MENSAJE solo si no hay uno sin leer de la misma conversación, sin copiar el texto; el celular del agricultor solo viaja dentro del enlace `wa.me`.
 
 ### RF-09 — Moderación posterior (slice 3)
 

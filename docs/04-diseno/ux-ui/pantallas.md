@@ -25,7 +25,7 @@ Relaciona cada pantalla del prototipo (numeración del diseño) con su archivo e
 | 03 | Crear cuenta · ¿Quién es usted? | `pages/usuario/rol.html` | `js/usuario/rol.js` | — | Continuar → 04 con `?rol=AGRICULTOR` o `COMPRADOR` |
 | 04 | Crear cuenta · datos | `pages/usuario/registro.html` | `js/usuario/registro.js` | `GET /api/v1/catalogo/distritos`, `POST /api/v1/auth/registro` | Agricultor → 05 · Comprador → inicio |
 | 05 | Bienvenida (3 tarjetas) | `pages/usuario/bienvenida.html` | `js/usuario/bienvenida.js` | — | "Saltar" o "Empezar" → inicio |
-| 06 / 14 | Inicio del agricultor / del comprador (versión sencilla) | `pages/usuario/inicio.html` | `js/usuario/inicio.js` | `GET /api/v1/usuarios/me`, `GET /api/v1/precios/vigentes` (slice 4) | Vender mi cosecha → 07 (agricultor) · Buscar productos (slice 5) · Ver todos los precios → 01 · Mi perfil · Salir → 02 |
+| 06 / 14 | Inicio del agricultor / del comprador (versión sencilla) | `pages/usuario/inicio.html` | `js/usuario/inicio.js` | `GET /api/v1/usuarios/me`, `GET /api/v1/precios/vigentes` (slice 4), `GET /api/v1/conversaciones/no-leidos` (slice 6) | Vender mi cosecha → 07 (agricultor) · Mensajes (slice 6) · Buscar productos (slice 5) · Ver todos los precios → 01 · Mi perfil · Salir → 02 |
 | — | Mi perfil (datos y contraseña) | `pages/usuario/perfil.html` | `js/usuario/perfil.js` | `GET /api/v1/catalogo/distritos`, `GET` y `PUT /api/v1/usuarios/me`, `PUT /api/v1/usuarios/me/contrasena` | Atrás → inicio |
 
 ### Diferencias con el diseño (aprobadas en el plan del slice 1)
@@ -73,13 +73,32 @@ El administrador entra por la misma pantalla "Ingresar"; el inicio lo lleva dire
 - **Detalle:** la línea "Hoy en … pagan entre …" todavía no se muestra en moderación (el endpoint `GET /api/v1/precios/referencia` ya existe desde el slice 4); la calificación y las ventas del agricultor, con RF-05 y RF-06.
 - **Motivos y mensajes sugeridos:** son los 5 del diseño, que coinciden con `chk_revision_motivo`.
 
+## Mensajería (RF-04, slice 6)
+
+| # | Pantalla del diseño | Archivo | JS | Endpoints | Navegación |
+|---|---|---|---|---|---|
+| — | Mensajes (diseño "chats") | `pages/mensajeria/conversaciones.html` | `js/mensajeria/conversaciones.js` | `GET /api/v1/conversaciones` (cada 30 s) | Conversación → Chat · Volver → inicio |
+| — | Chat (diseño "chat") | `pages/mensajeria/chat.html` | `js/mensajeria/chat.js` | `GET /api/v1/conversaciones/{id}`, `GET` (cada 10 s, con `despuesDe`) y `POST /api/v1/conversaciones/{id}/mensajes` | Volver → Mensajes |
+| — | Hoja "Hacer oferta" (no está en el diseño) | `<dialog>` del chat | — | `POST /api/v1/conversaciones/{id}/mensajes` (OFERTA) | Cerrar · Enviar oferta |
+
+- **Escribir y WhatsApp** (`js/mensajeria/contacto.js`): en las tarjetas de la búsqueda y en el detalle de la cosecha, para el comprador y el visitante (el agricultor y el administrador no los ven). El visitante va a "Ingresar" y vuelve a la misma página (`?volver=`, solo rutas de la aplicación).
+- **Inicio:** botón "Mensajes" con el número de no leídos (`GET /api/v1/conversaciones/no-leidos`, cada 30 s).
+
+### Diferencias con el diseño (aprobadas en el plan del slice 6)
+
+- **Hacer oferta:** el diseño muestra la tarjeta "Oferta" pero no cómo se crea; se agrega el botón y la hoja con cantidad y precio por unidad, que muestra los kilos y el total. Ambas partes pueden ofertar.
+- **Registrar acuerdo:** el botón del chat llega con RF-06 (slice 7).
+- **Calificación y compras** junto al nombre ("★ 4.7 · 32 compras"): llegan con el módulo `venta`.
+- **Barra inferior** (Inicio, Buscar, Agrupados, Mensajes): todavía no; se entra a Mensajes desde el inicio.
+- **Cosecha no disponible:** el chat sigue abierto para coordinar; se oculta "Hacer oferta" y se muestra un aviso.
+
 ## Búsqueda (RF-03, slice 5)
 
 | # | Pantalla del diseño | Archivo | JS | Endpoints | Navegación |
 |---|---|---|---|---|---|
 | — | Buscar (diseño "buscar") | `pages/publicacion/buscar.html` | `js/publicacion/buscar.js` | `GET /api/v1/publicaciones`, `GET /api/v1/catalogo/cultivos`, `/variedades`, `/provincias`, `/distritos`, `/unidades` | Resultado → Detalle · Volver → inicio (con sesión) o portada |
 | — | Hoja "Filtrar" | `<dialog>` de la misma página | — | — | Limpiar · Ver resultados · Cerrar |
-| — | Detalle de la cosecha (no está en el diseño) | `pages/publicacion/detalle.html` | `js/publicacion/detalle.js` | `GET /api/v1/publicaciones/{id}` | Volver → la búsqueda con sus filtros |
+| — | Detalle de la cosecha (no está en el diseño) | `pages/publicacion/detalle.html` | `js/publicacion/detalle.js` | `GET /api/v1/publicaciones/{id}`; Escribir y WhatsApp (slice 6) | Volver → la búsqueda con sus filtros · Escribir → Chat |
 
 Se entra desde "Ver productos disponibles" en la portada (01) y "Buscar productos" en el inicio (botón principal del comprador, secundario del agricultor). Los filtros quedan en la dirección de la página, así que "atrás" desde el detalle vuelve a la misma búsqueda. La tarjeta de resultado está en `js/publicacion/resultado.js`.
 
