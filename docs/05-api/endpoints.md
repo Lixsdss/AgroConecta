@@ -55,6 +55,11 @@ Base: `/api/v1`. Formato JSON (UTF-8). Autenticación con JWT en la cabecera `Au
 | GET | `/api/v1/conversaciones/{id}` | Participante | RF-04 | mensajeria |
 | GET | `/api/v1/conversaciones/{id}/mensajes` | Participante | RF-04 | mensajeria |
 | POST | `/api/v1/conversaciones/{id}/mensajes` | Participante | RF-04 | mensajeria |
+| POST | `/api/v1/ventas` | Participante | RF-06 | venta |
+| POST | `/api/v1/ventas/{id}/estado` | Parte de la venta | RF-06, RF-11 | venta |
+| GET | `/api/v1/ventas` | AGRICULTOR, COMPRADOR | RF-06 | venta |
+| GET | `/api/v1/ventas/exportar` | AGRICULTOR, COMPRADOR | RF-06 | venta |
+| GET | `/api/v1/ventas/{id}` | Parte de la venta | RF-06, RF-11 | venta |
 | GET | `/api/v1/moderacion/publicaciones` | ADMINISTRADOR | RF-09 | administracion |
 | GET | `/api/v1/moderacion/decisiones` | ADMINISTRADOR | RF-09 | administracion |
 | POST | `/api/v1/moderacion/publicaciones/{id}/decisiones` | ADMINISTRADOR | RF-09 | administracion |
@@ -609,6 +614,115 @@ Crea un aviso para la otra parte (`notificaciones`, `id_referencia` = id de la c
 | 404 | La conversación no existe | "La conversación no existe." |
 | 422 | Oferta sobre una publicación que ya no está PUBLICADA (UC-04 A3) | "Solo se hacen ofertas mientras la publicación está disponible." |
 | 422 | La oferta supera lo disponible | "La oferta supera lo disponible (≈ 25 jabas)." |
+
+---
+
+## Ventas (`venta`)
+
+Acuerdo de venta, seguimiento de la entrega e historial (RF-06, RF-11; UC-05, UC-06, UC-08). Roles **AGRICULTOR** y **COMPRADOR**; "parte de la venta" = el comprador de la conversación o el agricultor de la publicación; cualquier otro usuario recibe **403**. No hay pago en la plataforma: la venta solo registra el acuerdo.
+
+Estados: `ACORDADA` → `RECOGIDO` → `EN_CAMINO` → `ENTREGADO` → `COMPLETADA`, o `ACORDADA` → `ENTREGADO` → `COMPLETADA` (recojo en chacra). Solo `ACORDADA` se cancela (`CANCELADA`). `PROPUESTA` y `RECHAZADA` son de la venta agrupada (RF-10). Los cambios los validan el servicio y `trg_transacciones_bu`; la línea de tiempo la escriben `trg_transacciones_ai/au` en `transacciones_historial` y `sp_sincronizar_publicacion` pasa la publicación a VENDIDA (o la devuelve a PUBLICADA/VENCIDA al cancelar).
+
+**Venta** (respuesta del `POST`, de `POST /estado` y de `GET /ventas/{id}`):
+```json
+{
+  "id": 21, "idConversacion": 7, "idPublicacion": 15, "soyComprador": false,
+  "contraparte": { "id": 12, "nombre": "Rosa Quispe", "negocio": "Restaurante El Chalán", "celular": "912000001" },
+  "cultivo": "Mango", "variedad": "Kent", "distrito": "Tambogrande",
+  "idUnidad": 2, "unidad": "Jaba", "unidadPlural": "jabas",
+  "cantidad": 30.00, "pesoUnidadKg": 20.000, "cantidadKg": 600.00,
+  "precioUnitario": 28.00, "precioKg": 1.40, "montoTotal": 840.00,
+  "fechaRecojo": "2026-10-10", "estado": "ACORDADA",
+  "fechaCreacion": "2026-10-06T10:30:00", "fechaActualizacion": null,
+  "lineaDeTiempo": [ { "estado": "ACORDADA", "fecha": "2026-10-06T10:30:00", "autor": "Rosa Quispe", "esUsted": false } ],
+  "acciones": ["RECOGIDO", "CANCELAR"]
+}
+```
+
+- `contraparte`: la otra parte; `negocio` solo si es el comprador. El celular se muestra porque ya hay acuerdo (UC-05 paso 6).
+- `lineaDeTiempo`: `transacciones_historial` en orden, con el autor (`null` si fue un proceso automático).
+- `acciones`: lo que **este** usuario puede hacer ahora: `RECOGIDO` y `CANCELAR` (cualquiera, desde ACORDADA), `EN_CAMINO` (cualquiera, desde RECOGIDO), `CONFIRMAR_RECEPCION` (solo el comprador, desde ACORDADA, EN_CAMINO o ENTREGADO).
+
+### POST `/api/v1/ventas`
+
+**Participante** de la conversación (UC-05). Registra el acuerdo directamente como **ACORDADA**; bloquea la publicación (`PESSIMISTIC_WRITE`) mientras lo registra.
+
+| Campo | Obligatorio | Regla |
+|---|---|---|
+| `idConversacion` | Sí | Conversación de la que nace el acuerdo |
+| `idUnidad` | Sí | Unidad acordada (puede ser distinta de la publicada) |
+| `cantidad` | Sí | > 0, hasta 2 decimales |
+| `pesoUnidadKg` | Con jaba o saco distinta de la publicada | > 0, hasta 3 decimales. Con la misma unidad se usa el peso de la publicación; las unidades de peso fijo usan el del catálogo |
+| `precioUnitario` | Sí | > 0, hasta 2 decimales, soles por unidad acordada |
+| `fechaRecojo` | Sí | `AAAA-MM-DD`, hoy o después |
+
+**201** — `Location: /api/v1/ventas/{id}` y la venta. Avisa a la otra parte (VENTA, "Venta acordada") con el nombre y el celular de quien registró.
+
+**Errores**
+
+| Código | Cuándo | `mensaje` |
+|---|---|---|
+| 400 | Campo inválido o día de recojo pasado | "Los datos enviados no son válidos." (con `errores`) |
+| 403 | No participa en la conversación | "No tiene permiso para realizar esta acción." |
+| 404 | La conversación no existe | "La conversación no existe." |
+| 422 | La publicación ya no está PUBLICADA | "La cosecha ya no está disponible." |
+| 422 | La unidad no existe | "La unidad elegida no existe." |
+| 422 | Falta el peso de una jaba o saco | "Indique cuántos kilos pesa cada jaba o saco." |
+| 422 | Los kilos superan lo disponible | "La cantidad supera lo disponible (≈ 600 kg)." |
+
+### POST `/api/v1/ventas/{id}/estado`
+
+**Parte de la venta** (UC-05 A1, UC-06). Cuerpo `{ "accion": "RECOGIDO" | "EN_CAMINO" | "CONFIRMAR_RECEPCION" | "CANCELAR" }`. `CONFIRMAR_RECEPCION` hace **ENTREGADO y COMPLETADA en una sola transacción** (desde ENTREGADO, solo COMPLETADA). Cada cambio fija `id_actualizado_por` y avisa a la otra parte (VENTA).
+
+**200** — la venta actualizada.
+
+**Errores**
+
+| Código | Cuándo | `mensaje` |
+|---|---|---|
+| 400 | `accion` no válida | "Los datos enviados no son válidos." |
+| 403 | No es parte de la venta | "No tiene permiso para realizar esta acción." |
+| 404 | La venta no existe | "La venta no existe." |
+| 422 | La venta ya terminó (COMPLETADA, RECHAZADA, CANCELADA) | "La venta ya terminó y no se modifica." |
+| 422 | Cancelar después del recojo (UC-05 A4) | "Una venta recogida ya no se cancela. Si hay un problema, podrá registrar un reclamo." |
+| 422 | El agricultor intenta confirmar la recepción | "Solo el comprador confirma que recibió." |
+| 422 | Cambio fuera de secuencia (UC-06 A3) | "Ese cambio no corresponde al estado actual de la venta." |
+
+### GET `/api/v1/ventas?grupo=&desde=&hasta=&contraparte=&idConversacion=&page=0`
+
+Roles **AGRICULTOR** y **COMPRADOR** (UC-08). "Mis ventas" o "Mis compras" desde `v_historial_transacciones`, la más reciente primero, 20 por página.
+
+| Parámetro | Regla |
+|---|---|
+| `grupo` | `EN_CURSO` (PROPUESTA, ACORDADA, RECOGIDO, EN_CAMINO, ENTREGADO) o `TERMINADAS` (COMPLETADA, RECHAZADA, CANCELADA); sin él, todas |
+| `desde`, `hasta` | Fecha del acuerdo (`AAAA-MM-DD`); `desde` no puede ser posterior a `hasta` |
+| `contraparte` | Texto que se busca en el nombre de la otra parte (el negocio, si es el comprador) |
+| `idConversacion` | Solo las ventas de esa conversación (franja del chat) |
+
+**200** — lista paginada de:
+```json
+{
+  "id": 21, "soyComprador": false, "contraparte": "Restaurante El Chalán",
+  "cultivo": "Mango", "variedad": "Kent", "cantidad": 30.00, "unidad": "Jaba", "unidadPlural": "jabas",
+  "cantidadKg": 600.00, "precioUnitario": 28.00, "precioKg": 1.40, "montoTotal": 840.00,
+  "fechaRecojo": "2026-10-10", "estado": "ACORDADA",
+  "fechaCreacion": "2026-10-06T10:30:00", "fechaActualizacion": null
+}
+```
+
+**Errores:** 400 si las fechas están invertidas, `grupo` no es válido o la página es negativa.
+
+### GET `/api/v1/ventas/exportar?grupo=&desde=&hasta=&contraparte=`
+
+Roles **AGRICULTOR** y **COMPRADOR** (UC-08 A3). El mismo filtro en un archivo Excel (Apache POI), hasta **5000** ventas.
+
+**200** — `Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet`, `Content-Disposition: attachment; filename="AgroConecta_Historial_2026-10-06.xlsx"`. Columnas: Fecha del acuerdo, Cultivo, Variedad, Cantidad, Unidad, Kilos, Precio por unidad (S/), Precio por kilo (S/), Total (S/), Contraparte, Estado, Recojo, Última actualización.
+
+**Errores:** 400 como la lista · 422 "Hay más de 5000 ventas en ese filtro. Acorte el rango de fechas."
+
+### GET `/api/v1/ventas/{id}`
+
+**Parte de la venta**. Detalle con la línea de tiempo y las acciones (UC-06, UC-08 paso 6). **Errores:** 403 · 404 "La venta no existe."
 
 ---
 
