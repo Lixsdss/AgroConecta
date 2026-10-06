@@ -30,10 +30,18 @@ import pe.agroconecta.publicacion.dominio.EstadoPublicacion;
  * @param fechaLimite      fecha límite de venta
  * @param estado           estado
  * @param fechaPublicacion fecha y hora de publicación
+ * @param agricultor             nombre completo del agricultor (RF-03)
+ * @param calificacionAgricultor promedio de calificaciones (1 a 5), o {@code null} si no tiene (RF-03)
+ * @param disponibleKg           kilos aún no comprometidos en ventas (RF-03)
+ * @param unidadesDisponibles    unidades disponibles, redondeadas hacia abajo a 2 decimales (RF-03)
+ * @param diasRestantes          días que faltan para la fecha límite (RF-03)
+ * @param porVencer              {@code true} si está PUBLICADA y faltan 3 días o menos (RF-03)
  */
 public record PublicacionDto(Long id, Long idAgricultor, Integer idCultivo, String cultivo, Integer idVariedad,
         String variedad, Integer idUnidad, String unidad, String unidadPlural, BigDecimal cantidad,
         BigDecimal pesoUnidadKg, BigDecimal cantidadKg, BigDecimal precioUnitario, BigDecimal precioKg,
         Integer idDistrito, String distrito, String provincia, LocalDate fechaCosecha, LocalDate fechaLimite,
-        EstadoPublicacion estado, LocalDateTime fechaPublicacion) {
+        EstadoPublicacion estado, LocalDateTime fechaPublicacion, String agricultor,
+        BigDecimal calificacionAgricultor, BigDecimal disponibleKg, BigDecimal unidadesDisponibles,
+        Integer diasRestantes, boolean porVencer) {
 }

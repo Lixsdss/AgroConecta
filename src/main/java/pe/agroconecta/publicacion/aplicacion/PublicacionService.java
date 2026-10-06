@@ -31,7 +31,9 @@ import pe.agroconecta.compartido.error.ReglaNegocioException;
 import pe.agroconecta.publicacion.dominio.EstadoPublicacion;
 import pe.agroconecta.publicacion.dominio.MarcaRevision;
 import pe.agroconecta.publicacion.dominio.Publicacion;
+import pe.agroconecta.publicacion.dominio.PublicacionDisponible;
 import pe.agroconecta.publicacion.infraestructura.EstadisticaCantidad;
+import pe.agroconecta.publicacion.infraestructura.PublicacionDisponibleRepository;
 import pe.agroconecta.publicacion.infraestructura.PublicacionRepository;
 
 /**
@@ -65,6 +67,7 @@ public class PublicacionService {
     private static final Logger LOG = LoggerFactory.getLogger(PublicacionService.class);
 
     private final PublicacionRepository publicaciones;
+    private final PublicacionDisponibleRepository disponibles;
     private final CatalogoService catalogo;
     private final ReferenciaPrecioService referencias;
     private final EntityManager entityManager;
@@ -74,14 +77,16 @@ public class PublicacionService {
      * Crea el servicio.
      *
      * @param publicaciones repositorio de publicaciones
+     * @param disponibles   vista de publicaciones disponibles (agricultor, calificación, kilos disponibles)
      * @param catalogo      catálogo de variedades, unidades y distritos
      * @param referencias   referencia de precio del módulo {@code precio} (marca PRECIO_FUERA_RANGO)
      * @param entityManager contexto de persistencia (para refrescar lo que calcula la base de datos)
      * @param reloj         reloj de la aplicación
      */
-    public PublicacionService(PublicacionRepository publicaciones, CatalogoService catalogo,
-            ReferenciaPrecioService referencias, EntityManager entityManager, Clock reloj) {
+    public PublicacionService(PublicacionRepository publicaciones, PublicacionDisponibleRepository disponibles,
+            CatalogoService catalogo, ReferenciaPrecioService referencias, EntityManager entityManager, Clock reloj) {
         this.publicaciones = publicaciones;
+        this.disponibles = disponibles;
         this.catalogo = catalogo;
         this.referencias = referencias;
         this.entityManager = entityManager;
@@ -124,7 +129,7 @@ public class PublicacionService {
 
         LOG.info("Cosecha publicada: id={}, agricultor={}, cultivo={}, kg={}, marca={}", publicacion.getId(),
                 idAgricultor, variedad.cultivo(), publicacion.getCantidadKg(), publicacion.getMarcaRevision());
-        return aDto(publicacion, variedad, unidad, distrito);
+        return aDto(publicacion, variedad, unidad, distrito, disponibles.findById(publicacion.getId()).orElse(null));
     }
 
     /**
@@ -143,7 +148,7 @@ public class PublicacionService {
         VariedadDto variedad = catalogo.buscarVariedad(publicacion.getIdVariedad()).orElseThrow();
         UnidadDto unidad = catalogo.buscarUnidad(publicacion.getIdUnidad()).orElseThrow();
         DistritoDto distrito = catalogo.buscarDistrito(publicacion.getIdDistrito()).orElseThrow();
-        return aDto(publicacion, variedad, unidad, distrito);
+        return aDto(publicacion, variedad, unidad, distrito, disponibles.findById(idPublicacion).orElse(null));
     }
 
     /**
@@ -242,11 +247,19 @@ public class PublicacionService {
         }
     }
 
-    private static PublicacionDto aDto(Publicacion p, VariedadDto variedad, UnidadDto unidad, DistritoDto distrito) {
+    /** Arma el DTO; {@code vista} aporta agricultor, calificación, kilos disponibles y días restantes (RF-03). */
+    private static PublicacionDto aDto(Publicacion p, VariedadDto variedad, UnidadDto unidad, DistritoDto distrito,
+            PublicacionDisponible vista) {
         return new PublicacionDto(p.getId(), p.getIdAgricultor(), variedad.idCultivo(), variedad.cultivo(),
                 variedad.id(), variedad.nombre(), unidad.id(), unidad.nombre(), unidad.nombrePlural(), p.getCantidad(),
                 p.getPesoUnidadKg(), p.getCantidadKg(), p.getPrecioUnitario(), p.getPrecioKg(), distrito.id(),
                 distrito.nombre(), distrito.provincia(), p.getFechaCosecha(), p.getFechaLimite(), p.getEstado(),
-                p.getFechaPublicacion());
+                p.getFechaPublicacion(),
+                vista == null ? null : vista.getAgricultor(),
+                vista == null ? null : vista.getCalificacionAgricultor(),
+                vista == null ? null : vista.getDisponibleKg(),
+                vista == null ? null : BusquedaService.unidadesDisponibles(vista.getDisponibleKg(), vista.getPesoUnidadKg()),
+                vista == null ? null : vista.getDiasRestantes(),
+                vista != null && vista.isPorVencer());
     }
 }

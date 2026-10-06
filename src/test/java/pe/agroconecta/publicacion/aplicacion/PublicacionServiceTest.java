@@ -42,6 +42,7 @@ import pe.agroconecta.publicacion.dominio.EstadoPublicacion;
 import pe.agroconecta.publicacion.dominio.MarcaRevision;
 import pe.agroconecta.publicacion.dominio.Publicacion;
 import pe.agroconecta.publicacion.infraestructura.EstadisticaCantidad;
+import pe.agroconecta.publicacion.infraestructura.PublicacionDisponibleRepository;
 import pe.agroconecta.publicacion.infraestructura.PublicacionRepository;
 
 @ExtendWith(MockitoExtension.class)
@@ -54,6 +55,7 @@ class PublicacionServiceTest {
     private static final DistritoDto TAMBOGRANDE = new DistritoDto(9, "Tambogrande", 1, "Piura", true);
 
     @Mock private PublicacionRepository publicaciones;
+    @Mock private PublicacionDisponibleRepository disponibles;
     @Mock private CatalogoService catalogo;
     @Mock private EntityManager entityManager;
     @Mock private ReferenciaPrecioService referencias;
@@ -63,7 +65,7 @@ class PublicacionServiceTest {
     @BeforeEach
     void preparar() {
         Clock reloj = Clock.fixed(Instant.parse("2026-09-27T15:00:00Z"), ZoneId.of("America/Lima"));
-        servicio = new PublicacionService(publicaciones, catalogo, referencias, entityManager, reloj);
+        servicio = new PublicacionService(publicaciones, disponibles, catalogo, referencias, entityManager, reloj);
         lenient().when(referencias.evaluar(anyInt(), anyInt(), any())).thenReturn(EvaluacionPrecio.SIN_REFERENCIA);
     }
 
