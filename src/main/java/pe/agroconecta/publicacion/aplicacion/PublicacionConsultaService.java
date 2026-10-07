@@ -7,7 +7,10 @@ import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import jakarta.persistence.EntityManager;
+
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import pe.agroconecta.catalogo.aplicacion.CatalogoService;
@@ -27,6 +30,7 @@ public class PublicacionConsultaService {
     private final PublicacionDisponibleRepository disponibles;
     private final PublicacionRepository publicaciones;
     private final CatalogoService catalogo;
+    private final EntityManager entityManager;
 
     /**
      * Crea el servicio.
@@ -34,12 +38,14 @@ public class PublicacionConsultaService {
      * @param disponibles   vista de publicaciones
      * @param publicaciones tabla de publicaciones
      * @param catalogo      catálogo (nombre en singular de las unidades)
+     * @param entityManager contexto de persistencia (para releer los kilos disponibles tras el bloqueo)
      */
     public PublicacionConsultaService(PublicacionDisponibleRepository disponibles,
-            PublicacionRepository publicaciones, CatalogoService catalogo) {
+            PublicacionRepository publicaciones, CatalogoService catalogo, EntityManager entityManager) {
         this.disponibles = disponibles;
         this.publicaciones = publicaciones;
         this.catalogo = catalogo;
+        this.entityManager = entityManager;
     }
 
     /**
@@ -50,6 +56,25 @@ public class PublicacionConsultaService {
      */
     public Optional<PublicacionResumenDto> buscar(long idPublicacion) {
         return disponibles.findById(idPublicacion).map(p -> aDto(p, unidades()));
+    }
+
+    /**
+     * Bloquea la publicación ({@code PESSIMISTIC_WRITE}) hasta el fin de la transacción de quien llama y la
+     * devuelve con sus kilos disponibles actuales. La usa {@code venta} antes de registrar un acuerdo (RNF-02).
+     *
+     * @param idPublicacion id de la publicación
+     * @return la publicación, o vacío si no existe
+     */
+    @Transactional(propagation = Propagation.MANDATORY)
+    public Optional<PublicacionResumenDto> bloquearParaVenta(long idPublicacion) {
+        if (publicaciones.bloquear(idPublicacion).isEmpty()) {
+            return Optional.empty();
+        }
+        // Relee la vista: los kilos disponibles pueden haber cambiado desde que se cargó en esta transacción
+        return disponibles.findById(idPublicacion).map(p -> {
+            entityManager.refresh(p);
+            return aDto(p, unidades());
+        });
     }
 
     /**
@@ -87,6 +112,7 @@ public class PublicacionConsultaService {
                 p.getVariedad(), p.getDistrito(), p.getEstado().name(),
                 unidad == null ? p.getUnidadPlural() : unidad.nombre(), p.getUnidadPlural(), p.getPesoUnidadKg(),
                 p.getPrecioUnitario(), p.getPrecioKg(), p.getDisponibleKg(),
-                BusquedaService.unidadesDisponibles(p.getDisponibleKg(), p.getPesoUnidadKg()), p.getDiasRestantes());
+                BusquedaService.unidadesDisponibles(p.getDisponibleKg(), p.getPesoUnidadKg()), p.getDiasRestantes(),
+                p.getIdUnidad());
     }
 }

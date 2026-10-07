@@ -3,10 +3,14 @@ package pe.agroconecta.publicacion.infraestructura;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
+
+import jakarta.persistence.LockModeType;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 
 import pe.agroconecta.publicacion.dominio.Publicacion;
@@ -58,4 +62,15 @@ public interface PublicacionRepository extends JpaRepository<Publicacion, Long> 
      */
     @Query("select p.id from Publicacion p where p.idAgricultor = :idAgricultor")
     List<Long> idsDeAgricultor(Long idAgricultor);
+
+    /**
+     * Lee la publicación y la bloquea ({@code SELECT … FOR UPDATE}) hasta el fin de la transacción, para que dos
+     * acuerdos simultáneos no superen los kilos disponibles (RNF-02).
+     *
+     * @param id id de la publicación
+     * @return la publicación bloqueada, si existe
+     */
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select p from Publicacion p where p.id = :id")
+    Optional<Publicacion> bloquear(Long id);
 }

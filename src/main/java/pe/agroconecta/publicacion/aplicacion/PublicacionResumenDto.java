@@ -21,11 +21,12 @@ import java.math.BigDecimal;
  * @param disponibleKg        kilos aún no comprometidos en ventas
  * @param unidadesDisponibles unidades disponibles, redondeadas hacia abajo a 2 decimales
  * @param diasRestantes       días que faltan para la fecha límite
+ * @param idUnidad            id de la unidad de venta
  */
 public record PublicacionResumenDto(Long id, Long idAgricultor, String agricultor, String cultivo, String variedad,
         String distrito, String estado, String unidad, String unidadPlural, BigDecimal pesoUnidadKg,
         BigDecimal precioUnitario, BigDecimal precioKg, BigDecimal disponibleKg, BigDecimal unidadesDisponibles,
-        Integer diasRestantes) {
+        Integer diasRestantes, Integer idUnidad) {
 
     /** @return {@code true} si la publicación está PUBLICADA */
     public boolean estaPublicada() {

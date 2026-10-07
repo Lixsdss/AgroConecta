@@ -137,6 +137,21 @@ public class ConversacionService {
     }
 
     /**
+     * Partes de una conversación, para otros módulos (por ejemplo, {@code venta} al registrar un acuerdo).
+     *
+     * @param idConversacion conversación
+     * @return publicación, comprador y agricultor
+     * @throws RecursoNoEncontradoException si la conversación no existe
+     */
+    @Transactional(readOnly = true)
+    public ParticipantesDto participantes(long idConversacion) {
+        Conversacion c = conversaciones.findById(idConversacion)
+                .orElseThrow(() -> new RecursoNoEncontradoException(MENSAJE_CONVERSACION_NO_EXISTE));
+        PublicacionResumenDto publicacion = publicacion(c.getIdPublicacion());
+        return new ParticipantesDto(c.getId(), c.getIdPublicacion(), c.getIdComprador(), publicacion.idAgricultor());
+    }
+
+    /**
      * "Mensajes": conversaciones del usuario, con actividad más reciente primero.
      *
      * @param idUsuario usuario de la sesión

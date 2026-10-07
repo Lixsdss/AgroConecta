@@ -133,6 +133,6 @@ class ConversacionServiceTest {
     private static PublicacionResumenDto publicacion(String estado, String variedad) {
         return new PublicacionResumenDto(15L, AGRICULTOR, "Juan Carlos Chunga", "Mango", variedad, "Tambogrande",
                 estado, "Jaba", "jabas", new BigDecimal("20.000"), new BigDecimal("28.00"), new BigDecimal("1.4000"),
-                new BigDecimal("600.00"), new BigDecimal("30.00"), 5);
+                new BigDecimal("600.00"), new BigDecimal("30.00"), 5, 2);
     }
 }
