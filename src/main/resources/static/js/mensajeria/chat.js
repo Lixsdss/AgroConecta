@@ -1,7 +1,8 @@
 /**
  * Chat (diseño "chat", RF-04 / UC-04): mensajes de texto y ofertas entre el comprador y el agricultor.
  * GET /api/v1/conversaciones/{id}, GET y POST /api/v1/conversaciones/{id}/mensajes. Los mensajes nuevos se
- * consultan cada 10 segundos (solo los posteriores al último recibido). "Registrar acuerdo" llega con RF-06.
+ * consultan cada 10 segundos (solo los posteriores al último recibido). "Registrar acuerdo" y la franja de ventas de la
+ * conversación (GET /api/v1/ventas?idConversacion=) son de RF-06.
  */
 import { api } from '../api.js';
 import { requerirSesion } from '../comun/sesion.js';
@@ -11,6 +12,7 @@ import {
 } from '../comun/formulario.js';
 import { numero, soles } from '../publicacion/borrador.js';
 import { dia, hora, producto, textoOferta, unidad } from './formato.js';
+import { ESTADOS, textoEstado } from '../venta/estados.js';
 
 const CADA_MS = 10_000;
 const CABECERA_CADA_MS = 30_000;
@@ -59,6 +61,9 @@ function mostrarCabecera(c) {
     document.getElementById('producto').hidden = false;
     const disponible = p.estado === 'PUBLICADA';
     botonOferta.hidden = !disponible;
+    const acuerdo = document.getElementById('registrar-acuerdo');
+    acuerdo.hidden = !disponible;
+    acuerdo.href = `/pages/venta/acuerdo.html?conversacion=${c.id}`;
     document.getElementById('no-disponible').hidden = disponible;
 }
 
@@ -118,6 +123,33 @@ function agregar(mensajes) {
     }
     if (bajar) {
         irAlFinal();
+    }
+}
+
+/** Franja con las ventas de esta conversación: estado y enlace a la entrega. */
+async function mostrarVentas() {
+    try {
+        const respuesta = await api.get(`/ventas?idConversacion=${id}`);
+        const contenedor = document.getElementById('ventas');
+        contenedor.replaceChildren(...respuesta.content.map((v) => {
+            const enlace = document.createElement('a');
+            enlace.className = 'ac-producto-chat text-decoration-none';
+            enlace.href = `/pages/venta/venta.html?id=${v.id}`;
+            const texto = document.createElement('span');
+            texto.className = 'flex-grow-1';
+            const titulo = document.createElement('strong');
+            titulo.className = 'd-block';
+            titulo.textContent = textoEstado(v.estado);
+            const detalle = document.createElement('span');
+            detalle.className = 'ac-suave';
+            const u = Number(v.cantidad) === 1 ? v.unidad.toLowerCase() : v.unidadPlural;
+            detalle.textContent = `${numero(v.cantidad)} ${u} · Total ${soles(v.montoTotal)} · Ver entrega`;
+            texto.append(titulo, detalle);
+            enlace.append(icono(ESTADOS[v.estado]?.[1] ?? 'handshake'), texto, icono('chevron-right'));
+            return enlace;
+        }));
+    } catch {
+        // La franja es informativa: se reintenta con la próxima actualización de la cabecera
     }
 }
 
@@ -218,6 +250,7 @@ async function iniciar() {
     try {
         mostrarCabecera(await api.get(`/conversaciones/${id}`));
         agregar(await api.get(`/conversaciones/${id}/mensajes`));
+        mostrarVentas();
     } catch (error) {
         mostrarAlerta(alerta, error.estado === 403
             ? 'Esta conversación no es suya.'
@@ -234,6 +267,7 @@ async function iniciar() {
         if (!document.hidden) {
             try {
                 mostrarCabecera(await api.get(`/conversaciones/${id}`));
+                mostrarVentas();
             } catch {
                 // Se reintenta en la próxima consulta
             }

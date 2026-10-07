@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Registrar acuerdo · AgroConecta</title>
+    <link rel="stylesheet" href="/vendor/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/css/estilos.css">
+    <script type="module" src="/js/venta/acuerdo.js"></script>
+</head>
+<body>
+<!-- Registrar acuerdo (diseño "acuerdo", RF-06 / UC-05). Precargado con la última oferta del chat. -->
+<main class="ac-pantalla">
+    <div class="ac-barra">
+        <a class="ac-atras" href="/pages/mensajeria/conversaciones.html" id="volver" aria-label="Volver al chat"><svg class="ac-icono" aria-hidden="true" focusable="false"><use href="/img/iconos.svg#arrow-left"></use></svg></a>
+        <h1>Registrar acuerdo</h1>
+    </div>
+
+    <div id="alerta" class="ac-alerta" role="alert" tabindex="-1" hidden></div>
+
+    <form id="formulario" novalidate hidden>
+        <p class="mb-3">Con <strong id="otra-parte"></strong> · <span id="producto"></span></p>
+
+        <fieldset class="mb-3">
+            <legend class="form-label fw-semibold">Unidad acordada</legend>
+            <div class="ac-chips" id="unidades"></div>
+            <div class="invalid-feedback d-block" data-error-de="idUnidad"></div>
+        </fieldset>
+
+        <div class="mb-3">
+            <label class="form-label fw-semibold" for="cantidad" id="etiqueta-cantidad">Cantidad</label>
+            <div class="d-flex gap-2 align-items-stretch">
+                <button class="btn btn-outline-primary" type="button" id="menos" aria-label="Quitar uno"><svg class="ac-icono" aria-hidden="true" focusable="false"><use href="/img/iconos.svg#minus"></use></svg></button>
+                <input class="form-control text-center fs-5" id="cantidad" name="cantidad" type="number" inputmode="decimal" min="0.01" step="0.01" required>
+                <button class="btn btn-outline-primary" type="button" id="mas" aria-label="Sumar uno"><svg class="ac-icono" aria-hidden="true" focusable="false"><use href="/img/iconos.svg#plus"></use></svg></button>
+            </div>
+            <div class="form-text" id="disponible"></div>
+            <div class="invalid-feedback d-block" data-error-de="cantidad"></div>
+        </div>
+
+        <div class="mb-3" id="caja-peso" hidden>
+            <label class="form-label fw-semibold" for="pesoUnidadKg" id="etiqueta-peso">Kilos por unidad</label>
+            <input class="form-control" id="pesoUnidadKg" name="pesoUnidadKg" type="number" inputmode="decimal" min="0.001" step="0.001">
+            <div class="invalid-feedback d-block" data-error-de="pesoUnidadKg"></div>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label fw-semibold" for="precioUnitario" id="etiqueta-precio">Precio por unidad</label>
+            <div class="input-group">
+                <span class="input-group-text">S/</span>
+                <input class="form-control" id="precioUnitario" name="precioUnitario" type="number" inputmode="decimal" min="0.01" step="0.01" required>
+            </div>
+            <div class="invalid-feedback d-block" data-error-de="precioUnitario"></div>
+        </div>
+
+        <div class="ac-tarjeta-precio mb-3" aria-live="polite">
+            <strong class="d-block" id="resumen"></strong>
+            <span class="d-block ac-suave" id="por-kilo"></span>
+            <span class="d-block fs-5 fw-bold" id="total"></span>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label fw-semibold" for="fechaRecojo">Día de recojo</label>
+            <input class="form-control" id="fechaRecojo" name="fechaRecojo" type="date" required>
+            <div class="invalid-feedback d-block" data-error-de="fechaRecojo"></div>
+        </div>
+
+        <p class="ac-alerta ac-alerta-info"><svg class="ac-icono" aria-hidden="true" focusable="false"><use href="/img/iconos.svg#info"></use></svg> <span>El pago se hace en persona. AgroConecta solo guarda el acuerdo.</span></p>
+
+        <button class="btn btn-primary w-100" type="submit" id="enviar">
+            <svg class="ac-icono" aria-hidden="true" focusable="false"><use href="/img/iconos.svg#handshake"></use></svg>
+            <span>Registrar acuerdo</span>
+        </button>
+    </form>
+</main>
+</body>
+</html>

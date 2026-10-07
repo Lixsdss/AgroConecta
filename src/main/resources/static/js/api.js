@@ -79,3 +79,39 @@ export const api = {
     put: (ruta, cuerpo) => solicitar('PUT', ruta, cuerpo),
     del: (ruta) => solicitar('DELETE', ruta)
 };
+
+/**
+ * Descarga un archivo de la API (por ejemplo, el Excel del historial) y lo guarda en el equipo del usuario.
+ *
+ * @param {string} ruta ruta relativa a /api/v1
+ * @param {string} nombrePorDefecto nombre si la respuesta no trae Content-Disposition
+ * @returns {Promise<void>}
+ * @throws {ErrorApi} si la API responde con error o no hay conexión
+ */
+export async function descargar(ruta, nombrePorDefecto) {
+    const token = obtenerToken();
+    let respuesta;
+    try {
+        respuesta = await fetch(URL_BASE + ruta, { headers: token ? { 'Authorization': `Bearer ${token}` } : {} });
+    } catch {
+        throw new ErrorApi(0, 'No hay conexión. Revise su internet e intente de nuevo.');
+    }
+    if (!respuesta.ok) {
+        let datos = null;
+        try {
+            datos = await respuesta.json();
+        } catch {
+            datos = null;
+        }
+        throw new ErrorApi(respuesta.status, datos?.mensaje ?? 'Ocurrió un problema. Intente de nuevo.', datos?.errores ?? []);
+    }
+    const disposicion = respuesta.headers.get('Content-Disposition') ?? '';
+    const nombre = /filename="?([^";]+)"?/.exec(disposicion)?.[1] ?? nombrePorDefecto;
+    const enlace = document.createElement('a');
+    enlace.href = URL.createObjectURL(await respuesta.blob());
+    enlace.download = nombre;
+    document.body.append(enlace);
+    enlace.click();
+    enlace.remove();
+    setTimeout(() => URL.revokeObjectURL(enlace.href), 1000);
+}

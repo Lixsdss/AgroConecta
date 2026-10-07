@@ -34,6 +34,7 @@ async function cargar() {
         document.getElementById('saludo').textContent = `Hola, ${nombre}`;
         document.getElementById('rol').textContent = `${ROLES[perfil.rol] ?? ''} · ${perfil.distrito}`;
         document.getElementById('vender').hidden = perfil.rol !== 'AGRICULTOR';
+        document.getElementById('texto-ventas').textContent = perfil.rol === 'COMPRADOR' ? 'Mis compras' : 'Mis ventas';
         // "Buscar productos" es la acción principal del comprador (diseño 14); el agricultor también puede buscar
         document.getElementById('buscar').classList.add(perfil.rol === 'COMPRADOR' ? 'btn-primary' : 'btn-outline-primary');
         contarNoLeidos();

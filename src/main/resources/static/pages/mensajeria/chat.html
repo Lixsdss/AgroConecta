@@ -9,7 +9,7 @@
     <script type="module" src="/js/mensajeria/chat.js"></script>
 </head>
 <body>
-<!-- Chat (diseño "chat", RF-04 / UC-04): mensajes y ofertas. "Registrar acuerdo" llega con RF-06 (slice 7). -->
+<!-- Chat (diseño "chat", RF-04 / UC-04): mensajes y ofertas; "Registrar acuerdo" y ventas de la conversación (RF-06). -->
 <main class="ac-pantalla">
     <div class="ac-barra mb-2">
         <a class="ac-atras" href="/pages/mensajeria/conversaciones.html" aria-label="Volver a Mensajes"><svg class="ac-icono" aria-hidden="true" focusable="false"><use href="/img/iconos.svg#arrow-left"></use></svg></a>
@@ -30,15 +30,22 @@
         <div class="fw-semibold" id="producto-precio"></div>
         <div class="ac-suave" id="producto-peso"></div>
     </div>
+    <div class="d-grid gap-2 mt-2" id="ventas" aria-label="Ventas de esta conversación"></div>
     <p class="ac-alerta ac-alerta-info mt-2" id="no-disponible" hidden>Esta cosecha ya no está disponible para ofertas. Puede seguir escribiendo para coordinar.</p>
 
     <div class="ac-mensajes" id="mensajes" aria-live="polite" aria-label="Mensajes"></div>
 
     <div class="ac-escribir">
-        <button class="btn btn-outline-primary w-100 mb-2" type="button" id="hacer-oferta" hidden>
-            <svg class="ac-icono" aria-hidden="true" focusable="false"><use href="/img/iconos.svg#hand-coins"></use></svg>
-            <span>Hacer oferta</span>
-        </button>
+        <div class="d-flex gap-2 mb-2">
+            <button class="btn btn-outline-primary flex-grow-1" type="button" id="hacer-oferta" hidden>
+                <svg class="ac-icono" aria-hidden="true" focusable="false"><use href="/img/iconos.svg#hand-coins"></use></svg>
+                <span>Hacer oferta</span>
+            </button>
+            <a class="btn btn-primary flex-grow-1" id="registrar-acuerdo" hidden>
+                <svg class="ac-icono" aria-hidden="true" focusable="false"><use href="/img/iconos.svg#handshake"></use></svg>
+                <span>Registrar acuerdo</span>
+            </a>
+        </div>
         <form class="d-flex gap-2" id="form-texto" novalidate>
             <label class="visually-hidden" for="texto">Mensaje</label>
             <input class="form-control" id="texto" name="contenido" maxlength="1000" autocomplete="off" placeholder="Escriba un mensaje">

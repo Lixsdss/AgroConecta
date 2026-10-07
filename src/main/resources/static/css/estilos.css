@@ -952,3 +952,90 @@ body {
     background: var(--ac-superficie);
     border-top: 1px solid var(--ac-linea);
 }
+
+/* ===== Ventas (RF-06, RF-11) ===== */
+.ac-linea-tiempo {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.ac-linea-tiempo li {
+    position: relative;
+    padding: 0 0 1.25rem 2.5rem;
+}
+
+.ac-linea-tiempo li::before {
+    content: "";
+    position: absolute;
+    left: .6875rem;
+    top: 1.5rem;
+    bottom: 0;
+    width: 2px;
+    background: var(--ac-linea);
+}
+
+.ac-linea-tiempo li:last-child::before {
+    display: none;
+}
+
+.ac-linea-tiempo .ac-punto {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: 50%;
+    border: 2px solid var(--ac-linea);
+    background: var(--ac-superficie);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+}
+
+.ac-linea-tiempo .ac-hecho .ac-punto {
+    border-color: var(--ac-verde);
+    background: var(--ac-verde);
+}
+
+.ac-linea-tiempo .ac-hecho::before {
+    background: var(--ac-verde);
+}
+
+.ac-linea-tiempo .ac-siguiente .ac-punto {
+    border: 3px solid var(--ac-verde);
+}
+
+.ac-linea-tiempo .ac-cancelado .ac-punto {
+    border-color: var(--ac-error);
+    background: var(--ac-error);
+}
+
+.ac-linea-tiempo .ac-punto .ac-icono {
+    width: .875rem;
+    height: .875rem;
+}
+
+.ac-estado-venta {
+    display: inline-flex;
+    align-items: center;
+    gap: .25rem;
+    border-radius: 999px;
+    padding: .125rem .625rem;
+    font-size: .875rem;
+    font-weight: 600;
+    white-space: nowrap;
+    background: var(--ac-verde-claro);
+    color: var(--ac-verde-oscuro);
+}
+
+.ac-estado-venta.ac-estado-final {
+    background: var(--ac-verde);
+    color: #fff;
+}
+
+.ac-estado-venta.ac-estado-cancelada {
+    background: var(--ac-error-claro);
+    color: var(--ac-error);
+}
