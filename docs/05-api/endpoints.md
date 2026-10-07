@@ -59,7 +59,9 @@ Base: `/api/v1`. Formato JSON (UTF-8). Autenticación con JWT en la cabecera `Au
 | POST | `/api/v1/ventas/{id}/estado` | Parte de la venta | RF-06, RF-11 | venta |
 | GET | `/api/v1/ventas` | AGRICULTOR, COMPRADOR | RF-06 | venta |
 | GET | `/api/v1/ventas/exportar` | AGRICULTOR, COMPRADOR | RF-06 | venta |
-| GET | `/api/v1/ventas/{id}` | Parte de la venta | RF-06, RF-11 | venta |
+| GET | `/api/v1/ventas/{id}` | Parte de la venta | RF-06, RF-11, RF-05 | venta |
+| POST | `/api/v1/ventas/{id}/calificacion` | Parte de la venta | RF-05 | venta |
+| GET | `/api/v1/reputaciones/{idUsuario}` | Público | RF-05 | venta |
 | GET | `/api/v1/moderacion/publicaciones` | ADMINISTRADOR | RF-09 | administracion |
 | GET | `/api/v1/moderacion/decisiones` | ADMINISTRADOR | RF-09 | administracion |
 | POST | `/api/v1/moderacion/publicaciones/{id}/decisiones` | ADMINISTRADOR | RF-09 | administracion |
@@ -635,12 +637,18 @@ Estados: `ACORDADA` → `RECOGIDO` → `EN_CAMINO` → `ENTREGADO` → `COMPLETA
   "fechaRecojo": "2026-10-10", "estado": "ACORDADA",
   "fechaCreacion": "2026-10-06T10:30:00", "fechaActualizacion": null,
   "lineaDeTiempo": [ { "estado": "ACORDADA", "fecha": "2026-10-06T10:30:00", "autor": "Rosa Quispe", "esUsted": false } ],
-  "acciones": ["RECOGIDO", "CANCELAR"]
+  "acciones": ["RECOGIDO", "CANCELAR"],
+  "calificaciones": {
+    "puedoCalificar": false,
+    "mia": null,
+    "recibida": null
+  }
 }
 ```
 
 - `contraparte`: la otra parte; `negocio` solo si es el comprador. El celular se muestra porque ya hay acuerdo (UC-05 paso 6).
 - `lineaDeTiempo`: `transacciones_historial` en orden, con el autor (`null` si fue un proceso automático).
+- `calificaciones` (RF-05, desde el slice 8): `mia` es la que dio este usuario y `recibida` la que le dio la otra parte; cada una es `{ "puntuacion": 5, "comentario": "Pagó a tiempo.", "fecha": "2026-10-07T09:00:00", "autor": "Restaurante El Chalán" }` o `null`. `puedoCalificar` es `true` si la venta está COMPLETADA y este usuario aún no calificó.
 - `acciones`: lo que **este** usuario puede hacer ahora: `RECOGIDO` y `CANCELAR` (cualquiera, desde ACORDADA), `EN_CAMINO` (cualquiera, desde RECOGIDO), `CONFIRMAR_RECEPCION` (solo el comprador, desde ACORDADA, EN_CAMINO o ENTREGADO).
 
 ### POST `/api/v1/ventas`
@@ -706,9 +714,11 @@ Roles **AGRICULTOR** y **COMPRADOR** (UC-08). "Mis ventas" o "Mis compras" desde
   "cultivo": "Mango", "variedad": "Kent", "cantidad": 30.00, "unidad": "Jaba", "unidadPlural": "jabas",
   "cantidadKg": 600.00, "precioUnitario": 28.00, "precioKg": 1.40, "montoTotal": 840.00,
   "fechaRecojo": "2026-10-10", "estado": "ACORDADA",
-  "fechaCreacion": "2026-10-06T10:30:00", "fechaActualizacion": null
+  "fechaCreacion": "2026-10-06T10:30:00", "fechaActualizacion": null, "miPuntuacion": null
 }
 ```
+
+`miPuntuacion` (RF-05): las estrellas que este usuario dio en esa venta, o `null` si aún no la calificó.
 
 **Errores:** 400 si las fechas están invertidas, `grupo` no es válido o la página es negativa.
 
@@ -719,6 +729,47 @@ Roles **AGRICULTOR** y **COMPRADOR** (UC-08 A3). El mismo filtro en un archivo E
 **200** — `Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet`, `Content-Disposition: attachment; filename="AgroConecta_Historial_2026-10-06.xlsx"`. Columnas: Fecha del acuerdo, Cultivo, Variedad, Cantidad, Unidad, Kilos, Precio por unidad (S/), Precio por kilo (S/), Total (S/), Contraparte, Estado, Recojo, Última actualización.
 
 **Errores:** 400 como la lista · 422 "Hay más de 5000 ventas en ese filtro. Acorte el rango de fechas."
+
+### POST `/api/v1/ventas/{id}/calificacion`
+
+**Parte de la venta** (RF-05, UC-07). Califica a la otra parte una sola vez, solo si la venta está **COMPLETADA**. Las calificaciones no se editan ni se eliminan. `trg_calificaciones_bi` repite las validaciones y `uk_calificacion_trans_evaluador` impide la segunda.
+
+| Campo | Obligatorio | Regla |
+|---|---|---|
+| `puntuacion` | Sí | Entero de 1 a 5 |
+| `comentario` | No | Hasta 500 caracteres; vacío se guarda como `null` |
+
+**201** — la venta (mismo formato que `GET /ventas/{id}`), con `calificaciones.mia`. Avisa a la otra parte (CALIFICACION, "Nueva calificación": "{nombre} le dio 5 estrellas por la venta de Mango Kent.").
+
+**Errores**
+
+| Código | Cuándo | `mensaje` |
+|---|---|---|
+| 400 | Puntuación fuera de 1–5 o comentario de más de 500 caracteres | "Los datos enviados no son válidos." (con `errores`) |
+| 403 | No es parte de la venta | "No tiene permiso para realizar esta acción." |
+| 404 | La venta no existe | "La venta no existe." |
+| 409 | Ya calificó esa venta (UC-07 A2) | "Ya calificó esta venta. Las calificaciones no se cambian." |
+| 422 | La venta no está COMPLETADA (UC-07 A1) | "Solo se califican ventas terminadas." |
+
+### GET `/api/v1/reputaciones/{idUsuario}?page=0`
+
+**Público** (SRS §7.2: la reputación se ve en el perfil y en la búsqueda). Promedio y total de `v_reputacion_usuario` y las calificaciones que recibió el usuario, la más reciente primero, 10 por página.
+
+**200**
+```json
+{
+  "idUsuario": 3, "promedio": 4.8, "total": 23,
+  "calificaciones": {
+    "content": [ { "puntuacion": 5, "comentario": "Mango de primera.", "fecha": "2026-10-07T09:00:00", "autor": "Restaurante El Chalán" } ],
+    "page": { "size": 10, "number": 0, "totalElements": 23, "totalPages": 3 }
+  }
+}
+```
+
+- `promedio` es `null` y `total` 0 si aún no tiene calificaciones.
+- `autor`: el nombre del negocio si calificó un comprador, o el nombre completo si calificó un agricultor. No se muestran celulares.
+
+**Errores:** 400 si la página es negativa · 404 "El usuario no existe." (o es administrador).
 
 ### GET `/api/v1/ventas/{id}`
 
