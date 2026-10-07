@@ -35,6 +35,15 @@
             <a class="d-inline-flex align-items-center gap-2 mt-1" id="d-celular"></a>
         </section>
 
+        <section class="mb-3" id="seccion-calificaciones" aria-labelledby="titulo-calificaciones" hidden>
+            <h3 class="h6 fw-bold" id="titulo-calificaciones">Calificaciones</h3>
+            <div class="ac-calificaciones" id="calificaciones"></div>
+            <button class="btn btn-primary w-100 mt-2" type="button" id="calificar" hidden>
+                <svg class="ac-icono" aria-hidden="true" focusable="false"><use href="/img/iconos.svg#star"></use></svg>
+                <span id="texto-calificar">Calificar</span>
+            </button>
+        </section>
+
         <p class="ac-alerta ac-alerta-info" id="ayuda" hidden></p>
 
         <div class="d-grid gap-2" id="acciones"></div>
@@ -42,6 +51,27 @@
         <a class="btn btn-link w-100 mt-2" id="ir-chat"><svg class="ac-icono" aria-hidden="true" focusable="false"><use href="/img/iconos.svg#message-circle"></use></svg> <span>Ir al chat</span></a>
     </div>
 </main>
+
+<dialog class="ac-dialogo ac-hoja" id="dialogo-calificar" aria-labelledby="titulo-calificar">
+    <form id="form-calificar" novalidate>
+        <h2 class="h4 text-center" id="titulo-calificar">¿Cómo le fue?</h2>
+        <p class="text-center ac-suave" id="calificar-que"></p>
+        <div id="alerta-calificar" class="ac-alerta" role="alert" tabindex="-1" hidden></div>
+        <fieldset class="mb-2">
+            <legend class="visually-hidden">Estrellas</legend>
+            <div class="ac-elegir-estrellas" id="elegir-estrellas"></div>
+            <p class="text-center fw-semibold mt-1 mb-0" id="texto-puntuacion" aria-live="polite">Toque una estrella</p>
+            <div class="invalid-feedback d-block text-center" data-error-de="puntuacion"></div>
+        </fieldset>
+        <div class="mb-3">
+            <label class="form-label" for="comentario">Comentario (si desea)</label>
+            <textarea class="form-control" id="comentario" name="comentario" rows="3" maxlength="500" placeholder="Ejemplo: Pagó a tiempo y fue puntual."></textarea>
+            <div class="invalid-feedback d-block" data-error-de="comentario"></div>
+        </div>
+        <button class="btn btn-primary w-100 mb-2" type="submit" id="enviar-calificacion" disabled>Enviar calificación</button>
+        <button class="btn btn-link w-100" type="button" id="cerrar-calificar">Ahora no</button>
+    </form>
+</dialog>
 
 <dialog class="ac-dialogo" id="dialogo-cancelar" aria-labelledby="titulo-cancelar">
     <h2 class="h4" id="titulo-cancelar">¿Cancelar la venta?</h2>

@@ -9,6 +9,7 @@ import { mostrarAlerta, ocultarAlerta, marcarOcupado } from '../comun/formulario
 import { numero, soles } from '../publicacion/borrador.js';
 import { ESTADOS, textoEstado } from './estados.js';
 import { ponerBarra } from '../comun/barra.js';
+import { estrellas } from './estrellas.js';
 
 const lista = document.getElementById('lista');
 const vacio = document.getElementById('vacio');
@@ -71,6 +72,23 @@ function elemento(v) {
     fila3.className = 'd-block fw-semibold';
     fila3.textContent = `Total ${soles(v.montoTotal)} · ${soles(v.precioUnitario)} por ${v.unidad.toLowerCase()}`;
     enlace.append(fila1, fila2, fila3);
+    // RF-05: en una venta terminada, "Usted calificó ★★★★" o la invitación a calificar
+    if (v.estado === 'COMPLETADA') {
+        const fila4 = document.createElement('span');
+        fila4.className = 'd-flex align-items-center gap-2 mt-1';
+        if (v.miPuntuacion) {
+            const texto = document.createElement('span');
+            texto.className = 'ac-suave';
+            texto.textContent = 'Usted calificó';
+            fila4.append(texto, estrellas(v.miPuntuacion));
+        } else {
+            enlace.href += '&calificar=1';
+            fila4.className += ' fw-bold ac-texto-verde';
+            fila4.append(icono('star'), Object.assign(document.createElement('span'),
+                { textContent: `Calificar a ${v.contraparte}` }));
+        }
+        enlace.append(fila4);
+    }
     return enlace;
 }
 

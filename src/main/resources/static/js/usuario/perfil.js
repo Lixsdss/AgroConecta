@@ -4,6 +4,7 @@
  */
 import { api } from '../api.js';
 import { requerirSesion } from '../comun/sesion.js';
+import { mostrarReputacion } from '../venta/reputacion.js';
 import { limpiarErrores, mostrarErrores, mostrarAlerta, marcarOcupado } from '../comun/formulario.js';
 
 const ROLES = { AGRICULTOR: 'Agricultor', COMPRADOR: 'Comprador', ADMINISTRADOR: 'Administrador' };
@@ -97,7 +98,12 @@ async function iniciar() {
     }
     try {
         await cargarDistritos();
-        mostrarPerfil(await api.get('/usuarios/me'));
+        const perfil = await api.get('/usuarios/me');
+        mostrarPerfil(perfil);
+        if (perfil.rol !== 'ADMINISTRADOR') {
+            mostrarReputacion(document.getElementById('reputacion'), perfil.id,
+                'Todavía no tiene calificaciones. Las recibe cuando termina una venta.');
+        }
     } catch (error) {
         if (error.estado === 401) {
             window.location.replace('/pages/usuario/ingresar.html');

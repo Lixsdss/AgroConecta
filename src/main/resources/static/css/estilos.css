@@ -1106,3 +1106,62 @@ body {
 body.ac-con-barra .ac-pantalla {
     padding-bottom: 6.5rem;
 }
+
+/* ===== Calificaciones (RF-05) ===== */
+.ac-estrellas {
+    color: var(--ac-ambar);
+    font-size: 1.25rem;
+    letter-spacing: .125rem;
+    /* Contorno para que la estrella vacía se vea sobre fondo claro */
+    -webkit-text-stroke: .5px var(--ac-texto-suave);
+}
+
+.ac-calificacion {
+    border: 1px solid var(--ac-linea);
+    border-radius: 12px;
+    padding: .75rem .875rem;
+    background: var(--ac-superficie);
+}
+
+.ac-calificaciones {
+    display: grid;
+    gap: .5rem;
+}
+
+.ac-elegir-estrellas {
+    display: flex;
+    justify-content: center;
+    gap: .25rem;
+}
+
+.ac-elegir-estrellas label {
+    font-size: 2.5rem;
+    line-height: 1;
+    min-width: 3rem;
+    min-height: 3rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: var(--ac-linea);
+    -webkit-text-stroke: 1px var(--ac-texto-suave);
+}
+
+.ac-elegir-estrellas label.ac-encendida {
+    color: var(--ac-ambar);
+}
+
+.ac-elegir-estrellas input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.ac-elegir-estrellas input:focus-visible + label {
+    outline: 3px solid var(--ac-ambar);
+    border-radius: 8px;
+}
+
+.ac-texto-verde {
+    color: var(--ac-verde-oscuro);
+}

@@ -7,6 +7,7 @@ import { mostrarAlerta } from '../comun/formulario.js';
 import { fechaCorta, soles } from './borrador.js';
 import { etiquetaVence, textoCalificacion, textoDisponible, titulo } from './resultado.js';
 import { botonesContacto, puedeContactar } from '../mensajeria/contacto.js';
+import { mostrarReputacion } from '../venta/reputacion.js';
 
 const id = new URLSearchParams(window.location.search).get('id');
 
@@ -45,6 +46,8 @@ async function cargar() {
             }));
         }
         document.getElementById('detalle').hidden = false;
+        mostrarReputacion(document.getElementById('reputacion'), p.idAgricultor,
+            'Todavía no tiene calificaciones. Las recibe al terminar sus ventas.');
     } catch (e) {
         mostrarAlerta(document.getElementById('alerta'), e.message, 'error');
     }

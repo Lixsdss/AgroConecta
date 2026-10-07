@@ -1,17 +1,26 @@
 /**
  * "Entrega" (diseño "entrega", RF-11 / UC-06): línea de tiempo de la venta, detalle del acuerdo y solo las acciones
  * que el usuario puede hacer ahora. GET /api/v1/ventas/{id} y POST /api/v1/ventas/{id}/estado.
+ * RF-05: calificaciones dada y recibida, y la hoja "¿Cómo le fue con…?" (POST /api/v1/ventas/{id}/calificacion).
+ * Con ?calificar=1 la hoja se abre sola (enlace "Calificar" del historial).
  */
 import { api } from '../api.js';
 import { requerirSesion } from '../comun/sesion.js';
 import { icono, ponerIconoYTexto } from '../comun/iconos.js';
-import { mostrarAlerta, ocultarAlerta, marcarOcupado } from '../comun/formulario.js';
+import {
+    mostrarAlerta, ocultarAlerta, marcarOcupado, limpiarErrores, mostrarErrores
+} from '../comun/formulario.js';
 import { numero, soles } from '../publicacion/borrador.js';
 import { ACCIONES, textoEstado } from './estados.js';
+import { TEXTOS_ESTRELLAS, tarjetaCalificacion } from './estrellas.js';
 
 const id = new URLSearchParams(window.location.search).get('id');
 const alerta = document.getElementById('alerta');
 const dialogo = document.getElementById('dialogo-cancelar');
+const dialogoCalificar = document.getElementById('dialogo-calificar');
+const formCalificar = document.getElementById('form-calificar');
+let ventaActual = null;
+let puntuacion = 0;
 
 /** Camino con transporte y camino de recojo en chacra (UC-06 A1). */
 const CON_TRANSPORTE = ['ACORDADA', 'RECOGIDO', 'EN_CAMINO', 'ENTREGADO', 'COMPLETADA'];
@@ -107,7 +116,91 @@ function dibujarAcciones(venta) {
     }
 }
 
+/** Nombre de la otra parte para "Calificar a …" y "¿Cómo le fue con …?". */
+function nombreOtra(venta) {
+    return venta.contraparte.negocio ?? venta.contraparte.nombre;
+}
+
+function dibujarCalificaciones(venta) {
+    const c = venta.calificaciones;
+    const seccion = document.getElementById('seccion-calificaciones');
+    const lista = document.getElementById('calificaciones');
+    lista.replaceChildren();
+    if (c.mia) {
+        lista.append(tarjetaCalificacion(c.mia, 'Usted calificó'));
+    }
+    if (c.recibida) {
+        lista.append(tarjetaCalificacion(c.recibida, `${c.recibida.autor} le calificó`));
+    }
+    const boton = document.getElementById('calificar');
+    boton.hidden = !c.puedoCalificar;
+    poner('texto-calificar', `Calificar a ${nombreOtra(venta)}`);
+    seccion.hidden = !c.mia && !c.recibida && !c.puedoCalificar;
+}
+
+function elegirPuntuacion(valor) {
+    puntuacion = valor;
+    document.querySelectorAll('#elegir-estrellas label').forEach((etiqueta, i) => {
+        etiqueta.classList.toggle('ac-encendida', i < valor);
+    });
+    poner('texto-puntuacion', TEXTOS_ESTRELLAS[valor]);
+    document.getElementById('enviar-calificacion').disabled = valor === 0;
+}
+
+function abrirCalificar() {
+    const v = ventaActual;
+    limpiarErrores(formCalificar, document.getElementById('alerta-calificar'));
+    poner('titulo-calificar', `¿Cómo le fue con ${nombreOtra(v)}?`);
+    const unidad = Number(v.cantidad) === 1 ? v.unidad.toLowerCase() : v.unidadPlural;
+    poner('calificar-que', `${numero(v.cantidad)} ${unidad} de ${v.cultivo.toLowerCase()} ${v.variedad} · Venta terminada`);
+    const contenedor = document.getElementById('elegir-estrellas');
+    contenedor.replaceChildren();
+    for (let i = 1; i <= 5; i++) {
+        const radio = document.createElement('input');
+        radio.type = 'radio';
+        radio.name = 'puntuacion';
+        radio.id = `estrella-${i}`;
+        radio.value = String(i);
+        radio.addEventListener('change', () => elegirPuntuacion(i));
+        const etiqueta = document.createElement('label');
+        etiqueta.htmlFor = radio.id;
+        etiqueta.textContent = '★';
+        etiqueta.setAttribute('aria-label', `${i} ${i === 1 ? 'estrella' : 'estrellas'}: ${TEXTOS_ESTRELLAS[i]}`);
+        contenedor.append(radio, etiqueta);
+    }
+    formCalificar.elements.comentario.value = '';
+    elegirPuntuacion(0);
+    dialogoCalificar.showModal();
+}
+
+formCalificar.addEventListener('submit', async (evento) => {
+    evento.preventDefault();
+    const alertaCalificar = document.getElementById('alerta-calificar');
+    limpiarErrores(formCalificar, alertaCalificar);
+    const boton = document.getElementById('enviar-calificacion');
+    marcarOcupado(boton, true, 'Enviando…');
+    try {
+        const venta = await api.post(`/ventas/${id}/calificacion`, {
+            puntuacion,
+            comentario: formCalificar.elements.comentario.value
+        });
+        dialogoCalificar.close();
+        mostrar(venta);
+        mostrarAlerta(alerta, '¡Gracias por calificar! Su opinión ayuda a otros a vender y comprar con confianza.',
+            'exito');
+        alerta.focus();
+    } catch (error) {
+        mostrarErrores(formCalificar, alertaCalificar, error);
+    } finally {
+        marcarOcupado(boton, false);
+        boton.disabled = puntuacion === 0;
+    }
+});
+document.getElementById('calificar').addEventListener('click', abrirCalificar);
+document.getElementById('cerrar-calificar').addEventListener('click', () => dialogoCalificar.close());
+
 function mostrar(venta) {
+    ventaActual = venta;
     poner('titulo', textoEstado(venta.estado));
     dibujarLinea(venta);
     const unidad = Number(venta.cantidad) === 1 ? venta.unidad.toLowerCase() : venta.unidadPlural;
@@ -131,6 +224,7 @@ function mostrar(venta) {
     document.getElementById('ir-chat').href = `/pages/mensajeria/chat.html?id=${venta.idConversacion}`;
     ayuda(venta);
     dibujarAcciones(venta);
+    dibujarCalificaciones(venta);
     document.getElementById('contenido').hidden = false;
 }
 
@@ -165,6 +259,10 @@ async function iniciar() {
     }
     try {
         mostrar(await api.get(`/ventas/${id}`));
+        if (new URLSearchParams(window.location.search).get('calificar') === '1'
+            && ventaActual.calificaciones.puedoCalificar) {
+            abrirCalificar();
+        }
     } catch (error) {
         mostrarAlerta(alerta, error.estado === 403 ? 'Esta venta no es suya.' : error.message, 'error');
     }
