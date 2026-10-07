@@ -31,11 +31,12 @@ import java.util.List;
  * @param fechaActualizacion fecha y hora del último cambio
  * @param lineaDeTiempo      pasos de la venta, del primero al último
  * @param acciones           acciones que el usuario de la sesión puede hacer ahora
+ * @param calificaciones     calificaciones dada y recibida, y si puede calificar (RF-05)
  */
 public record VentaDetalleDto(Long id, Long idConversacion, Long idPublicacion, boolean soyComprador,
         ContraparteDto contraparte, String cultivo, String variedad, String distrito, Integer idUnidad, String unidad,
         String unidadPlural, BigDecimal cantidad, BigDecimal pesoUnidadKg, BigDecimal cantidadKg,
         BigDecimal precioUnitario, BigDecimal precioKg, BigDecimal montoTotal, LocalDate fechaRecojo, String estado,
         LocalDateTime fechaCreacion, LocalDateTime fechaActualizacion, List<PasoDto> lineaDeTiempo,
-        List<AccionVenta> acciones) {
+        List<AccionVenta> acciones, CalificacionesVentaDto calificaciones) {
 }

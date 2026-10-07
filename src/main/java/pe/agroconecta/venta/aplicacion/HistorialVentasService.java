@@ -28,6 +28,8 @@ import pe.agroconecta.compartido.error.ReglaNegocioException;
 import pe.agroconecta.compartido.error.SolicitudInvalidaException;
 import pe.agroconecta.venta.dominio.EstadoTransaccion;
 import pe.agroconecta.venta.dominio.VentaHistorial;
+import pe.agroconecta.venta.dominio.Calificacion;
+import pe.agroconecta.venta.infraestructura.CalificacionRepository;
 import pe.agroconecta.venta.infraestructura.TransaccionRepository;
 import pe.agroconecta.venta.infraestructura.VentaHistorialRepository;
 
@@ -54,6 +56,7 @@ public class HistorialVentasService {
 
     private final VentaHistorialRepository historial;
     private final TransaccionRepository transacciones;
+    private final CalificacionRepository calificaciones;
     private final CatalogoService catalogo;
     private final ExportadorExcelVentas excel;
     private final Clock reloj;
@@ -63,14 +66,17 @@ public class HistorialVentasService {
      *
      * @param historial     vista del historial
      * @param transacciones ventas (filtro por conversación)
+     * @param calificaciones estrellas que dio el usuario (RF-05)
      * @param catalogo      unidades (nombre en singular)
      * @param excel         generador del Excel
      * @param reloj         reloj de la aplicación (nombre del archivo)
      */
     HistorialVentasService(VentaHistorialRepository historial, TransaccionRepository transacciones,
-            CatalogoService catalogo, ExportadorExcelVentas excel, Clock reloj) {
+            CalificacionRepository calificaciones, CatalogoService catalogo, ExportadorExcelVentas excel,
+            Clock reloj) {
         this.historial = historial;
         this.transacciones = transacciones;
+        this.calificaciones = calificaciones;
         this.catalogo = catalogo;
         this.excel = excel;
         this.reloj = reloj;
@@ -90,8 +96,13 @@ public class HistorialVentasService {
             throw new SolicitudInvalidaException(MENSAJE_PAGINA);
         }
         Map<String, String> singulares = singulares();
-        return historial.findAll(condicion(idUsuario, filtro), PageRequest.of(pagina, TAMANO_PAGINA, RECIENTES))
-                .map(v -> aDto(v, idUsuario, singulares));
+        Page<VentaHistorial> encontradas = historial.findAll(condicion(idUsuario, filtro),
+                PageRequest.of(pagina, TAMANO_PAGINA, RECIENTES));
+        Map<Long, Integer> puntuaciones = encontradas.isEmpty() ? Map.of()
+                : calificaciones.findByIdTransaccionInAndIdEvaluador(encontradas.map(VentaHistorial::getId).toList(),
+                        idUsuario).stream()
+                        .collect(Collectors.toMap(Calificacion::getIdTransaccion, Calificacion::getPuntuacion));
+        return encontradas.map(v -> aDto(v, idUsuario, singulares, puntuaciones.get(v.getId())));
     }
 
     /**
@@ -110,7 +121,7 @@ public class HistorialVentasService {
         }
         Map<String, String> singulares = singulares();
         byte[] contenido = excel.generar(historial.findAll(condicion, RECIENTES).stream()
-                .map(v -> aDto(v, idUsuario, singulares))
+                .map(v -> aDto(v, idUsuario, singulares, null))
                 .toList());
         return new ArchivoDto("AgroConecta_Historial_%s.xlsx".formatted(LocalDate.now(reloj)), contenido);
     }
@@ -145,12 +156,13 @@ public class HistorialVentasService {
                 .collect(Collectors.toMap(UnidadDto::nombrePlural, UnidadDto::nombre, (a, b) -> a));
     }
 
-    private static VentaResumenDto aDto(VentaHistorial v, long idUsuario, Map<String, String> singulares) {
+    private static VentaResumenDto aDto(VentaHistorial v, long idUsuario, Map<String, String> singulares,
+            Integer miPuntuacion) {
         boolean comprador = v.getIdComprador() == idUsuario;
         return new VentaResumenDto(v.getId(), comprador, comprador ? v.getAgricultor() : v.getComprador(),
                 v.getCultivo(), v.getVariedad(), v.getCantidad(),
                 singulares.getOrDefault(v.getUnidadPlural(), v.getUnidadPlural()), v.getUnidadPlural(),
                 v.getCantidadKg(), v.getPrecioUnitario(), v.getPrecioKg(), v.getMontoTotal(), v.getFechaRecojo(),
-                v.getEstado().name(), v.getFechaCreacion(), v.getFechaActualizacion());
+                v.getEstado().name(), v.getFechaCreacion(), v.getFechaActualizacion(), miPuntuacion);
     }
 }

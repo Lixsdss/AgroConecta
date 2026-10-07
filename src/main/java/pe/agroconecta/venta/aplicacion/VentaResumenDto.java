@@ -23,9 +23,10 @@ import java.time.LocalDateTime;
  * @param estado             estado
  * @param fechaCreacion      fecha y hora del acuerdo
  * @param fechaActualizacion fecha y hora del último cambio
+ * @param miPuntuacion       estrellas que dio el usuario de la sesión, o {@code null} si no calificó (RF-05)
  */
 public record VentaResumenDto(Long id, boolean soyComprador, String contraparte, String cultivo, String variedad,
         BigDecimal cantidad, String unidad, String unidadPlural, BigDecimal cantidadKg, BigDecimal precioUnitario,
         BigDecimal precioKg, BigDecimal montoTotal, LocalDate fechaRecojo, String estado,
-        LocalDateTime fechaCreacion, LocalDateTime fechaActualizacion) {
+        LocalDateTime fechaCreacion, LocalDateTime fechaActualizacion, Integer miPuntuacion) {
 }

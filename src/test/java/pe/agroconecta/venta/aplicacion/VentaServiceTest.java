@@ -33,6 +33,7 @@ import pe.agroconecta.publicacion.aplicacion.PublicacionResumenDto;
 import pe.agroconecta.usuario.aplicacion.UsuarioConsultaService;
 import pe.agroconecta.venta.dominio.EstadoTransaccion;
 import pe.agroconecta.venta.dominio.Transaccion;
+import pe.agroconecta.venta.infraestructura.CalificacionRepository;
 import pe.agroconecta.venta.infraestructura.HistorialRepository;
 import pe.agroconecta.venta.infraestructura.TransaccionRepository;
 
@@ -47,6 +48,7 @@ class VentaServiceTest {
 
     @Mock private TransaccionRepository transacciones;
     @Mock private HistorialRepository historial;
+    @Mock private CalificacionRepository calificaciones;
     @Mock private ConversacionService conversaciones;
     @Mock private PublicacionConsultaService publicaciones;
     @Mock private UsuarioConsultaService usuarios;
@@ -58,7 +60,7 @@ class VentaServiceTest {
 
     @BeforeEach
     void preparar() {
-        servicio = new VentaService(transacciones, historial, conversaciones, publicaciones, usuarios, catalogo,
+        servicio = new VentaService(transacciones, historial, calificaciones, conversaciones, publicaciones, usuarios, catalogo,
                 notificaciones, entityManager);
     }
 

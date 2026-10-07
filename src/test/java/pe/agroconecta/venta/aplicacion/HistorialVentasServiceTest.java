@@ -18,6 +18,7 @@ import org.springframework.data.jpa.domain.Specification;
 import pe.agroconecta.catalogo.aplicacion.CatalogoService;
 import pe.agroconecta.compartido.error.ReglaNegocioException;
 import pe.agroconecta.compartido.error.SolicitudInvalidaException;
+import pe.agroconecta.venta.infraestructura.CalificacionRepository;
 import pe.agroconecta.venta.infraestructura.TransaccionRepository;
 import pe.agroconecta.venta.infraestructura.VentaHistorialRepository;
 
@@ -28,6 +29,7 @@ class HistorialVentasServiceTest {
 
     @Mock private VentaHistorialRepository historial;
     @Mock private TransaccionRepository transacciones;
+    @Mock private CalificacionRepository calificaciones;
     @Mock private CatalogoService catalogo;
     @Mock private ExportadorExcelVentas excel;
 
@@ -35,7 +37,7 @@ class HistorialVentasServiceTest {
 
     @BeforeEach
     void preparar() {
-        servicio = new HistorialVentasService(historial, transacciones, catalogo, excel, Clock.systemDefaultZone());
+        servicio = new HistorialVentasService(historial, transacciones, calificaciones, catalogo, excel, Clock.systemDefaultZone());
     }
 
     @Test

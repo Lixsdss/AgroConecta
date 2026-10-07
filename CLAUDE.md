@@ -212,7 +212,7 @@ Never reimplement these side effects in Java and never use `@Scheduled` for the 
   - 409: unique key duplicate (1062) or foreign key violation (1451, 1452), with a generic Spanish message.
   - 500: anything else, with a generic message; the detail is logged with Logback.
   - 401: missing/invalid token or user not ACTIVO. 403: wrong role or not the owner (Spring Security; the handler rethrows its exceptions). 404: not found.
-- Public endpoints: `POST /api/v1/auth/registro`, `POST /api/v1/auth/login`, `GET /api/v1/catalogo/**`, `GET /api/v1/publicaciones/**`, `GET /api/v1/precios/**`, static files, `/actuator/health` (the only exposed Actuator endpoint), Swagger UI. Everything else requires JWT.
+- Public endpoints: `POST /api/v1/auth/registro`, `POST /api/v1/auth/login`, `GET /api/v1/catalogo/**`, `GET /api/v1/publicaciones/**`, `GET /api/v1/precios/**`, `GET /api/v1/reputaciones/**` (reputation is shown in search and profiles, SRS §7.2), static files, `/actuator/health` (the only exposed Actuator endpoint), Swagger UI. Everything else requires JWT.
 - Roles in the token claim `roles`: `AGRICULTOR`, `COMPRADOR`, `ADMINISTRADOR`. Use `@PreAuthorize` in controllers.
 - Keep `docs/05-api/endpoints.md` updated when adding endpoints.
 

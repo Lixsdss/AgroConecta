@@ -32,9 +32,11 @@ import pe.agroconecta.publicacion.aplicacion.PublicacionConsultaService;
 import pe.agroconecta.publicacion.aplicacion.PublicacionResumenDto;
 import pe.agroconecta.usuario.aplicacion.UsuarioConsultaService;
 import pe.agroconecta.usuario.aplicacion.UsuarioResumenDto;
+import pe.agroconecta.venta.dominio.Calificacion;
 import pe.agroconecta.venta.dominio.EstadoTransaccion;
 import pe.agroconecta.venta.dominio.HistorialTransaccion;
 import pe.agroconecta.venta.dominio.Transaccion;
+import pe.agroconecta.venta.infraestructura.CalificacionRepository;
 import pe.agroconecta.venta.infraestructura.HistorialRepository;
 import pe.agroconecta.venta.infraestructura.TransaccionRepository;
 
@@ -63,6 +65,7 @@ public class VentaService {
 
     private final TransaccionRepository transacciones;
     private final HistorialRepository historial;
+    private final CalificacionRepository calificaciones;
     private final ConversacionService conversaciones;
     private final PublicacionConsultaService publicaciones;
     private final UsuarioConsultaService usuarios;
@@ -75,6 +78,7 @@ public class VentaService {
      *
      * @param transacciones  repositorio de ventas
      * @param historial      línea de tiempo (solo lectura)
+     * @param calificaciones calificaciones de la venta (RF-05)
      * @param conversaciones partes de la conversación
      * @param publicaciones  publicación (bloqueo y kilos disponibles)
      * @param usuarios       nombres, negocio y celular
@@ -83,11 +87,12 @@ public class VentaService {
      * @param entityManager  contexto de persistencia (para leer lo que calcula la base de datos)
      */
     public VentaService(TransaccionRepository transacciones, HistorialRepository historial,
-            ConversacionService conversaciones, PublicacionConsultaService publicaciones,
+            CalificacionRepository calificaciones, ConversacionService conversaciones, PublicacionConsultaService publicaciones,
             UsuarioConsultaService usuarios, CatalogoService catalogo, NotificacionService notificaciones,
             EntityManager entityManager) {
         this.transacciones = transacciones;
         this.historial = historial;
+        this.calificaciones = calificaciones;
         this.conversaciones = conversaciones;
         this.publicaciones = publicaciones;
         this.usuarios = usuarios;
@@ -287,7 +292,27 @@ public class VentaService {
                         RoundingMode.HALF_UP),
                 venta.getMontoTotal(), venta.getFechaRecojo(), venta.getEstado().name(), venta.getFechaCreacion(),
                 venta.getFechaActualizacion(), linea,
-                venta.getIdPropuestaGrupal() == null ? accionesPermitidas(venta.getEstado(), comprador) : List.of());
+                venta.getIdPropuestaGrupal() == null ? accionesPermitidas(venta.getEstado(), comprador) : List.of(),
+                calificaciones(venta, idUsuario, resumenes));
+    }
+
+    /** La calificación que dio el usuario, la que recibió y si todavía puede calificar (RF-05). */
+    private CalificacionesVentaDto calificaciones(Transaccion venta, long idUsuario,
+            Map<Long, UsuarioResumenDto> resumenes) {
+        CalificacionDto mia = null;
+        CalificacionDto recibida = null;
+        for (Calificacion c : calificaciones.findByIdTransaccion(venta.getId())) {
+            UsuarioResumenDto autor = resumenes.get(c.getIdEvaluador());
+            CalificacionDto dto = new CalificacionDto(c.getPuntuacion(), c.getComentario(), c.getFecha(),
+                    StringUtils.defaultIfBlank(autor.nombreNegocio(), autor.nombreCompleto()));
+            if (c.getIdEvaluador() == idUsuario) {
+                mia = dto;
+            } else {
+                recibida = dto;
+            }
+        }
+        return new CalificacionesVentaDto(venta.getEstado() == EstadoTransaccion.COMPLETADA && mia == null, mia,
+                recibida);
     }
 
     private void avisar(long idDestinatario, String titulo, String texto, long idVenta) {

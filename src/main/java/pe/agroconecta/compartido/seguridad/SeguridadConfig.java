@@ -50,7 +50,7 @@ public class SeguridadConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(HttpMethod.POST, "/api/v1/auth/registro", "/api/v1/auth/login").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/v1/catalogo/**", "/api/v1/publicaciones/**",
-                        "/api/v1/precios/**").permitAll()
+                        "/api/v1/precios/**", "/api/v1/reputaciones/**").permitAll()
                 .requestMatchers(HttpMethod.GET, ARCHIVOS_ESTATICOS).permitAll()
                 .requestMatchers(DOCUMENTACION_API).permitAll()
                 .requestMatchers("/actuator/health", "/actuator/health/**", "/error").permitAll()
