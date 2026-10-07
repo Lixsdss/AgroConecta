@@ -13,12 +13,12 @@ Relaciona cada requisito funcional con su caso de uso, módulo, tablas, endpoint
 | **RF-03** | **Búsqueda multi-criterio** | **UC-03** | **publicacion** | **5** | **Implementado (slice 5)**; "Escribir" y "WhatsApp" del resultado llegan con RF-04 (slice 6) |
 | **RF-04** | **Mensajería directa** | **UC-04** | **mensajeria** | **6** | **Implementado (slice 6)**; "Registrar acuerdo" del chat llega con RF-06 (slice 7) |
 | RF-05 | Calificación | UC-07 | venta | 8 | Pendiente |
-| RF-06 | Registro e historial de transacciones | UC-05, UC-06 A1, UC-08 | venta | 7 | Pendiente |
+| **RF-06** | **Registro e historial de transacciones** | **UC-05, UC-06 A1, UC-08** | **venta** | **7** | **Implementado (slice 7)**; calificaciones en el detalle con RF-05 (slice 8); reclamos con RF-09 (slice 11); PROPUESTA con RF-10 (slice 10) |
 | RF-07 | Alertas de vencimiento | UC-09 | notificacion, publicacion | 9 | Pendiente |
 | **RF-08** | **Registro y gestión de usuarios** | **UC-10** | **usuario (+ catalogo)** | **1** | **Implementado** (gestión por el administrador: slice 11) |
 | **RF-09** | **Panel administrativo** | **UC-11** | **administracion** | **3 y 11** | **Moderación implementada (slice 3)**; reclamos, suspensiones, usuarios y panel: slice 11; corrección de una publicación bloqueada (CORREGIDA): slice 9 |
 | RF-10 | Venta agrupada | UC-12 | ventaagrupada | 10 | Pendiente |
-| RF-11 | Seguimiento de entrega | UC-06 | venta | 7 | Pendiente |
+| **RF-11** | **Seguimiento de entrega** | **UC-06** | **venta** | **7** | **Implementado (slice 7)** |
 
 ## Detalle por requisito
 
@@ -90,6 +90,21 @@ Reglas aprobadas en el plan del slice 5: solo publicaciones con fecha límite ho
 | RNF | RNF-01 (consulta periódica cada 10 s / 30 s, sin WebSockets ni librerías), RNF-02 (API sin estado), RNF-03 (botones ≥ 48 px, ofertas con ícono y texto), RNF-05 (triggers como última barrera) |
 
 Reglas aprobadas en el plan del slice 6: ambas partes pueden ofertar; la oferta no supera las unidades disponibles (422); aviso OFERTA siempre y MENSAJE solo si no hay uno sin leer de la misma conversación, sin copiar el texto; el celular del agricultor solo viaja dentro del enlace `wa.me`.
+
+### RF-06 y RF-11 — Acuerdo, entrega e historial (slice 7)
+
+| Elemento | Trazas |
+|---|---|
+| Caso de uso | UC-05: registrar acuerdo desde el chat, precargado con la última oferta (1), unidad acordada distinta de la publicada con su peso (2), validaciones (3), bloqueo de la publicación y venta ACORDADA (4), VENDIDA al agotar los kilos (5), aviso VENTA con el contacto (6); A1 cancelar desde ACORDADA (vuelve a PUBLICADA); A2 kilos o publicación no disponible (422); A3 términos fijos (sin edición); A4 no se cancela tras el recojo (422). UC-06: RECOGIDO y EN_CAMINO por cualquiera de las partes, "Confirmar que recibí" (ENTREGADO y COMPLETADA en una transacción) solo por el comprador, aviso a la otra parte; A1 recojo en chacra desde ACORDADA; A3 fuera de secuencia (422); A4 la línea de tiempo no se corrige. UC-08: Mis ventas / Mis compras con grupo En curso / Terminadas, fechas y contraparte, 20 por página, detalle con línea de tiempo y enlace al chat, Excel; A1 sin ventas; A2 filtro sin resultados; A3 `AgroConecta_Historial_{fecha}.xlsx`. Paso 6 de UC-08 (calificaciones) → slice 8 |
+| Módulos | `venta` (dueño); `mensajeria` (`ConversacionService.participantes`); `publicacion` (`PublicacionConsultaService.bloquearParaVenta` con `PESSIMISTIC_WRITE`); `usuario` (nombres, negocio y celular); `catalogo` (unidades); `notificacion` (avisos VENTA) |
+| Tablas | transacciones (escritura); transacciones_historial y `v_historial_transacciones` (lectura); publicaciones (bloqueo; estado por `sp_sincronizar_publicacion`); notificaciones (escritura) |
+| Triggers y restricciones | `trg_transacciones_bi` (nace ACORDADA, publicación PUBLICADA, quien registra es parte, peso de la unidad, kilos disponibles), `trg_transacciones_bu` (finales no cambian, términos fijos, transiciones por usuario), `trg_transacciones_ai/au` (línea de tiempo y `sp_sincronizar_publicacion`); `chk_transaccion_*` |
+| Endpoints | `POST /api/v1/ventas`, `POST /api/v1/ventas/{id}/estado`, `GET /api/v1/ventas/{id}`, `GET /api/v1/ventas`, `GET /api/v1/ventas/exportar` |
+| Pantallas | Registrar acuerdo (`pages/venta/acuerdo.html`), Entrega (`pages/venta/venta.html`), Mis ventas / Mis compras (`pages/venta/historial.html`); botón "Registrar acuerdo" y franja de ventas en el chat; botón en el inicio |
+| Pruebas | Unitarias: `VentaServiceTest` (acciones por estado y parte, tercero 403, peso de jaba o saco, publicación no disponible y kilos, mensajes de cambio no permitido, 404), `HistorialVentasServiceTest` (grupo, fechas y página inválidos, tope de 5000 en Excel). Integración (MariaDB): `VentaIntegracionTest` (acuerdo que vende la publicación y cancelación que la devuelve, aviso con celular, camino con transporte y línea de tiempo con autor, recojo en chacra, unidad distinta y validaciones, tercero 403 y acción inválida 400, historial por grupo, contraparte y conversación, Excel leído con Apache POI). Arquitectura: `ArquitecturaTest` |
+| RNF | RNF-01 (Excel generado en el servidor, sin librerías en el navegador), RNF-02 (bloqueo `PESSIMISTIC_WRITE` de la publicación y de la venta), RNF-03 (solo los botones permitidos, estados con ícono y texto), RNF-05 (triggers como última barrera) |
+
+Reglas aprobadas en el plan del slice 7: día de recojo hoy o después; las 5 unidades del catálogo (jaba o saco distinta de la publicada pide el peso); el aviso del acuerdo lleva nombre y celular de quien registra; filtro de contraparte por texto y fechas por fecha del acuerdo; Excel con hasta 5000 ventas; cancelar con confirmación y sin motivo.
 
 ### RF-09 — Moderación posterior (slice 3)
 

@@ -73,6 +73,26 @@ El administrador entra por la misma pantalla "Ingresar"; el inicio lo lleva dire
 - **Detalle:** la línea "Hoy en … pagan entre …" todavía no se muestra en moderación (el endpoint `GET /api/v1/precios/referencia` ya existe desde el slice 4); la calificación y las ventas del agricultor, con RF-05 y RF-06.
 - **Motivos y mensajes sugeridos:** son los 5 del diseño, que coinciden con `chk_revision_motivo`.
 
+## Ventas (RF-06 y RF-11, slice 7)
+
+| # | Pantalla del diseño | Archivo | JS | Endpoints | Navegación |
+|---|---|---|---|---|---|
+| — | Registrar acuerdo (diseño "acuerdo") | `pages/venta/acuerdo.html?conversacion={id}` | `js/venta/acuerdo.js` | `GET /api/v1/conversaciones/{id}` y `/mensajes` (última oferta), `GET /api/v1/catalogo/unidades`, `POST /api/v1/ventas` | Registrar → Entrega · Volver → Chat |
+| — | Entrega (diseño "entrega") | `pages/venta/venta.html?id={id}` | `js/venta/venta.js` | `GET /api/v1/ventas/{id}`, `POST /api/v1/ventas/{id}/estado` | Ir al chat · Volver → Mis ventas |
+| — | Mis ventas / Mis compras (en el diseño, pestañas de "Mi perfil") | `pages/venta/historial.html` | `js/venta/historial.js` | `GET /api/v1/ventas`, `GET /api/v1/ventas/exportar` | Venta → Entrega · Volver → inicio |
+
+- **Chat:** botón **Registrar acuerdo** junto a "Hacer oferta" (solo si la cosecha está disponible) y una franja con las ventas de la conversación ("En camino · 10 jabas · Total S/ 280.00 · Ver entrega").
+- **Inicio:** botón "Mis ventas" (agricultor) o "Mis compras" (comprador).
+- Textos de estados y acciones en `js/venta/estados.js`; descarga del Excel con `descargar()` de `js/api.js` (lleva el token).
+
+### Diferencias con el diseño (aprobadas en el plan del slice 7)
+
+- **Unidades del acuerdo:** las 5 del catálogo (el diseño muestra 3); al cambiar de unidad se convierten la cantidad y el precio por los kilos. Jaba o saco distinta de la publicada pide su peso.
+- **Cantidad propuesta:** la de la última oferta, sin pasar de lo disponible.
+- **Día de recojo:** editable, hoy o después (en el diseño era fijo).
+- **Entrega:** muestra solo los botones que el usuario puede usar ("Confirmar que recibí", "Ya recogieron la carga", "La carga va en camino", "Cancelar venta" con confirmación); en el recojo en chacra la línea de tiempo es Venta acordada → Ya entregado → Venta terminada. "Chacra Las Lomas" del diseño no existe en el esquema: se muestra el distrito.
+- **Historial:** página propia (en el diseño son pestañas de "Mi perfil"); pestañas En curso / Terminadas, filtros de fecha y persona, Excel. Calificar llega con RF-05 (slice 8).
+
 ## Mensajería (RF-04, slice 6)
 
 | # | Pantalla del diseño | Archivo | JS | Endpoints | Navegación |
@@ -87,7 +107,7 @@ El administrador entra por la misma pantalla "Ingresar"; el inicio lo lleva dire
 ### Diferencias con el diseño (aprobadas en el plan del slice 6)
 
 - **Hacer oferta:** el diseño muestra la tarjeta "Oferta" pero no cómo se crea; se agrega el botón y la hoja con cantidad y precio por unidad, que muestra los kilos y el total. Ambas partes pueden ofertar.
-- **Registrar acuerdo:** el botón del chat llega con RF-06 (slice 7).
+- **Registrar acuerdo:** el botón del chat llegó con RF-06 (slice 7).
 - **Calificación y compras** junto al nombre ("★ 4.7 · 32 compras"): llegan con el módulo `venta`.
 - **Barra inferior** (Inicio, Buscar, Agrupados, Mensajes): todavía no; se entra a Mensajes desde el inicio.
 - **Cosecha no disponible:** el chat sigue abierto para coordinar; se oculta "Hacer oferta" y se muestra un aviso.
