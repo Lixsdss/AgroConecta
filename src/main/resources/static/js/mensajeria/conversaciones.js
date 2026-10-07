@@ -6,6 +6,7 @@ import { api } from '../api.js';
 import { requerirSesion } from '../comun/sesion.js';
 import { mostrarAlerta, ocultarAlerta } from '../comun/formulario.js';
 import { cuando, producto, textoOferta } from './formato.js';
+import { ponerBarra } from '../comun/barra.js';
 
 const CADA_MS = 30_000;
 const lista = document.getElementById('lista');
@@ -112,6 +113,7 @@ if (sesion) {
         : 'Cuando un comprador le escriba sobre su cosecha, aparecerá aquí.';
     document.getElementById('vacio-buscar').hidden = !comprador;
     verMas.addEventListener('click', () => cargar(true));
+    ponerBarra('mensajes');
     cargar();
     setInterval(() => {
         if (!document.hidden) {

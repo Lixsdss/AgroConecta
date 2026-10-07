@@ -9,6 +9,7 @@ import { obtenerSesion } from '../comun/sesion.js';
 import { mostrarAlerta } from '../comun/formulario.js';
 import { crearChips } from '../comun/precios.js';
 import { tarjetaResultado } from './resultado.js';
+import { ponerBarra } from '../comun/barra.js';
 
 const TODOS = 'todos';
 const ORDENES = [
@@ -215,6 +216,7 @@ async function iniciar() {
     const sesion = obtenerSesion();
     if (sesion) {
         document.getElementById('volver').href = '/pages/usuario/inicio.html';
+        ponerBarra(sesion.usuario.rol === 'COMPRADOR' ? 'buscar' : null);
     }
     crearChips(document.getElementById('orden'), 'orden', ORDENES, criterios.orden, (valor) => {
         criterios.orden = valor;

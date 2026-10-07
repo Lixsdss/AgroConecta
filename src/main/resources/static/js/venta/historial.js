@@ -8,6 +8,7 @@ import { icono, ponerIconoYTexto } from '../comun/iconos.js';
 import { mostrarAlerta, ocultarAlerta, marcarOcupado } from '../comun/formulario.js';
 import { numero, soles } from '../publicacion/borrador.js';
 import { ESTADOS, textoEstado } from './estados.js';
+import { ponerBarra } from '../comun/barra.js';
 
 const lista = document.getElementById('lista');
 const vacio = document.getElementById('vacio');
@@ -151,5 +152,6 @@ if (sesion) {
     document.getElementById('titulo').textContent = titulo;
     document.title = `${titulo} · AgroConecta`;
     document.getElementById('etiqueta-contraparte').textContent = comprador ? 'Agricultor' : 'Comprador';
+    ponerBarra('ventas');
     cargar();
 }

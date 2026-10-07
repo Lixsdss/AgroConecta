@@ -109,7 +109,7 @@ El administrador entra por la misma pantalla "Ingresar"; el inicio lo lleva dire
 - **Hacer oferta:** el diseño muestra la tarjeta "Oferta" pero no cómo se crea; se agrega el botón y la hoja con cantidad y precio por unidad, que muestra los kilos y el total. Ambas partes pueden ofertar.
 - **Registrar acuerdo:** el botón del chat llegó con RF-06 (slice 7).
 - **Calificación y compras** junto al nombre ("★ 4.7 · 32 compras"): llegan con el módulo `venta`.
-- **Barra inferior** (Inicio, Buscar, Agrupados, Mensajes): todavía no; se entra a Mensajes desde el inicio.
+- **Barra inferior:** se agregó después del slice 7 (ver "Barra inferior del celular").
 - **Cosecha no disponible:** el chat sigue abierto para coordinar; se oculta "Hacer oferta" y se muestra un aviso.
 
 ## Búsqueda (RF-03, slice 5)
@@ -144,6 +144,22 @@ Piezas compartidas: `js/comun/precios.js` (tarjeta de precio, tendencia, fuentes
 - **01:** cultivo y zona tienen la opción "Todos" / "Todas" (en UC-02 la zona es opcional); el gráfico de 30 días aparece solo con un cultivo y una zona elegidos. Sin resultados: "Sin resultados en esta zona. Pruebe con «Todas»." (UC-02 A3).
 - **06 / 14:** solo el bloque "Precios de hoy en {distrito}"; si el distrito del usuario no es zona de precio, se muestran todas las zonas. El resto de esos inicios llega con sus RF.
 - **11b:** se agregan el campo **Fecha** (hoy por defecto), el botón **Editar ese precio** cuando ya existe (409) y la sección **Cargar archivo** (Excel o CSV) con la lista de filas no guardadas. "X de N cargados hoy" cuenta cultivos activos × 4 zonas.
+
+## Barra inferior del celular (después del slice 7)
+
+`js/comun/barra.js` agrega la barra en las pantallas principales del agricultor y del comprador (no para el visitante ni el administrador). La opción actual se marca con `aria-current="page"`; "Mensajes" muestra los no leídos (`GET /api/v1/conversaciones/no-leidos`, cada 30 s; también el botón "Mensajes" del inicio, con `data-no-leidos`).
+
+| Rol | Opciones | Pantallas que la muestran |
+|---|---|---|
+| Agricultor | Inicio · Vender (paso 1) · Mis ventas · Mensajes | inicio, historial de ventas, Mensajes; en Buscar aparece sin opción marcada |
+| Comprador | Inicio · Buscar · Mis compras · Mensajes | inicio, Buscar, historial de compras, Mensajes |
+
+Los pasos de "Vender", el chat, la entrega, el acuerdo y el detalle de la cosecha no la muestran (usan "atrás"), como en el diseño.
+
+### Diferencias con el diseño (aprobadas)
+
+- **"Mis ventas" del agricultor:** en el diseño es la lista de sus cosechas publicadas (activa, por vencer, vendida, vencida) con acciones rápidas; esa pantalla llega con RF-07 (slice 9). Hasta entonces abre el historial de ventas.
+- **"Agrupados" del comprador:** llega con RF-10 (slice 10); hasta entonces su lugar lo ocupa "Mis compras".
 
 ## Sesión en el navegador
 
