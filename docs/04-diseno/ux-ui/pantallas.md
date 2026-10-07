@@ -73,6 +73,23 @@ El administrador entra por la misma pantalla "Ingresar"; el inicio lo lleva dire
 - **Detalle:** la línea "Hoy en … pagan entre …" todavía no se muestra en moderación (el endpoint `GET /api/v1/precios/referencia` ya existe desde el slice 4); la calificación y las ventas del agricultor, con RF-05 y RF-06.
 - **Motivos y mensajes sugeridos:** son los 5 del diseño, que coinciden con `chk_revision_motivo`.
 
+## Calificaciones (RF-05, slice 8)
+
+| # | Pantalla del diseño | Archivo | JS | Endpoints | Navegación |
+|---|---|---|---|---|---|
+| — | Hoja "¿Cómo le fue con…?" (diseño "calificar") | `<dialog>` de `pages/venta/venta.html` (se abre sola con `?calificar=1`) | `js/venta/venta.js` | `POST /api/v1/ventas/{id}/calificacion` | Enviar calificación · Ahora no |
+| — | Reputación (en "Mi perfil" del diseño) | bloque en `pages/usuario/perfil.html` y `pages/publicacion/detalle.html` | `js/venta/reputacion.js` | `GET /api/v1/reputaciones/{idUsuario}` | Ver más comentarios |
+
+- **Entrega:** sección "Calificaciones" con "Usted calificó", "… le calificó" y el botón "Calificar a …" (solo con la venta terminada y sin calificar).
+- **Mis ventas / Mis compras → Terminadas:** "Usted calificó ★★★★" o "Calificar a …" (abre la entrega con la hoja).
+- Estrellas compartidas en `js/venta/estrellas.js` (texto "★★★★☆" con `aria-label`).
+
+### Diferencias con el diseño (aprobadas en el plan del slice 8)
+
+- **Confirmación:** en lugar de la pantalla "¡Gracias por calificar!", el mensaje aparece en la misma entrega, que ya muestra la calificación.
+- **Búsqueda:** solo el promedio "★ 4.8" (el total va en el detalle de la cosecha).
+- **Chat:** la reputación de la otra parte ("★ 4.7 · 32 compras") no se muestra todavía.
+
 ## Ventas (RF-06 y RF-11, slice 7)
 
 | # | Pantalla del diseño | Archivo | JS | Endpoints | Navegación |
@@ -91,7 +108,7 @@ El administrador entra por la misma pantalla "Ingresar"; el inicio lo lleva dire
 - **Cantidad propuesta:** la de la última oferta, sin pasar de lo disponible.
 - **Día de recojo:** editable, hoy o después (en el diseño era fijo).
 - **Entrega:** muestra solo los botones que el usuario puede usar ("Confirmar que recibí", "Ya recogieron la carga", "La carga va en camino", "Cancelar venta" con confirmación); en el recojo en chacra la línea de tiempo es Venta acordada → Ya entregado → Venta terminada. "Chacra Las Lomas" del diseño no existe en el esquema: se muestra el distrito.
-- **Historial:** página propia (en el diseño son pestañas de "Mi perfil"); pestañas En curso / Terminadas, filtros de fecha y persona, Excel. Calificar llega con RF-05 (slice 8).
+- **Historial:** página propia (en el diseño son pestañas de "Mi perfil"); pestañas En curso / Terminadas, filtros de fecha y persona, Excel. Calificar llegó con RF-05 (slice 8).
 
 ## Mensajería (RF-04, slice 6)
 

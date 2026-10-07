@@ -12,7 +12,7 @@ Relaciona cada requisito funcional con su caso de uso, módulo, tablas, endpoint
 | **RF-02** | **Precios de mercado** | **UC-02** | **precio** | **4** | **Implementado (slice 4)**; también activa la marca PRECIO_FUERA_RANGO de RF-01 |
 | **RF-03** | **Búsqueda multi-criterio** | **UC-03** | **publicacion** | **5** | **Implementado (slice 5)**; "Escribir" y "WhatsApp" del resultado llegan con RF-04 (slice 6) |
 | **RF-04** | **Mensajería directa** | **UC-04** | **mensajeria** | **6** | **Implementado (slice 6)**; "Registrar acuerdo" del chat llega con RF-06 (slice 7) |
-| RF-05 | Calificación | UC-07 | venta | 8 | Pendiente |
+| **RF-05** | **Calificación** | **UC-07** | **venta** | **8** | **Implementado (slice 8)**; UC-07 A3 (comentario inapropiado) se atiende con la suspensión de RF-09 (slice 11) |
 | **RF-06** | **Registro e historial de transacciones** | **UC-05, UC-06 A1, UC-08** | **venta** | **7** | **Implementado (slice 7)**; calificaciones en el detalle con RF-05 (slice 8); reclamos con RF-09 (slice 11); PROPUESTA con RF-10 (slice 10) |
 | RF-07 | Alertas de vencimiento | UC-09 | notificacion, publicacion | 9 | Pendiente |
 | **RF-08** | **Registro y gestión de usuarios** | **UC-10** | **usuario (+ catalogo)** | **1** | **Implementado** (gestión por el administrador: slice 11) |
@@ -105,6 +105,21 @@ Reglas aprobadas en el plan del slice 6: ambas partes pueden ofertar; la oferta 
 | RNF | RNF-01 (Excel generado en el servidor, sin librerías en el navegador), RNF-02 (bloqueo `PESSIMISTIC_WRITE` de la publicación y de la venta), RNF-03 (solo los botones permitidos, estados con ícono y texto), RNF-05 (triggers como última barrera) |
 
 Reglas aprobadas en el plan del slice 7: día de recojo hoy o después; las 5 unidades del catálogo (jaba o saco distinta de la publicada pide el peso); el aviso del acuerdo lleva nombre y celular de quien registra; filtro de contraparte por texto y fechas por fecha del acuerdo; Excel con hasta 5000 ventas; cancelar con confirmación y sin motivo.
+
+### RF-05 — Calificaciones y reputación (slice 8)
+
+| Elemento | Trazas |
+|---|---|
+| Caso de uso | UC-07: "Calificar a …" desde la entrega o el historial (1), 1–5 estrellas y comentario opcional de hasta 500 caracteres (2–3), validaciones (4), registro (5), aviso CALIFICACION (6), reputación calculada por la vista (7); A1 venta no terminada (422); A2 ya calificada (409, no se edita); A3 comentario inapropiado → suspensión del administrador (slice 11). UC-08 paso 6: calificaciones dada y recibida en el detalle. SRS §7.2: reputación visible en el perfil y en la búsqueda |
+| Módulos | `venta` (dueño de calificaciones y `v_reputacion_usuario`); `usuario` (existencia y rol); `notificacion` (aviso CALIFICACION) |
+| Tablas | calificaciones (escritura); `v_reputacion_usuario`, `v_historial_transacciones` (lectura; partes de la venta); `v_publicaciones_disponibles` ya muestra el promedio en la búsqueda |
+| Triggers y restricciones | `trg_calificaciones_bi` (solo COMPLETADA, solo una parte), `uk_calificacion_trans_evaluador`, `chk_calificacion_puntuacion` |
+| Endpoints | `POST /api/v1/ventas/{id}/calificacion`, `GET /api/v1/reputaciones/{idUsuario}` (público); `GET /api/v1/ventas/{id}` y `GET /api/v1/ventas` agregan las calificaciones |
+| Pantallas | Entrega con "Calificaciones" y la hoja "¿Cómo le fue con…?"; Mis ventas / Mis compras (Terminadas) con "Calificar a …" o "Usted calificó"; detalle de la cosecha con "Lo que dicen del agricultor"; Mi perfil con "Mi reputación" |
+| Pruebas | Unitarias: `CalificacionServiceTest` (no terminada, tercero, ya calificada, 404, reputación sin calificaciones, administrador e inexistente, página negativa), `VentaServiceTest`, `HistorialVentasServiceTest`. Integración (MariaDB): `CalificacionIntegracionTest` (ambas partes califican una vez, comentario recortado o nulo, 409, aviso, `miPuntuacion`, reputación pública con autor, promedio en la publicación, 404, validación de puntuación y comentario, 403 y 401). Arquitectura: `ArquitecturaTest` |
+| RNF | RNF-03 (estrellas grandes con texto "Muy mal … Muy bien" y descripción para lectores de pantalla), RNF-05 (trigger y clave única como última barrera) |
+
+Reglas aprobadas en el plan del slice 8: la reputación es pública; el autor de un comentario es el negocio del comprador o el nombre del agricultor (sin celulares); en la búsqueda solo el promedio; sin reputación en el chat por ahora; sin plazo para calificar.
 
 ### RF-09 — Moderación posterior (slice 3)
 
