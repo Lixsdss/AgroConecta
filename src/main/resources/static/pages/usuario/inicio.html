@@ -11,7 +11,10 @@
 <body>
 <!-- Inicio del agricultor (diseño 06) y del comprador (diseño 14), versión sencilla: precios de hoy (RF-02) y "Buscar productos" (RF-03) "Mensajes" (RF-04) y "Mis ventas / Mis compras" (RF-06). -->
 <main class="ac-pantalla">
-    <p class="ac-marca mb-0">AgroConecta</p>
+    <div class="d-flex justify-content-between align-items-center">
+        <p class="ac-marca mb-0">AgroConecta</p>
+        <a class="ac-campana" href="/pages/notificacion/avisos.html" aria-label="Avisos"><svg class="ac-icono" aria-hidden="true" focusable="false"><use href="/img/iconos.svg#bell"></use></svg><span class="ac-no-leidos" data-avisos-no-leidos hidden></span></a>
+    </div>
     <h1 class="ac-titulo" id="saludo">Hola</h1>
     <p class="mb-4" id="rol"></p>
 

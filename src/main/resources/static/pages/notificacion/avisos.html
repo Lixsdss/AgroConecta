@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Avisos · AgroConecta</title>
+    <link rel="stylesheet" href="/vendor/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/css/estilos.css">
+    <script type="module" src="/js/notificacion/avisos.js"></script>
+</head>
+<body>
+<!-- Avisos (diseño "notif", RF-07 / UC-09 paso 2): todos los avisos del usuario, el más reciente primero. -->
+<main class="ac-pantalla">
+    <div class="ac-barra">
+        <a class="ac-atras" href="/pages/usuario/inicio.html" aria-label="Volver al inicio"><svg class="ac-icono" aria-hidden="true" focusable="false"><use href="/img/iconos.svg#arrow-left"></use></svg></a>
+        <h1>Avisos</h1>
+    </div>
+
+    <div id="alerta" class="ac-alerta" role="alert" tabindex="-1" hidden></div>
+
+    <button class="btn btn-link px-0 mb-2" type="button" id="marcar-todos" hidden>
+        <svg class="ac-icono" aria-hidden="true" focusable="false"><use href="/img/iconos.svg#check"></use></svg>
+        <span>Marcar todos como leídos</span>
+    </button>
+
+    <div class="ac-avisos" id="lista" aria-live="polite"></div>
+
+    <div class="ac-vacio" id="vacio" hidden>
+        <svg class="ac-icono ac-icono-grande" aria-hidden="true" focusable="false"><use href="/img/iconos.svg#bell"></use></svg>
+        <h2 class="h5 mt-2">No tiene avisos nuevos</h2>
+        <p class="ac-suave">Le avisaremos cuando reciba ofertas o mensajes.</p>
+        <a class="btn btn-outline-primary" href="/pages/usuario/inicio.html">
+            <svg class="ac-icono" aria-hidden="true" focusable="false"><use href="/img/iconos.svg#house"></use></svg>
+            <span>Ir al inicio</span>
+        </a>
+    </div>
+
+    <button class="btn btn-outline-primary w-100 mt-3" type="button" id="ver-mas" hidden>
+        <svg class="ac-icono" aria-hidden="true" focusable="false"><use href="/img/iconos.svg#chevron-down"></use></svg>
+        <span>Ver más</span>
+    </button>
+</main>
+</body>
+</html>

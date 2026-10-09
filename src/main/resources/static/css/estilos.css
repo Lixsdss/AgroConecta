@@ -1165,3 +1165,68 @@ body.ac-con-barra .ac-pantalla {
 .ac-texto-verde {
     color: var(--ac-verde-oscuro);
 }
+
+/* ===== Avisos (RF-07) ===== */
+.ac-avisos {
+    display: grid;
+    gap: .75rem;
+}
+
+.ac-aviso {
+    border: 1px solid var(--ac-linea);
+    border-radius: 12px;
+    padding: .875rem 1rem;
+    background: var(--ac-superficie);
+}
+
+.ac-aviso-nuevo {
+    border-left: 4px solid var(--ac-verde);
+}
+
+.ac-aviso-tipo {
+    display: inline-flex;
+    align-items: center;
+    gap: .25rem;
+    font-size: .875rem;
+    font-weight: 700;
+    color: var(--ac-verde-oscuro);
+}
+
+.ac-aviso-tipo.ac-aviso-por_vencer,
+.ac-aviso-tipo.ac-aviso-moderacion {
+    color: var(--ac-error);
+}
+
+.ac-campana {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 48px;
+    min-height: 48px;
+    color: var(--ac-texto);
+    border-radius: 12px;
+}
+
+.ac-campana .ac-no-leidos {
+    position: absolute;
+    top: .125rem;
+    right: .125rem;
+    min-width: 1.25rem;
+    height: 1.25rem;
+    font-size: .75rem;
+}
+
+.ac-cosecha-destacada {
+    outline: 3px solid var(--ac-ambar);
+    outline-offset: 2px;
+}
+
+/* Aviso de "Mis ventas": bloque (no fila) y oculto de verdad con hidden */
+.ac-banner {
+    display: block;
+}
+
+.ac-banner[hidden] {
+    display: none;
+}

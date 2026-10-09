@@ -36,6 +36,10 @@ async function cargar() {
         document.getElementById('rol').textContent = `${ROLES[perfil.rol] ?? ''} · ${perfil.distrito}`;
         document.getElementById('vender').hidden = perfil.rol !== 'AGRICULTOR';
         document.getElementById('texto-ventas').textContent = perfil.rol === 'COMPRADOR' ? 'Mis compras' : 'Mis ventas';
+        if (perfil.rol === 'AGRICULTOR') {
+            // RF-07: "Mis ventas" del agricultor son sus cosechas, con las acciones rápidas
+            document.getElementById('ventas').href = '/pages/publicacion/mis-cosechas.html';
+        }
         // "Buscar productos" es la acción principal del comprador (diseño 14); el agricultor también puede buscar
         document.getElementById('buscar').classList.add(perfil.rol === 'COMPRADOR' ? 'btn-primary' : 'btn-outline-primary');
         await cargarPrecios(perfil);
