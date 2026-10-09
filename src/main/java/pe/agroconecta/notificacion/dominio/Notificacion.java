@@ -71,6 +71,16 @@ public class Notificacion {
         this.idReferencia = idReferencia;
     }
 
+    /** Marca el aviso como leído. */
+    public void marcarLeida() {
+        this.leida = true;
+    }
+
+    /** @return fecha y hora de creación (la pone la base de datos) */
+    public LocalDateTime getFechaCreacion() {
+        return fechaCreacion;
+    }
+
     /** @return id del aviso */
     public Long getId() {
         return id;

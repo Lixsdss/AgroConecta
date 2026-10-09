@@ -134,6 +134,45 @@ public class Publicacion {
         return idAgricultor.equals(idUsuario);
     }
 
+    /**
+     * "Bajar el precio" (RF-07): nuevo precio por unidad; el precio por kilo lo recalcula la base de datos.
+     *
+     * @param precioUnitario nuevo precio por unidad
+     */
+    public void cambiarPrecio(BigDecimal precioUnitario) {
+        this.precioUnitario = precioUnitario;
+    }
+
+    /**
+     * "Extender" (RF-07): nueva fecha límite. En una VENCIDA, {@code trg_publicaciones_bu} la devuelve a PUBLICADA.
+     *
+     * @param fechaLimite nueva fecha límite (hoy o después)
+     */
+    public void extenderHasta(LocalDate fechaLimite) {
+        this.fechaLimite = fechaLimite;
+    }
+
+    /** "Retirar" (RF-07): la publicación pasa a RETIRADA. */
+    public void retirar() {
+        this.estado = EstadoPublicacion.RETIRADA;
+    }
+
+    /**
+     * Corrección del agricultor sobre una publicación oculta (RF-09): {@code trg_publicaciones_bu} la marca
+     * CORREGIDA para que vuelva a la cola de moderación.
+     *
+     * @param cantidad       cantidad en la unidad publicada
+     * @param pesoUnidadKg   kilos por unidad (jaba o saco), o {@code null} para no cambiarlo
+     * @param precioUnitario precio por unidad
+     */
+    public void corregir(BigDecimal cantidad, BigDecimal pesoUnidadKg, BigDecimal precioUnitario) {
+        this.cantidad = cantidad;
+        if (pesoUnidadKg != null) {
+            this.pesoUnidadKg = pesoUnidadKg;
+        }
+        this.precioUnitario = precioUnitario;
+    }
+
     /** @return id de la publicación */
     public Long getId() {
         return id;
