@@ -42,6 +42,15 @@ Base: `/api/v1`. Formato JSON (UTF-8). Autenticación con JWT en la cabecera `Au
 | POST | `/api/v1/publicaciones` | AGRICULTOR | RF-01 | publicacion |
 | GET | `/api/v1/publicaciones` | Público | RF-03 | publicacion |
 | GET | `/api/v1/publicaciones/{id}` | Público | RF-01, RF-03 | publicacion |
+| GET | `/api/v1/publicaciones/mias` | AGRICULTOR | RF-07 | publicacion |
+| POST | `/api/v1/publicaciones/{id}/precio` | AGRICULTOR (dueño) | RF-07 | publicacion |
+| POST | `/api/v1/publicaciones/{id}/extender` | AGRICULTOR (dueño) | RF-07 | publicacion |
+| POST | `/api/v1/publicaciones/{id}/retirar` | AGRICULTOR (dueño) | RF-07 | publicacion |
+| PUT | `/api/v1/publicaciones/{id}/correccion` | AGRICULTOR (dueño) | RF-09 | publicacion |
+| GET | `/api/v1/notificaciones` | Autenticado | RF-07 | notificacion |
+| GET | `/api/v1/notificaciones/no-leidas` | Autenticado | RF-07 | notificacion |
+| POST | `/api/v1/notificaciones/{id}/leida` | Autenticado (dueño) | RF-07 | notificacion |
+| POST | `/api/v1/notificaciones/leidas` | Autenticado | RF-07 | notificacion |
 | GET | `/api/v1/precios/vigentes` | Público | RF-02 | precio |
 | GET | `/api/v1/precios/historial` | Público | RF-02 | precio |
 | GET | `/api/v1/precios/referencia` | Público | RF-02, RF-01 | precio |
@@ -398,6 +407,56 @@ Desde el slice 5 (RF-03) agrega `agricultor`, `calificacionAgricultor`, `disponi
 - `PRIMERA_PUBLICACION`: la pone `trg_publicaciones_bi` si no hay otra marca.
 
 **Errores:** 404 "La publicación no existe." (inexistente, o no PUBLICADA y quien la pide no es su dueño).
+
+---
+
+### Mis cosechas y acciones rápidas (RF-07, UC-09; corrección de RF-09)
+
+Rol **AGRICULTOR**; solo el dueño de la publicación (otro agricultor recibe **403**, una publicación inexistente **404** "La publicación no existe."). Las acciones devuelven la cosecha actualizada (formato de abajo). Vencer y crear los avisos POR_VENCER lo hace `ev_tareas_diarias`, no Java.
+
+**Cosecha** (cada elemento de `GET /mias` y respuesta de las acciones):
+```json
+{
+  "id": 15, "cultivo": "Mango", "variedad": "Kent", "distrito": "Tambogrande",
+  "unidad": "Jaba", "unidadPlural": "jabas", "cantidad": 30.00, "pesoUnidadKg": 20.000, "cantidadKg": 600.00,
+  "disponibleKg": 400.00, "unidadesDisponibles": 20.00, "precioUnitario": 28.00, "precioKg": 1.4000,
+  "fechaCosecha": "2026-09-27", "fechaLimite": "2026-10-11", "diasRestantes": 2, "porVencer": true,
+  "estado": "PUBLICADA", "fechaPublicacion": "2026-09-27T12:30:00",
+  "acciones": ["BAJAR_PRECIO", "EXTENDER", "RETIRAR"]
+}
+```
+
+`acciones` según el estado: PUBLICADA → `BAJAR_PRECIO`, `EXTENDER`, `RETIRAR`; VENCIDA → `EXTENDER` ("Publicar otra vez"), `RETIRAR`; BLOQUEADA → `CORREGIR`; VENDIDA y RETIRADA → ninguna. `marca_revision` no se expone.
+
+### GET `/api/v1/publicaciones/mias?grupo=ACTIVAS&page=0`
+
+"Mis ventas" del agricultor (diseño "ventas"). `grupo`: `ACTIVAS` (PUBLICADA, BLOQUEADA, VENCIDA; por defecto) o `CERRADAS` (VENDIDA, RETIRADA). Orden: en ACTIVAS, la que vence antes primero; en CERRADAS, la más reciente primero. 20 por página.
+
+**200** — lista paginada de cosechas. **Errores:** 400 si `grupo` no es válido o la página es negativa.
+
+### POST `/api/v1/publicaciones/{id}/precio`
+
+**Bajar el precio** (solo PUBLICADA). Cuerpo `{ "precioUnitario": 25.00 }` (> 0, hasta 2 decimales). El precio por kilo lo recalcula la base de datos.
+
+**Errores:** 400 · 403 · 404 · 422 "El nuevo precio debe ser menor que el actual (S/ 28.00)." · 422 "Solo se baja el precio de una cosecha que está a la venta."
+
+### POST `/api/v1/publicaciones/{id}/extender`
+
+**Extender** (PUBLICADA o VENCIDA). Cuerpo `{ "dias": 7 }` con 7, 14 o 30. La nueva fecha límite es la mayor entre la actual y hoy, más esos días. En una VENCIDA, `trg_publicaciones_bu` la devuelve a PUBLICADA.
+
+**Errores:** 400 si `dias` no es 7, 14 ni 30 · 403 · 404 · 422 "Solo se extiende una cosecha a la venta o vencida."
+
+### POST `/api/v1/publicaciones/{id}/retirar`
+
+**Retirar** (PUBLICADA o VENCIDA → RETIRADA). Las ventas ya acordadas siguen su curso; nadie más puede comprar.
+
+**Errores:** 403 · 404 · 422 "Una cosecha oculta por la moderación no se retira; corríjala para que la revisen." · 422 "Esta cosecha ya no se puede retirar." (VENDIDA o RETIRADA)
+
+### PUT `/api/v1/publicaciones/{id}/correccion`
+
+**Corregir** una cosecha oculta por la moderación (solo BLOQUEADA; UC-11 parte 2, paso 4). Cuerpo `{ "cantidad": 25, "pesoUnidadKg": 20, "precioUnitario": 27 }`; `pesoUnidadKg` solo cuenta en jaba o saco (en las demás unidades lo fija el catálogo). `trg_publicaciones_bu` marca la publicación CORREGIDA y vuelve a la cola "Por revisar"; sigue oculta hasta que el administrador la vuelva a mostrar.
+
+**Errores:** 400 · 403 · 404 · 422 "Solo se corrige una cosecha oculta por la moderación." · 422 "No cambió ningún dato." · 422 "La cantidad no puede ser menor a lo ya acordado" (trigger)
 
 ---
 
@@ -774,6 +833,36 @@ Roles **AGRICULTOR** y **COMPRADOR** (UC-08 A3). El mismo filtro en un archivo E
 ### GET `/api/v1/ventas/{id}`
 
 **Parte de la venta**. Detalle con la línea de tiempo y las acciones (UC-06, UC-08 paso 6). **Errores:** 403 · 404 "La venta no existe."
+
+---
+
+## Avisos (`notificacion`)
+
+Centro de avisos (RF-07, UC-09 paso 2). Cualquier usuario autenticado ve **solo los suyos**. Los crean los triggers (`MODERACION`), el evento diario (`POR_VENCER`) y los módulos que ejecutan cada acción (`MENSAJE`, `OFERTA`, `VENTA`, `CALIFICACION`…). No se borran.
+
+**Aviso:**
+```json
+{ "id": 40, "tipo": "POR_VENCER", "titulo": "Su mango vence en 3 días. ¿Qué desea hacer?",
+  "contenido": "30 jabas · Tambogrande", "idReferencia": 15, "leida": false, "fechaCreacion": "2026-10-09T06:00:00" }
+```
+
+`idReferencia` según el tipo: POR_VENCER y MODERACION → publicación; MENSAJE y OFERTA → conversación; VENTA y CALIFICACION → venta.
+
+### GET `/api/v1/notificaciones?page=0`
+
+Mis avisos, el más reciente primero, 20 por página. **200** — lista paginada. **Errores:** 400 si la página es negativa.
+
+### GET `/api/v1/notificaciones/no-leidas`
+
+**200** `{ "total": 3 }` (campana del inicio).
+
+### POST `/api/v1/notificaciones/{id}/leida`
+
+Marca un aviso como leído. **204**. **Errores:** 404 "El aviso no existe." (también si es de otro usuario).
+
+### POST `/api/v1/notificaciones/leidas`
+
+"Marcar todos como leídos". **200** `{ "marcados": 5 }`.
 
 ---
 
