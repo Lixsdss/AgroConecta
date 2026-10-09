@@ -73,6 +73,25 @@ El administrador entra por la misma pantalla "Ingresar"; el inicio lo lleva dire
 - **Detalle:** la línea "Hoy en … pagan entre …" todavía no se muestra en moderación (el endpoint `GET /api/v1/precios/referencia` ya existe desde el slice 4); la calificación y las ventas del agricultor, con RF-05 y RF-06.
 - **Motivos y mensajes sugeridos:** son los 5 del diseño, que coinciden con `chk_revision_motivo`.
 
+## Avisos y Mis ventas del agricultor (RF-07, slice 9)
+
+| # | Pantalla del diseño | Archivo | JS | Endpoints | Navegación |
+|---|---|---|---|---|---|
+| — | Avisos (diseño "notif") | `pages/notificacion/avisos.html` | `js/notificacion/avisos.js` | `GET /api/v1/notificaciones`, `GET /no-leidas`, `POST /{id}/leida`, `POST /leidas` | Cada aviso lleva a su cosecha, chat o venta · Volver → inicio |
+| — | Mis ventas del agricultor (diseño "ventas") | `pages/publicacion/mis-cosechas.html` | `js/publicacion/mis-cosechas.js` | `GET /api/v1/publicaciones/mias`, `POST /{id}/precio`, `/extender`, `/retirar`, `PUT /{id}/correccion`, `GET /api/v1/catalogo/unidades` | Ver historial de ventas · Volver → inicio |
+
+- **Campana** en el inicio con los avisos sin leer (`data-avisos-no-leidos`, cada 30 s junto con los mensajes, `js/comun/barra.js`).
+- **Destino de cada aviso:** POR_VENCER y MODERACION → `mis-cosechas.html#cosecha-{id}` (la resalta); OFERTA y MENSAJE → chat; VENTA y CALIFICACION → entrega. PROPUESTA_CONJUNTA, RECLAMO y CUENTA no llevan botón hasta sus slices.
+- **Barra inferior:** "Mis ventas" del agricultor abre esta pantalla (antes, el historial). El inicio también.
+
+### Diferencias con el diseño (aprobadas en el plan del slice 9)
+
+- **"Bajar precio" del aviso:** abre una hoja con el nuevo precio (solo menor) y su equivalente por kilo; en el diseño llevaba al paso 3 de "Vender".
+- **"Extender":** hoja con 7, 14 o 30 días y la nueva fecha; "Publicar otra vez" en una vencida es la misma acción.
+- **"N ofertas"** de cada cosecha: no se muestra (las ofertas están en Mensajes).
+- **Motivo de la moderación:** el diseño lo muestra en la tarjeta; aquí la tarjeta dice "Oculta por la moderación" y enlaza al aviso, que tiene el motivo.
+- **Corregir** (cosecha oculta): hoja con cantidad, peso por unidad (jaba o saco) y precio; no está en el diseño.
+
 ## Calificaciones (RF-05, slice 8)
 
 | # | Pantalla del diseño | Archivo | JS | Endpoints | Navegación |
@@ -168,14 +187,14 @@ Piezas compartidas: `js/comun/precios.js` (tarjeta de precio, tendencia, fuentes
 
 | Rol | Opciones | Pantallas que la muestran |
 |---|---|---|
-| Agricultor | Inicio · Vender (paso 1) · Mis ventas · Mensajes | inicio, historial de ventas, Mensajes; en Buscar aparece sin opción marcada |
+| Agricultor | Inicio · Vender (paso 1) · Mis ventas (sus cosechas, desde el slice 9) · Mensajes | inicio, Mis ventas, historial de ventas, Mensajes, Avisos; en Buscar aparece sin opción marcada |
 | Comprador | Inicio · Buscar · Mis compras · Mensajes | inicio, Buscar, historial de compras, Mensajes |
 
 Los pasos de "Vender", el chat, la entrega, el acuerdo y el detalle de la cosecha no la muestran (usan "atrás"), como en el diseño.
 
 ### Diferencias con el diseño (aprobadas)
 
-- **"Mis ventas" del agricultor:** en el diseño es la lista de sus cosechas publicadas (activa, por vencer, vendida, vencida) con acciones rápidas; esa pantalla llega con RF-07 (slice 9). Hasta entonces abre el historial de ventas.
+- **"Mis ventas" del agricultor:** desde el slice 9 abre la lista de sus cosechas con acciones rápidas, como en el diseño; el historial de ventas queda enlazado desde ahí.
 - **"Agrupados" del comprador:** llega con RF-10 (slice 10); hasta entonces su lugar lo ocupa "Mis compras".
 
 ## Sesión en el navegador

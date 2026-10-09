@@ -14,9 +14,9 @@ Relaciona cada requisito funcional con su caso de uso, módulo, tablas, endpoint
 | **RF-04** | **Mensajería directa** | **UC-04** | **mensajeria** | **6** | **Implementado (slice 6)**; "Registrar acuerdo" del chat llega con RF-06 (slice 7) |
 | **RF-05** | **Calificación** | **UC-07** | **venta** | **8** | **Implementado (slice 8)**; UC-07 A3 (comentario inapropiado) se atiende con la suspensión de RF-09 (slice 11) |
 | **RF-06** | **Registro e historial de transacciones** | **UC-05, UC-06 A1, UC-08** | **venta** | **7** | **Implementado (slice 7)**; calificaciones en el detalle con RF-05 (slice 8); reclamos con RF-09 (slice 11); PROPUESTA con RF-10 (slice 10) |
-| RF-07 | Alertas de vencimiento | UC-09 | notificacion, publicacion | 9 | Pendiente |
+| **RF-07** | **Alertas de vencimiento** | **UC-09** | **notificacion, publicacion** | **9** | **Implementado (slice 9)** |
 | **RF-08** | **Registro y gestión de usuarios** | **UC-10** | **usuario (+ catalogo)** | **1** | **Implementado** (gestión por el administrador: slice 11) |
-| **RF-09** | **Panel administrativo** | **UC-11** | **administracion** | **3 y 11** | **Moderación implementada (slice 3)**; reclamos, suspensiones, usuarios y panel: slice 11; corrección de una publicación bloqueada (CORREGIDA): slice 9 |
+| **RF-09** | **Panel administrativo** | **UC-11** | **administracion** | **3 y 11** | **Moderación implementada (slice 3)**; reclamos, suspensiones, usuarios y panel: slice 11; corrección de una publicación bloqueada (CORREGIDA): implementada en el slice 9 |
 | RF-10 | Venta agrupada | UC-12 | ventaagrupada | 10 | Pendiente |
 | **RF-11** | **Seguimiento de entrega** | **UC-06** | **venta** | **7** | **Implementado (slice 7)** |
 
@@ -120,6 +120,21 @@ Reglas aprobadas en el plan del slice 7: día de recojo hoy o después; las 5 un
 | RNF | RNF-03 (estrellas grandes con texto "Muy mal … Muy bien" y descripción para lectores de pantalla), RNF-05 (trigger y clave única como última barrera) |
 
 Reglas aprobadas en el plan del slice 8: la reputación es pública; el autor de un comentario es el negocio del comprador o el nombre del agricultor (sin celulares); en la búsqueda solo el promedio; sin reputación en el chat por ahora; sin plazo para calificar.
+
+### RF-07 — Avisos y alertas de vencimiento (slice 9)
+
+| Elemento | Trazas |
+|---|---|
+| Caso de uso | UC-09: el evento diario crea los avisos POR_VENCER a 3 días y a 1 día sin repetir y pasa a VENCIDA las atrasadas (1, 4, base de datos); el agricultor ve el aviso en "Avisos", lo abre y se marca leído (2); acciones rápidas bajar precio, extender +7/+14/+30 y retirar (3); extender una VENCIDA la devuelve a PUBLICADA (5); A1 sin alertas fuera de PUBLICADA (evento); A2 varios avisos juntos, ordenados por fecha. UC-11 parte 2 paso 4: corregir una publicación oculta → CORREGIDA y vuelve a la cola |
+| Módulos | `notificacion` (centro de avisos); `publicacion` (Mis cosechas y acciones rápidas, `MisCosechasService`); `catalogo` (unidades) |
+| Tablas | notificaciones (lectura y marca de leída); publicaciones (precio, fecha límite, estado RETIRADA, corrección); `v_publicaciones_disponibles` (lectura); evento `ev_tareas_diarias` |
+| Triggers y restricciones | `ev_tareas_diarias` (POR_VENCER y VENCIDA); `trg_publicaciones_bu` (VENCIDA → PUBLICADA al extender, fecha límite ≥ hoy, transiciones de estado, CORREGIDA al corregir una BLOQUEADA, cantidad ≥ lo acordado); índice `idx_notificacion_usuario` |
+| Endpoints | `GET /api/v1/notificaciones`, `GET /api/v1/notificaciones/no-leidas`, `POST /api/v1/notificaciones/{id}/leida`, `POST /api/v1/notificaciones/leidas`; `GET /api/v1/publicaciones/mias`, `POST /api/v1/publicaciones/{id}/precio`, `/extender`, `/retirar`, `PUT /api/v1/publicaciones/{id}/correccion` |
+| Pantallas | Avisos (`pages/notificacion/avisos.html`) con la campana del inicio; Mis ventas del agricultor (`pages/publicacion/mis-cosechas.html`) con el aviso de vencimiento y las hojas de cada acción; la barra inferior lleva "Mis ventas" a esta pantalla |
+| Pruebas | Unitarias: `MisCosechasServiceTest` (acciones por estado, extender desde hoy si la fecha pasó, días, estados no permitidos, dueño, 404, corrección sin cambios en unidad fija, grupo y página), `NotificacionServiceTest`. Integración (MariaDB): `MisCosechasIntegracionTest` (lista por grupo con acciones, bajar solo a menor y precio por kilo recalculado, VENCIDA → PUBLICADA al extender, retirar y no retirar una oculta, corrección → CORREGIDA, otro agricultor 403), `AvisosIntegracionTest` (lista ordenada, no leídos, marcar uno y todos, solo los propios, 404 ajeno, 400, 401). Arquitectura: `ArquitecturaTest` |
+| RNF | RNF-01 (consulta de la campana cada 30 s, sin push), RNF-03 (acciones con ícono y texto, confirmación al retirar), RNF-05 (evento y triggers como fuente de verdad) |
+
+Reglas aprobadas en el plan del slice 9: bajar el precio solo a uno menor; extender desde la fecha límite actual u hoy, la mayor; retirar se permite con ventas acordadas (siguen su curso); una cosecha oculta solo se corrige (no se retira, no baja precio ni se extiende); el motivo de la moderación se ve en Avisos; sin el número de ofertas por cosecha; abrir un aviso lo marca leído y hay "Marcar todos".
 
 ### RF-09 — Moderación posterior (slice 3)
 
