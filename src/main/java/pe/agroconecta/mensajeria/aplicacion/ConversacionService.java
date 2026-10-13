@@ -113,6 +113,23 @@ public class ConversacionService {
     }
 
     /**
+     * Conversación de una parte de la venta agrupada (RF-10): la del comprador con esa publicación, o una nueva con
+     * {@code canal_inicio} = PROPUESTA_CONJUNTA si no existía. Se usa dentro de la transacción de la propuesta.
+     *
+     * @param idComprador   comprador de la propuesta
+     * @param idPublicacion publicación de la parte
+     * @return id de la conversación
+     * @throws RecursoNoEncontradoException si la publicación no existe
+     * @throws ReglaNegocioException        si no había conversación y la publicación no está PUBLICADA
+     */
+    @Transactional
+    public long abrirParaPropuesta(long idComprador, long idPublicacion) {
+        return conversaciones.findByIdPublicacionAndIdComprador(idPublicacion, idComprador)
+                .orElseGet(() -> crear(idComprador, publicacion(idPublicacion), CanalInicio.PROPUESTA_CONJUNTA))
+                .getId();
+    }
+
+    /**
      * "WhatsApp" (UC-04 A1): crea la conversación si no existía, suma un clic y devuelve el enlace {@code wa.me}
      * con el celular del agricultor y un texto sugerido.
      *

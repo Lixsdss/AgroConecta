@@ -2,12 +2,14 @@ package pe.agroconecta.venta.aplicacion;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import jakarta.persistence.EntityManager;
 
@@ -36,9 +38,11 @@ import pe.agroconecta.venta.dominio.Calificacion;
 import pe.agroconecta.venta.dominio.EstadoTransaccion;
 import pe.agroconecta.venta.dominio.HistorialTransaccion;
 import pe.agroconecta.venta.dominio.Transaccion;
+import pe.agroconecta.venta.dominio.VentaHistorial;
 import pe.agroconecta.venta.infraestructura.CalificacionRepository;
 import pe.agroconecta.venta.infraestructura.HistorialRepository;
 import pe.agroconecta.venta.infraestructura.TransaccionRepository;
+import pe.agroconecta.venta.infraestructura.VentaHistorialRepository;
 
 /**
  * Acuerdo de venta y seguimiento de la entrega (RF-06, RF-11; UC-05, UC-06). Valida con mensajes amigables lo mismo
@@ -59,6 +63,8 @@ public class VentaService {
             "Una venta recogida ya no se cancela. Si hay un problema, podrá registrar un reclamo.";
     static final String MENSAJE_SOLO_COMPRADOR = "Solo el comprador confirma que recibió.";
     static final String MENSAJE_FUERA_DE_SECUENCIA = "Ese cambio no corresponde al estado actual de la venta.";
+    static final String MENSAJE_SOLO_AGRICULTOR = "Solo el agricultor acepta o rechaza su parte.";
+    static final String MENSAJE_AGRICULTOR_RECHAZA = "Para no aceptar su parte, use Rechazar.";
 
     private static final DateTimeFormatter DIA = DateTimeFormatter.ofPattern("dd/MM/yyyy");
     private static final Logger LOG = LoggerFactory.getLogger(VentaService.class);
@@ -66,6 +72,7 @@ public class VentaService {
     private final TransaccionRepository transacciones;
     private final HistorialRepository historial;
     private final CalificacionRepository calificaciones;
+    private final VentaHistorialRepository vistaVentas;
     private final ConversacionService conversaciones;
     private final PublicacionConsultaService publicaciones;
     private final UsuarioConsultaService usuarios;
@@ -79,6 +86,7 @@ public class VentaService {
      * @param transacciones  repositorio de ventas
      * @param historial      línea de tiempo (solo lectura)
      * @param calificaciones calificaciones de la venta (RF-05)
+     * @param vistaVentas    vista del historial (partes de una propuesta conjunta, RF-10)
      * @param conversaciones partes de la conversación
      * @param publicaciones  publicación (bloqueo y kilos disponibles)
      * @param usuarios       nombres, negocio y celular
@@ -87,12 +95,14 @@ public class VentaService {
      * @param entityManager  contexto de persistencia (para leer lo que calcula la base de datos)
      */
     public VentaService(TransaccionRepository transacciones, HistorialRepository historial,
-            CalificacionRepository calificaciones, ConversacionService conversaciones, PublicacionConsultaService publicaciones,
+            CalificacionRepository calificaciones, VentaHistorialRepository vistaVentas,
+            ConversacionService conversaciones, PublicacionConsultaService publicaciones,
             UsuarioConsultaService usuarios, CatalogoService catalogo, NotificacionService notificaciones,
             EntityManager entityManager) {
         this.transacciones = transacciones;
         this.historial = historial;
         this.calificaciones = calificaciones;
+        this.vistaVentas = vistaVentas;
         this.conversaciones = conversaciones;
         this.publicaciones = publicaciones;
         this.usuarios = usuarios;
@@ -167,11 +177,14 @@ public class VentaService {
         exigirParte(partes, idUsuario);
         boolean comprador = idUsuario == partes.idComprador();
         validarAccion(venta.getEstado(), comprador, accion);
+        boolean eraPropuesta = venta.getEstado() == EstadoTransaccion.PROPUESTA;
 
         switch (accion) {
             case RECOGIDO -> guardar(venta, EstadoTransaccion.RECOGIDO, idUsuario);
             case EN_CAMINO -> guardar(venta, EstadoTransaccion.EN_CAMINO, idUsuario);
             case CANCELAR -> guardar(venta, EstadoTransaccion.CANCELADA, idUsuario);
+            case ACEPTAR -> aceptar(venta, partes, idUsuario);
+            case RECHAZAR -> guardar(venta, EstadoTransaccion.RECHAZADA, idUsuario);
             case CONFIRMAR_RECEPCION -> {
                 if (venta.getEstado() != EstadoTransaccion.ENTREGADO) {
                     guardar(venta, EstadoTransaccion.ENTREGADO, idUsuario);
@@ -184,9 +197,96 @@ public class VentaService {
 
         PublicacionResumenDto publicacion = publicaciones.buscar(partes.idPublicacion()).orElseThrow();
         UsuarioResumenDto quien = usuarios.buscarResumenes(List.of(idUsuario)).get(idUsuario);
-        avisar(otraParte(partes, idUsuario), TITULOS.get(venta.getEstado()),
-                textoCambio(venta.getEstado(), nombre(quien), producto(publicacion)), venta.getId());
+        avisar(otraParte(partes, idUsuario), eraPropuesta ? TITULOS_PROPUESTA.get(venta.getEstado())
+                        : TITULOS.get(venta.getEstado()),
+                textoCambio(venta.getEstado(), nombre(quien), producto(publicacion), eraPropuesta), venta.getId());
         return detalle(venta, partes, publicacion, idUsuario);
+    }
+
+    /**
+     * Crea una parte de una propuesta conjunta (RF-10, UC-12 paso 5) como venta PROPUESTA en la conversación del
+     * comprador con la publicación. {@code trg_transacciones_bi} verifica que la propuesta esté ABIERTA, que coincidan
+     * comprador, variedad y distrito, y que haya kilos.
+     *
+     * @param idComprador       comprador de la propuesta
+     * @param idConversacion    conversación del comprador con la publicación
+     * @param idPropuestaGrupal propuesta conjunta
+     * @param idUnidad          unidad de la publicación
+     * @param cantidad          unidades enteras de la parte
+     * @param pesoUnidadKg      kilos por unidad
+     * @param precioUnitario    soles por unidad
+     * @param fechaRecojo       día de recojo (también límite para responder)
+     * @return id de la venta creada
+     */
+    @Transactional
+    public long registrarPropuesta(long idComprador, long idConversacion, long idPropuestaGrupal, int idUnidad,
+            BigDecimal cantidad, BigDecimal pesoUnidadKg, BigDecimal precioUnitario, LocalDate fechaRecojo) {
+        Transaccion parte = transacciones.saveAndFlush(Transaccion.propuesta(idConversacion, idPropuestaGrupal,
+                idUnidad, cantidad, pesoUnidadKg, precioUnitario, fechaRecojo, idComprador));
+        entityManager.refresh(parte); // Kilos y monto los calcula la base de datos (columnas generadas)
+        LOG.info("Parte de la propuesta conjunta {}: venta={}, conversacion={}", idPropuestaGrupal, parte.getId(),
+                idConversacion);
+        return parte.getId();
+    }
+
+    /**
+     * Partes de una propuesta conjunta, en el orden en que se crearon (RF-10, UC-12 paso 8).
+     *
+     * @param idPropuestaGrupal propuesta conjunta
+     * @return partes con su estado
+     */
+    @Transactional(readOnly = true)
+    public List<ParteDto> partesDePropuesta(long idPropuestaGrupal) {
+        Map<String, String> singulares = catalogo.listarUnidades().stream()
+                .collect(Collectors.toMap(UnidadDto::nombrePlural, UnidadDto::nombre, (a, b) -> a));
+        List<VentaHistorial> encontradas =
+                vistaVentas.findByIdPropuestaGrupalOrderByIdAsc(idPropuestaGrupal);
+        encontradas.forEach(entityManager::refresh); // Las partes pudieron cambiar de estado en esta transacción
+        return encontradas.stream()
+                .map(v -> new ParteDto(v.getId(), v.getAgricultor(), v.getCantidad(),
+                        singulares.getOrDefault(v.getUnidadPlural(), v.getUnidadPlural()), v.getUnidadPlural(),
+                        v.getCantidadKg(), v.getPrecioUnitario(), v.getMontoTotal(), v.getEstado().name()))
+                .toList();
+    }
+
+    /**
+     * Cancela las partes de una propuesta conjunta que siguen en PROPUESTA (el comprador cierra o cancela la
+     * propuesta, UC-12 paso 9 y A3) y avisa a cada agricultor. Las partes ACORDADA siguen su ciclo.
+     *
+     * @param idPropuestaGrupal propuesta conjunta
+     * @param idComprador       comprador que cierra o cancela
+     * @param cerrada           {@code true} si la cerró; {@code false} si la canceló
+     * @return partes canceladas
+     */
+    @Transactional
+    public int cancelarPartesPendientes(long idPropuestaGrupal, long idComprador, boolean cerrada) {
+        List<Transaccion> pendientes = transacciones.findByIdPropuestaGrupalAndEstado(idPropuestaGrupal,
+                EstadoTransaccion.PROPUESTA);
+        UsuarioResumenDto comprador = usuarios.buscarResumenes(List.of(idComprador)).get(idComprador);
+        for (Transaccion parte : pendientes) {
+            guardar(parte, EstadoTransaccion.CANCELADA, idComprador);
+            ParticipantesDto partes = conversaciones.participantes(parte.getIdConversacion());
+            PublicacionResumenDto publicacion = publicaciones.buscar(partes.idPublicacion()).orElseThrow();
+            avisar(partes.idAgricultor(), "Propuesta conjunta " + (cerrada ? "cerrada" : "cancelada"),
+                    "%s %s la propuesta conjunta por su %s; su parte ya no está pendiente.".formatted(nombre(comprador),
+                            cerrada ? "cerró" : "canceló", producto(publicacion)), parte.getId());
+        }
+        LOG.info("Propuesta conjunta {} {}: {} partes canceladas", idPropuestaGrupal, cerrada ? "cerrada" : "cancelada",
+                pendientes.size());
+        return pendientes.size();
+    }
+
+    /** "Aceptar mi parte": bloquea la publicación y verifica que todavía haya kilos (UC-12 paso 7 y A5). */
+    private void aceptar(Transaccion venta, ParticipantesDto partes, long idUsuario) {
+        PublicacionResumenDto publicacion = publicaciones.bloquearParaVenta(partes.idPublicacion())
+                .orElseThrow(() -> new ReglaNegocioException(MENSAJE_NO_DISPONIBLE));
+        if (!publicacion.estaPublicada()) {
+            throw new ReglaNegocioException(MENSAJE_NO_DISPONIBLE);
+        }
+        if (venta.getCantidad().multiply(venta.getPesoUnidadKg()).compareTo(publicacion.disponibleKg()) > 0) {
+            throw new ReglaNegocioException(MENSAJE_EXCEDE.formatted(numero(publicacion.disponibleKg())));
+        }
+        guardar(venta, EstadoTransaccion.ACORDADA, idUsuario);
     }
 
     /**
@@ -221,6 +321,8 @@ public class VentaService {
             case ACORDADA -> comprador
                     ? List.of(AccionVenta.CONFIRMAR_RECEPCION, AccionVenta.RECOGIDO, AccionVenta.CANCELAR)
                     : List.of(AccionVenta.RECOGIDO, AccionVenta.CANCELAR);
+            case PROPUESTA -> comprador ? List.of(AccionVenta.CANCELAR)
+                    : List.of(AccionVenta.ACEPTAR, AccionVenta.RECHAZAR);
             case RECOGIDO -> List.of(AccionVenta.EN_CAMINO);
             case EN_CAMINO, ENTREGADO -> comprador ? List.of(AccionVenta.CONFIRMAR_RECEPCION) : List.of();
             default -> List.of();
@@ -233,6 +335,9 @@ public class VentaService {
         }
         if (accionesPermitidas(estado, comprador).contains(accion)) {
             return;
+        }
+        if (estado == EstadoTransaccion.PROPUESTA) {
+            throw new ReglaNegocioException(comprador ? MENSAJE_SOLO_AGRICULTOR : MENSAJE_AGRICULTOR_RECHAZA);
         }
         if (accion == AccionVenta.CANCELAR && estado != EstadoTransaccion.PROPUESTA) {
             throw new ReglaNegocioException(MENSAJE_CANCELAR_TARDE);
@@ -292,8 +397,8 @@ public class VentaService {
                         RoundingMode.HALF_UP),
                 venta.getMontoTotal(), venta.getFechaRecojo(), venta.getEstado().name(), venta.getFechaCreacion(),
                 venta.getFechaActualizacion(), linea,
-                venta.getIdPropuestaGrupal() == null ? accionesPermitidas(venta.getEstado(), comprador) : List.of(),
-                calificaciones(venta, idUsuario, resumenes));
+                accionesPermitidas(venta.getEstado(), comprador), calificaciones(venta, idUsuario, resumenes),
+                venta.getIdPropuestaGrupal());
     }
 
     /** La calificación que dio el usuario, la que recibió y si todavía puede calificar (RF-05). */
@@ -325,7 +430,20 @@ public class VentaService {
             EstadoTransaccion.COMPLETADA, "Venta terminada",
             EstadoTransaccion.CANCELADA, "Venta cancelada");
 
-    private static String textoCambio(EstadoTransaccion estado, String quien, String producto) {
+    /** Títulos de los avisos de una parte de propuesta conjunta (RF-10). */
+    private static final Map<EstadoTransaccion, String> TITULOS_PROPUESTA = Map.of(
+            EstadoTransaccion.ACORDADA, "Parte aceptada",
+            EstadoTransaccion.RECHAZADA, "Parte rechazada",
+            EstadoTransaccion.CANCELADA, "Parte cancelada");
+
+    private static String textoCambio(EstadoTransaccion estado, String quien, String producto, boolean eraPropuesta) {
+        if (eraPropuesta) {
+            return switch (estado) {
+                case ACORDADA -> "%s aceptó su parte de la propuesta conjunta por %s.".formatted(quien, producto);
+                case RECHAZADA -> "%s rechazó su parte de la propuesta conjunta por %s.".formatted(quien, producto);
+                default -> "%s canceló la parte de la propuesta conjunta por su %s.".formatted(quien, producto);
+            };
+        }
         return switch (estado) {
             case RECOGIDO -> "%s marcó que ya recogieron %s.".formatted(quien, producto);
             case EN_CAMINO -> "%s marcó que %s va en camino.".formatted(quien, producto);

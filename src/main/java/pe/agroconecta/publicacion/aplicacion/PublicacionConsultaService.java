@@ -1,5 +1,7 @@
 package pe.agroconecta.publicacion.aplicacion;
 
+import java.time.Clock;
+import java.time.LocalDate;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -9,6 +11,7 @@ import java.util.stream.Collectors;
 
 import jakarta.persistence.EntityManager;
 
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 import pe.agroconecta.catalogo.aplicacion.CatalogoService;
 import pe.agroconecta.catalogo.aplicacion.UnidadDto;
 import pe.agroconecta.publicacion.dominio.PublicacionDisponible;
+import pe.agroconecta.publicacion.infraestructura.EspecificacionesBusqueda;
 import pe.agroconecta.publicacion.infraestructura.PublicacionDisponibleRepository;
 import pe.agroconecta.publicacion.infraestructura.PublicacionRepository;
 
@@ -31,6 +35,7 @@ public class PublicacionConsultaService {
     private final PublicacionRepository publicaciones;
     private final CatalogoService catalogo;
     private final EntityManager entityManager;
+    private final Clock reloj;
 
     /**
      * Crea el servicio.
@@ -39,13 +44,15 @@ public class PublicacionConsultaService {
      * @param publicaciones tabla de publicaciones
      * @param catalogo      catálogo (nombre en singular de las unidades)
      * @param entityManager contexto de persistencia (para releer los kilos disponibles tras el bloqueo)
+     * @param reloj         reloj de la aplicación (cosechas vigentes de un lote)
      */
     public PublicacionConsultaService(PublicacionDisponibleRepository disponibles,
-            PublicacionRepository publicaciones, CatalogoService catalogo, EntityManager entityManager) {
+            PublicacionRepository publicaciones, CatalogoService catalogo, EntityManager entityManager, Clock reloj) {
         this.disponibles = disponibles;
         this.publicaciones = publicaciones;
         this.catalogo = catalogo;
         this.entityManager = entityManager;
+        this.reloj = reloj;
     }
 
     /**
@@ -75,6 +82,23 @@ public class PublicacionConsultaService {
             entityManager.refresh(p);
             return aDto(p, unidades());
         });
+    }
+
+    /**
+     * Cosechas de un lote de la venta agrupada (RF-10): PUBLICADA, con kilos disponibles y fecha límite vigente, de una
+     * variedad en un distrito, la que tiene más kilos primero.
+     *
+     * @param idVariedad variedad
+     * @param idDistrito distrito
+     * @return cosechas del lote
+     */
+    public List<PublicacionResumenDto> cosechasDeLote(int idVariedad, int idDistrito) {
+        Map<Integer, UnidadDto> unidades = unidades();
+        return disponibles.findAll(EspecificacionesBusqueda.disponibles(LocalDate.now(reloj))
+                        .and(EspecificacionesBusqueda.igual("idVariedad", idVariedad))
+                        .and(EspecificacionesBusqueda.igual("idDistrito", idDistrito)),
+                        Sort.by(Sort.Order.desc("disponibleKg"), Sort.Order.asc("id")))
+                .stream().map(p -> aDto(p, unidades)).toList();
     }
 
     /**

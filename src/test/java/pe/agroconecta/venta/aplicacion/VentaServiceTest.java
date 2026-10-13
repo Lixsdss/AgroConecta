@@ -36,6 +36,7 @@ import pe.agroconecta.venta.dominio.Transaccion;
 import pe.agroconecta.venta.infraestructura.CalificacionRepository;
 import pe.agroconecta.venta.infraestructura.HistorialRepository;
 import pe.agroconecta.venta.infraestructura.TransaccionRepository;
+import pe.agroconecta.venta.infraestructura.VentaHistorialRepository;
 
 @ExtendWith(MockitoExtension.class)
 class VentaServiceTest {
@@ -49,6 +50,7 @@ class VentaServiceTest {
     @Mock private TransaccionRepository transacciones;
     @Mock private HistorialRepository historial;
     @Mock private CalificacionRepository calificaciones;
+    @Mock private VentaHistorialRepository vistaVentas;
     @Mock private ConversacionService conversaciones;
     @Mock private PublicacionConsultaService publicaciones;
     @Mock private UsuarioConsultaService usuarios;
@@ -60,7 +62,7 @@ class VentaServiceTest {
 
     @BeforeEach
     void preparar() {
-        servicio = new VentaService(transacciones, historial, calificaciones, conversaciones, publicaciones, usuarios, catalogo,
+        servicio = new VentaService(transacciones, historial, calificaciones, vistaVentas, conversaciones, publicaciones, usuarios, catalogo,
                 notificaciones, entityManager);
     }
 
@@ -77,7 +79,10 @@ class VentaServiceTest {
         assertThat(VentaService.accionesPermitidas(EstadoTransaccion.EN_CAMINO, false)).isEmpty();
         assertThat(VentaService.accionesPermitidas(EstadoTransaccion.ENTREGADO, true))
                 .containsExactly(AccionVenta.CONFIRMAR_RECEPCION);
-        assertThat(VentaService.accionesPermitidas(EstadoTransaccion.PROPUESTA, true)).isEmpty();
+        assertThat(VentaService.accionesPermitidas(EstadoTransaccion.PROPUESTA, true))
+                .containsExactly(AccionVenta.CANCELAR);
+        assertThat(VentaService.accionesPermitidas(EstadoTransaccion.PROPUESTA, false))
+                .containsExactly(AccionVenta.ACEPTAR, AccionVenta.RECHAZAR);
         assertThat(VentaService.accionesPermitidas(EstadoTransaccion.COMPLETADA, true)).isEmpty();
     }
 

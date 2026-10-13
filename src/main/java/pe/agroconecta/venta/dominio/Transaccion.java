@@ -103,6 +103,29 @@ public class Transaccion {
     }
 
     /**
+     * Crea una parte de una propuesta conjunta (RF-10), que nace PROPUESTA y espera la respuesta del agricultor.
+     *
+     * @param idConversacion    conversación del comprador con la publicación
+     * @param idPropuestaGrupal propuesta conjunta
+     * @param idUnidad          unidad de la publicación
+     * @param cantidad          unidades enteras de la parte
+     * @param pesoUnidadKg      kilos por unidad
+     * @param precioUnitario    soles por unidad
+     * @param fechaRecojo       día de recojo (también límite para responder)
+     * @param idComprador       comprador que propone
+     * @return la venta, sin guardar
+     */
+    public static Transaccion propuesta(Long idConversacion, Long idPropuestaGrupal, Integer idUnidad,
+            BigDecimal cantidad, BigDecimal pesoUnidadKg, BigDecimal precioUnitario, LocalDate fechaRecojo,
+            Long idComprador) {
+        Transaccion t = acordada(idConversacion, idUnidad, cantidad, pesoUnidadKg, precioUnitario, fechaRecojo,
+                idComprador);
+        t.idPropuestaGrupal = idPropuestaGrupal;
+        t.estado = EstadoTransaccion.PROPUESTA;
+        return t;
+    }
+
+    /**
      * Cambia el estado y registra quién lo hizo ({@code trg_transacciones_bu} valida el cambio).
      *
      * @param nuevo     nuevo estado

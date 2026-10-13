@@ -10,6 +10,10 @@ public enum AccionVenta {
     EN_CAMINO,
     /** "Confirmar que recibí": → ENTREGADO → COMPLETADA en una sola transacción (solo el comprador). */
     CONFIRMAR_RECEPCION,
-    /** "Cancelar venta": ACORDADA → CANCELADA (cualquiera de las partes). */
-    CANCELAR
+    /** "Cancelar venta": ACORDADA → CANCELADA (cualquiera de las partes); PROPUESTA → CANCELADA (solo el comprador). */
+    CANCELAR,
+    /** "Aceptar mi parte" de una propuesta conjunta: PROPUESTA → ACORDADA (solo el agricultor, RF-10). */
+    ACEPTAR,
+    /** "Rechazar" una parte de una propuesta conjunta: PROPUESTA → RECHAZADA (solo el agricultor, RF-10). */
+    RECHAZAR
 }

@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 
+import pe.agroconecta.venta.dominio.EstadoTransaccion;
 import pe.agroconecta.venta.dominio.Transaccion;
 
 /**
@@ -34,4 +35,13 @@ public interface TransaccionRepository extends JpaRepository<Transaccion, Long> 
      */
     @Query("select t.id from Transaccion t where t.idConversacion = :idConversacion")
     List<Long> idsDeConversacion(Long idConversacion);
+
+    /**
+     * Partes de una propuesta conjunta en un estado (RF-10).
+     *
+     * @param idPropuestaGrupal propuesta conjunta
+     * @param estado            estado buscado
+     * @return ventas
+     */
+    List<Transaccion> findByIdPropuestaGrupalAndEstado(Long idPropuestaGrupal, EstadoTransaccion estado);
 }

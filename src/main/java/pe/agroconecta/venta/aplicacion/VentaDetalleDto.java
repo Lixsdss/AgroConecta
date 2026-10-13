@@ -32,11 +32,12 @@ import java.util.List;
  * @param lineaDeTiempo      pasos de la venta, del primero al último
  * @param acciones           acciones que el usuario de la sesión puede hacer ahora
  * @param calificaciones     calificaciones dada y recibida, y si puede calificar (RF-05)
+ * @param idPropuestaGrupal  propuesta conjunta de la que nace, o {@code null} si nace del chat (RF-10)
  */
 public record VentaDetalleDto(Long id, Long idConversacion, Long idPublicacion, boolean soyComprador,
         ContraparteDto contraparte, String cultivo, String variedad, String distrito, Integer idUnidad, String unidad,
         String unidadPlural, BigDecimal cantidad, BigDecimal pesoUnidadKg, BigDecimal cantidadKg,
         BigDecimal precioUnitario, BigDecimal precioKg, BigDecimal montoTotal, LocalDate fechaRecojo, String estado,
         LocalDateTime fechaCreacion, LocalDateTime fechaActualizacion, List<PasoDto> lineaDeTiempo,
-        List<AccionVenta> acciones, CalificacionesVentaDto calificaciones) {
+        List<AccionVenta> acciones, CalificacionesVentaDto calificaciones, Long idPropuestaGrupal) {
 }
