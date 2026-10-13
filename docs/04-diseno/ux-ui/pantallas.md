@@ -73,6 +73,23 @@ El administrador entra por la misma pantalla "Ingresar"; el inicio lo lleva dire
 - **Detalle:** la línea "Hoy en … pagan entre …" todavía no se muestra en moderación (el endpoint `GET /api/v1/precios/referencia` ya existe desde el slice 4); la calificación y las ventas del agricultor, con RF-05 y RF-06.
 - **Motivos y mensajes sugeridos:** son los 5 del diseño, que coinciden con `chk_revision_motivo`.
 
+## Venta agrupada (RF-10, slice 10)
+
+| # | Pantalla del diseño | Archivo | JS | Endpoints | Navegación |
+|---|---|---|---|---|---|
+| — | Lotes agrupados (diseño "agrupados") | `pages/ventaagrupada/lotes.html` | `js/ventaagrupada/lotes.js` | `GET /api/v1/lotes`, `GET /api/v1/lotes/agricultores` | Enviar propuesta conjunta → Propuesta · Mis propuestas |
+| — | Propuesta conjunta (diseño "propuesta") | `pages/ventaagrupada/propuesta.html?idVariedad=&idDistrito=` | `js/ventaagrupada/propuesta.js` | `GET /api/v1/lotes`, `POST /api/v1/propuestas` | Al enviar muestra el reparto · Ver mis propuestas |
+| — | Mis propuestas (no está en el diseño) | `pages/ventaagrupada/propuestas.html` | `js/ventaagrupada/propuestas.js` | `GET /api/v1/propuestas`, `POST /{id}/cerrar`, `/cancelar` | Cada parte → Entrega |
+
+- **Entrega de una parte:** `pages/venta/venta.html` muestra "Propuesta conjunta" como primer paso de la línea de tiempo; el agricultor tiene **Aceptar mi parte** y **Rechazar** (con confirmación) y el comprador **Cancelar esta parte**.
+- **Aviso PROPUESTA_CONJUNTA:** "Ver propuesta" lleva a la entrega de esa parte.
+- **Barra inferior del comprador:** Inicio · Buscar · **Agrupados** · Mensajes, como en el diseño; "Mis compras" sigue en el inicio.
+
+### Diferencias con el diseño (aprobadas en el plan del slice 10)
+
+- **Resultado del envío:** en lugar de volver a la lista, la pantalla muestra cómo se repartió (partes por agricultor) y, si el redondeo deja kilos sin repartir, lo dice.
+- **Mis propuestas** y la respuesta del agricultor en la entrega no están en el diseño.
+
 ## Avisos y Mis ventas del agricultor (RF-07, slice 9)
 
 | # | Pantalla del diseño | Archivo | JS | Endpoints | Navegación |
@@ -188,14 +205,14 @@ Piezas compartidas: `js/comun/precios.js` (tarjeta de precio, tendencia, fuentes
 | Rol | Opciones | Pantallas que la muestran |
 |---|---|---|
 | Agricultor | Inicio · Vender (paso 1) · Mis ventas (sus cosechas, desde el slice 9) · Mensajes | inicio, Mis ventas, historial de ventas, Mensajes, Avisos; en Buscar aparece sin opción marcada |
-| Comprador | Inicio · Buscar · Mis compras · Mensajes | inicio, Buscar, historial de compras, Mensajes |
+| Comprador | Inicio · Buscar · Agrupados (desde el slice 10) · Mensajes | inicio, Buscar, Lotes agrupados, Mis propuestas, Mensajes, Avisos; en el historial de compras aparece sin opción marcada |
 
 Los pasos de "Vender", el chat, la entrega, el acuerdo y el detalle de la cosecha no la muestran (usan "atrás"), como en el diseño.
 
 ### Diferencias con el diseño (aprobadas)
 
 - **"Mis ventas" del agricultor:** desde el slice 9 abre la lista de sus cosechas con acciones rápidas, como en el diseño; el historial de ventas queda enlazado desde ahí.
-- **"Agrupados" del comprador:** llega con RF-10 (slice 10); hasta entonces su lugar lo ocupa "Mis compras".
+- **"Agrupados" del comprador:** desde el slice 10, como en el diseño; "Mis compras" quedó como botón del inicio.
 
 ## Sesión en el navegador
 

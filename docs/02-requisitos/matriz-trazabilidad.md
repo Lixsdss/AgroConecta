@@ -17,7 +17,7 @@ Relaciona cada requisito funcional con su caso de uso, módulo, tablas, endpoint
 | **RF-07** | **Alertas de vencimiento** | **UC-09** | **notificacion, publicacion** | **9** | **Implementado (slice 9)** |
 | **RF-08** | **Registro y gestión de usuarios** | **UC-10** | **usuario (+ catalogo)** | **1** | **Implementado** (gestión por el administrador: slice 11) |
 | **RF-09** | **Panel administrativo** | **UC-11** | **administracion** | **3 y 11** | **Moderación implementada (slice 3)**; reclamos, suspensiones, usuarios y panel: slice 11; corrección de una publicación bloqueada (CORREGIDA): implementada en el slice 9 |
-| RF-10 | Venta agrupada | UC-12 | ventaagrupada | 10 | Pendiente |
+| **RF-10** | **Venta agrupada** | **UC-12** | **ventaagrupada** | **10** | **Implementado (slice 10)** |
 | **RF-11** | **Seguimiento de entrega** | **UC-06** | **venta** | **7** | **Implementado (slice 7)** |
 
 ## Detalle por requisito
@@ -135,6 +135,21 @@ Reglas aprobadas en el plan del slice 8: la reputación es pública; el autor de
 | RNF | RNF-01 (consulta de la campana cada 30 s, sin push), RNF-03 (acciones con ícono y texto, confirmación al retirar), RNF-05 (evento y triggers como fuente de verdad) |
 
 Reglas aprobadas en el plan del slice 9: bajar el precio solo a uno menor; extender desde la fecha límite actual u hoy, la mayor; retirar se permite con ventas acordadas (siguen su curso); una cosecha oculta solo se corrige (no se retira, no baja precio ni se extiende); el motivo de la moderación se ve en Avisos; sin el número de ofertas por cosecha; abrir un aviso lo marca leído y hay "Marcar todos".
+
+### RF-10 — Venta agrupada (slice 10)
+
+| Elemento | Trazas |
+|---|---|
+| Caso de uso | UC-12: lotes con total, promedio y agricultores (1); propuesta conjunta con kilos, precio por kilo y fecha de recojo (2–3); reparto proporcional en unidades enteras (4); una venta PROPUESTA por cosecha en su unidad, en la conversación del comprador (canal PROPUESTA_CONJUNTA si no existía) (5); aviso PROPUESTA_CONJUNTA (6); el agricultor acepta con bloqueo o rechaza (7); el comprador ve el avance (8); cerrar cancela lo pendiente (9); las aceptadas siguen su ciclo (10). A1 lote incompatible (trigger); A2 vencimiento por `ev_tareas_diarias`; A3 cancelar; A4 propuesta no ABIERTA (trigger); A5 al aceptar ya no hay kilos (422); A6 menos de una unidad sin parte |
+| Módulos | `ventaagrupada` (dueño de propuestas_grupales y `v_lotes_agrupados`); `venta` (partes PROPUESTA, aceptar, rechazar, cancelar, partes de una propuesta); `mensajeria` (`abrirParaPropuesta`); `publicacion` (`cosechasDeLote`, `bloquearParaVenta`); `catalogo`, `usuario`, `notificacion` |
+| Tablas | propuestas_grupales (escritura); transacciones, conversaciones, notificaciones (escritura vía sus módulos); `v_lotes_agrupados`, `v_publicaciones_disponibles`, `v_historial_transacciones` (lectura); evento `ev_tareas_diarias` |
+| Triggers y restricciones | `trg_transacciones_bi` (PROPUESTA solo con propuesta ABIERTA, mismo comprador, variedad y distrito, kilos disponibles), `trg_transacciones_bu` (solo el agricultor acepta o rechaza, el comprador cancela, kilos al aceptar), `trg_transacciones_ai/au`; `chk_propuesta_cantidad`, `_precio`, `_fecha`, `_estado`, `uk_transaccion_propuesta_conv`, `idx_propuesta_estado` |
+| Endpoints | `GET /api/v1/lotes`, `GET /api/v1/lotes/agricultores`, `POST /api/v1/propuestas`, `GET /api/v1/propuestas`, `GET /api/v1/propuestas/{id}`, `POST /api/v1/propuestas/{id}/cerrar`, `/cancelar`; `POST /api/v1/ventas/{id}/estado` con ACEPTAR, RECHAZAR y CANCELAR sobre una parte |
+| Pantallas | Lotes agrupados (`pages/ventaagrupada/lotes.html`), Propuesta conjunta (`propuesta.html`), Mis propuestas (`propuestas.html`); la entrega (`pages/venta/venta.html`) muestra la parte con Aceptar mi parte / Rechazar o Cancelar esta parte; barra del comprador con "Agrupados" |
+| Pruebas | Unitarias: `RepartoTest` (proporción en jabas, sacos y kilos; redondeo que no pasa lo pedido; menos de una unidad), `VentaServiceTest` (acciones de PROPUESTA). Integración (MariaDB): `VentaAgrupadaIntegracionTest` (lote y agricultores, 403 para el agricultor; reparto, partes, avisos y canal; aceptar y rechazar con avance y avisos al comprador; mensajes al comprador y al agricultor; cerrar con partes pendientes canceladas y acordadas que siguen; aceptar sin kilos 422; lote inexistente, cantidad mayor, muy poca, fecha pasada, 403 y 404). Arquitectura: `ArquitecturaTest` |
+| RNF | RNF-02 (bloqueo `PESSIMISTIC_WRITE` al aceptar), RNF-03 (confirmación al rechazar, cerrar o cancelar), RNF-05 (triggers y evento como última barrera) |
+
+Reglas aprobadas en el plan del slice 10: una parte por publicación del lote; la barra del comprador sigue el diseño (Agrupados); los lotes solo para el comprador; se informa lo que no se reparte por el redondeo; la parte se acepta completa o se rechaza; cerrar y cancelar cancelan lo pendiente y las acordadas siguen.
 
 ### RF-09 — Moderación posterior (slice 3)
 
