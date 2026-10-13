@@ -47,6 +47,13 @@ Base: `/api/v1`. Formato JSON (UTF-8). Autenticación con JWT en la cabecera `Au
 | POST | `/api/v1/publicaciones/{id}/extender` | AGRICULTOR (dueño) | RF-07 | publicacion |
 | POST | `/api/v1/publicaciones/{id}/retirar` | AGRICULTOR (dueño) | RF-07 | publicacion |
 | PUT | `/api/v1/publicaciones/{id}/correccion` | AGRICULTOR (dueño) | RF-09 | publicacion |
+| GET | `/api/v1/lotes` | COMPRADOR | RF-10 | ventaagrupada |
+| GET | `/api/v1/lotes/agricultores` | COMPRADOR | RF-10 | ventaagrupada |
+| POST | `/api/v1/propuestas` | COMPRADOR | RF-10 | ventaagrupada |
+| GET | `/api/v1/propuestas` | COMPRADOR | RF-10 | ventaagrupada |
+| GET | `/api/v1/propuestas/{id}` | COMPRADOR (dueño) | RF-10 | ventaagrupada |
+| POST | `/api/v1/propuestas/{id}/cerrar` | COMPRADOR (dueño) | RF-10 | ventaagrupada |
+| POST | `/api/v1/propuestas/{id}/cancelar` | COMPRADOR (dueño) | RF-10 | ventaagrupada |
 | GET | `/api/v1/notificaciones` | Autenticado | RF-07 | notificacion |
 | GET | `/api/v1/notificaciones/no-leidas` | Autenticado | RF-07 | notificacion |
 | POST | `/api/v1/notificaciones/{id}/leida` | Autenticado (dueño) | RF-07 | notificacion |
@@ -708,7 +715,8 @@ Estados: `ACORDADA` → `RECOGIDO` → `EN_CAMINO` → `ENTREGADO` → `COMPLETA
 - `contraparte`: la otra parte; `negocio` solo si es el comprador. El celular se muestra porque ya hay acuerdo (UC-05 paso 6).
 - `lineaDeTiempo`: `transacciones_historial` en orden, con el autor (`null` si fue un proceso automático).
 - `calificaciones` (RF-05, desde el slice 8): `mia` es la que dio este usuario y `recibida` la que le dio la otra parte; cada una es `{ "puntuacion": 5, "comentario": "Pagó a tiempo.", "fecha": "2026-10-07T09:00:00", "autor": "Restaurante El Chalán" }` o `null`. `puedoCalificar` es `true` si la venta está COMPLETADA y este usuario aún no calificó.
-- `acciones`: lo que **este** usuario puede hacer ahora: `RECOGIDO` y `CANCELAR` (cualquiera, desde ACORDADA), `EN_CAMINO` (cualquiera, desde RECOGIDO), `CONFIRMAR_RECEPCION` (solo el comprador, desde ACORDADA, EN_CAMINO o ENTREGADO).
+- `acciones`: lo que **este** usuario puede hacer ahora: `RECOGIDO` y `CANCELAR` (cualquiera, desde ACORDADA), `EN_CAMINO` (cualquiera, desde RECOGIDO), `CONFIRMAR_RECEPCION` (solo el comprador, desde ACORDADA, EN_CAMINO o ENTREGADO). Parte de una venta agrupada en PROPUESTA (RF-10): `ACEPTAR` y `RECHAZAR` (solo el agricultor), `CANCELAR` (solo el comprador).
+- `idPropuestaGrupal` (RF-10): la propuesta conjunta de la que nace, o `null` si nace del chat. En PROPUESTA, `fechaRecojo` es también el límite para responder.
 
 ### POST `/api/v1/ventas`
 
@@ -739,7 +747,7 @@ Estados: `ACORDADA` → `RECOGIDO` → `EN_CAMINO` → `ENTREGADO` → `COMPLETA
 
 ### POST `/api/v1/ventas/{id}/estado`
 
-**Parte de la venta** (UC-05 A1, UC-06). Cuerpo `{ "accion": "RECOGIDO" | "EN_CAMINO" | "CONFIRMAR_RECEPCION" | "CANCELAR" }`. `CONFIRMAR_RECEPCION` hace **ENTREGADO y COMPLETADA en una sola transacción** (desde ENTREGADO, solo COMPLETADA). Cada cambio fija `id_actualizado_por` y avisa a la otra parte (VENTA).
+**Parte de la venta** (UC-05 A1, UC-06). Cuerpo `{ "accion": "RECOGIDO" | "EN_CAMINO" | "CONFIRMAR_RECEPCION" | "CANCELAR" | "ACEPTAR" | "RECHAZAR" }`. `ACEPTAR` (RF-10) bloquea la publicación (`PESSIMISTIC_WRITE`) y pasa la parte a ACORDADA si aún hay kilos; `RECHAZAR` la pasa a RECHAZADA. `CONFIRMAR_RECEPCION` hace **ENTREGADO y COMPLETADA en una sola transacción** (desde ENTREGADO, solo COMPLETADA). Cada cambio fija `id_actualizado_por` y avisa a la otra parte (VENTA).
 
 **200** — la venta actualizada.
 
@@ -754,6 +762,9 @@ Estados: `ACORDADA` → `RECOGIDO` → `EN_CAMINO` → `ENTREGADO` → `COMPLETA
 | 422 | Cancelar después del recojo (UC-05 A4) | "Una venta recogida ya no se cancela. Si hay un problema, podrá registrar un reclamo." |
 | 422 | El agricultor intenta confirmar la recepción | "Solo el comprador confirma que recibió." |
 | 422 | Cambio fuera de secuencia (UC-06 A3) | "Ese cambio no corresponde al estado actual de la venta." |
+| 422 | El comprador intenta aceptar o rechazar una parte (RF-10) | "Solo el agricultor acepta o rechaza su parte." |
+| 422 | Al aceptar, la publicación ya no está PUBLICADA (RF-10) | "La cosecha ya no está disponible." |
+| 422 | Al aceptar, ya no hay kilos suficientes (UC-12 A5) | "La cantidad supera lo disponible (≈ 400 kg)." |
 
 ### GET `/api/v1/ventas?grupo=&desde=&hasta=&contraparte=&idConversacion=&page=0`
 
@@ -836,6 +847,87 @@ Roles **AGRICULTOR** y **COMPRADOR** (UC-08 A3). El mismo filtro en un archivo E
 
 ---
 
+## Venta agrupada (`ventaagrupada`)
+
+Lotes y propuestas conjuntas (RF-10, UC-12). Rol **COMPRADOR**; las propuestas solo las ve su dueño (otro comprador recibe **403**). Cada parte de una propuesta es una venta PROPUESTA del módulo `venta` (ver Ventas): el agricultor la acepta o rechaza con `POST /api/v1/ventas/{id}/estado`. Pasada la fecha de recojo, `ev_tareas_diarias` cancela las partes pendientes y cierra la propuesta (UC-12 A2).
+
+### GET `/api/v1/lotes?idCultivo=&idDistrito=&page=0`
+
+"Lotes agrupados" (`v_lotes_agrupados`): cosechas PUBLICADA con kilos disponibles del mismo cultivo, variedad y distrito, de **2 o más agricultores**. Filtros opcionales; el lote con más kilos primero; 20 por página.
+
+**200** — lista paginada de:
+```json
+{ "idCultivo": 1, "cultivo": "Mango", "idVariedad": 1, "variedad": "Kent", "idDistrito": 9, "distrito": "Tambogrande",
+  "totalAgricultores": 3, "totalPublicaciones": 3, "volumenKg": 1500.00, "precioPromedioKg": 1.38,
+  "fechaLimiteProxima": "2026-10-18" }
+```
+
+### GET `/api/v1/lotes/agricultores?idVariedad=&idDistrito=`
+
+"Ver agricultores" de un lote: sus cosechas, la que tiene más kilos primero.
+
+**200**
+```json
+[ { "idPublicacion": 15, "agricultor": "Juan Carlos Chunga", "unidad": "Jaba", "unidadPlural": "jabas",
+    "unidadesDisponibles": 20.00, "disponibleKg": 400.00, "precioUnitario": 28.00, "precioKg": 1.4000 } ]
+```
+
+**Errores:** 400 si falta `idVariedad` o `idDistrito`.
+
+### POST `/api/v1/propuestas`
+
+"Enviar propuesta conjunta" (UC-12 pasos 2–6).
+
+| Campo | Obligatorio | Regla |
+|---|---|---|
+| `idVariedad`, `idDistrito` | Sí | El lote |
+| `cantidadKg` | Sí | > 0, hasta 2 decimales; no mayor que los kilos del lote |
+| `precioKg` | Sí | > 0, hasta 2 decimales |
+| `fechaRecojo` | Sí | `AAAA-MM-DD`, hoy o después; también es el límite para responder |
+
+El servicio registra la propuesta (ABIERTA) y **reparte** la cantidad: a cada cosecha del lote le toca `cantidadKg × (sus kg disponibles ÷ kg del lote)`, en **unidades enteras de su publicación, redondeando hacia abajo**; con menos de una unidad no recibe parte (A6). Por cada parte crea, en la conversación de ese comprador con esa publicación (`canal_inicio` = PROPUESTA_CONJUNTA si no existía), una venta **PROPUESTA** con precio por unidad = `precioKg × kilos por unidad` (redondeado a 2 decimales), y avisa al agricultor (**PROPUESTA_CONJUNTA**, `id_referencia` = la venta).
+
+**201** — `Location: /api/v1/propuestas/{id}` y la propuesta:
+```json
+{
+  "id": 4, "cultivo": "Mango", "variedad": "Kent", "idVariedad": 1, "distrito": "Tambogrande", "idDistrito": 9,
+  "cantidadKg": 600.00, "precioKg": 1.40, "fechaRecojo": "2026-10-15", "estado": "ABIERTA",
+  "fechaCreacion": "2026-10-13T10:00:00",
+  "kgRepartidos": 580.00, "kgAcordados": 0.00, "kgPendientes": 580.00,
+  "partes": [ { "idVenta": 31, "agricultor": "Juan Carlos Chunga", "cantidad": 15.00, "unidad": "Jaba",
+                "unidadPlural": "jabas", "cantidadKg": 300.00, "precioUnitario": 28.00, "montoTotal": 420.00,
+                "estado": "PROPUESTA" } ]
+}
+```
+
+`kgRepartidos` puede ser menor que `cantidadKg` por el redondeo a unidades enteras.
+
+**Errores**
+
+| Código | Cuándo | `mensaje` |
+|---|---|---|
+| 400 | Campo inválido o fecha pasada | "Los datos enviados no son válidos." (con `errores`) |
+| 403 | No es comprador | "No tiene permiso para realizar esta acción." |
+| 422 | Ya no hay lote (menos de 2 agricultores) | "Ese lote ya no está disponible: necesita 2 o más agricultores con cosechas a la venta." |
+| 422 | La cantidad supera el lote | "La cantidad supera lo disponible en el lote (≈ 1500 kg)." |
+| 422 | A nadie le toca una unidad entera | "La cantidad es muy pequeña: a ningún agricultor le toca una unidad entera." |
+
+### GET `/api/v1/propuestas?page=0`
+
+"Mis propuestas", la más reciente primero, 20 por página. **200** — lista paginada de propuestas (mismo formato, con sus partes).
+
+### GET `/api/v1/propuestas/{id}`
+
+Avance de una propuesta (UC-12 paso 8). **200** — la propuesta. **Errores:** 403 · 404 "La propuesta no existe."
+
+### POST `/api/v1/propuestas/{id}/cerrar` y `/cancelar`
+
+**Cerrar** (CERRADA, "ya tengo lo que necesitaba") o **cancelar** (CANCELADA, "ya no la quiero"), solo si está ABIERTA (UC-12 paso 9 y A3). En ambos casos se cancelan las partes que sigan en PROPUESTA (con aviso VENTA al agricultor); las partes ACORDADA siguen su ciclo normal.
+
+**200** — la propuesta. **Errores:** 403 · 404 · 422 "La propuesta ya está cerrada o cancelada."
+
+---
+
 ## Avisos (`notificacion`)
 
 Centro de avisos (RF-07, UC-09 paso 2). Cualquier usuario autenticado ve **solo los suyos**. Los crean los triggers (`MODERACION`), el evento diario (`POR_VENCER`) y los módulos que ejecutan cada acción (`MENSAJE`, `OFERTA`, `VENTA`, `CALIFICACION`…). No se borran.
@@ -846,7 +938,7 @@ Centro de avisos (RF-07, UC-09 paso 2). Cualquier usuario autenticado ve **solo 
   "contenido": "30 jabas · Tambogrande", "idReferencia": 15, "leida": false, "fechaCreacion": "2026-10-09T06:00:00" }
 ```
 
-`idReferencia` según el tipo: POR_VENCER y MODERACION → publicación; MENSAJE y OFERTA → conversación; VENTA y CALIFICACION → venta.
+`idReferencia` según el tipo: POR_VENCER y MODERACION → publicación; MENSAJE y OFERTA → conversación; VENTA, CALIFICACION y PROPUESTA_CONJUNTA → venta.
 
 ### GET `/api/v1/notificaciones?page=0`
 
