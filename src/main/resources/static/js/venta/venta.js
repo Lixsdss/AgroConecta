@@ -17,6 +17,8 @@ import { TEXTOS_ESTRELLAS, tarjetaCalificacion } from './estrellas.js';
 const id = new URLSearchParams(window.location.search).get('id');
 const alerta = document.getElementById('alerta');
 const dialogo = document.getElementById('dialogo-cancelar');
+/** Acción que espera confirmación en la ventana (CANCELAR o RECHAZAR). */
+let accionPorConfirmar = null;
 const dialogoCalificar = document.getElementById('dialogo-calificar');
 const formCalificar = document.getElementById('form-calificar');
 let ventaActual = null;
@@ -44,7 +46,9 @@ function diaRecojo(iso) {
 function dibujarLinea(venta) {
     const hechos = venta.lineaDeTiempo;
     const estados = hechos.map((p) => p.estado);
-    const camino = estados.includes('ENTREGADO') && !estados.includes('RECOGIDO') ? EN_CHACRA : CON_TRANSPORTE;
+    const base = estados.includes('ENTREGADO') && !estados.includes('RECOGIDO') ? EN_CHACRA : CON_TRANSPORTE;
+    // RF-10: la parte de una propuesta conjunta empieza en PROPUESTA y, si se acepta, sigue el camino normal
+    const camino = estados.includes('PROPUESTA') ? ['PROPUESTA', ...base] : base;
     const pendientes = venta.estado === 'CANCELADA' || venta.estado === 'RECHAZADA'
         ? [] : camino.filter((e) => !estados.includes(e));
     const lista = document.getElementById('linea');
@@ -85,7 +89,13 @@ function dibujarLinea(venta) {
 function ayuda(venta) {
     const caja = document.getElementById('ayuda');
     let texto = '';
-    if (venta.estado === 'ACORDADA' && venta.soyComprador) {
+    const limite = diaRecojo(venta.fechaRecojo);
+    if (venta.estado === 'PROPUESTA' && !venta.soyComprador) {
+        texto = `${venta.contraparte.negocio ?? venta.contraparte.nombre} le propone esta compra como parte de una `
+            + `propuesta conjunta. Acepte o rechace su parte antes del ${limite}.`;
+    } else if (venta.estado === 'PROPUESTA') {
+        texto = `Parte de su propuesta conjunta: el agricultor puede responder hasta el ${limite}.`;
+    } else if (venta.estado === 'ACORDADA' && venta.soyComprador) {
         texto = 'Si recoge usted mismo en la chacra, pulse «Confirmar que recibí» cuando tenga la carga.';
     } else if (venta.estado === 'EN_CAMINO' && !venta.soyComprador) {
         texto = 'El comprador confirmará cuando reciba la carga. Desde el recojo, la venta ya no se cancela.';
@@ -106,8 +116,8 @@ function dibujarAcciones(venta) {
         boton.className = `btn ${clase}`;
         ponerIconoYTexto(boton, nombreIcono, texto);
         boton.addEventListener('click', () => {
-            if (accion === 'CANCELAR') {
-                dialogo.showModal();
+            if (accion === 'CANCELAR' || accion === 'RECHAZAR') {
+                confirmar(venta, accion);
             } else {
                 cambiar(accion, boton);
             }
@@ -243,10 +253,24 @@ async function cambiar(accion, boton) {
     }
 }
 
+/** Pide confirmación antes de cancelar la venta, cancelar una parte o rechazarla. */
+function confirmar(venta, accion) {
+    accionPorConfirmar = accion;
+    const propuesta = venta.estado === 'PROPUESTA';
+    poner('titulo-cancelar', accion === 'RECHAZAR' ? '¿Rechazar su parte?'
+        : propuesta ? '¿Cancelar esta parte de la propuesta?' : '¿Cancelar la venta?');
+    poner('texto-cancelar', accion === 'RECHAZAR'
+        ? 'El comprador sabrá que no acepta esta parte. Puede seguir conversando por el chat.'
+        : propuesta ? 'El agricultor ya no podrá aceptarla. Las demás partes siguen.'
+            : 'La cosecha vuelve a quedar disponible para otros compradores. Esta acción no se puede deshacer.');
+    poner('si-cancelar', accion === 'RECHAZAR' ? 'Sí, rechazar' : 'Sí, cancelar');
+    dialogo.showModal();
+}
+
 document.getElementById('no-cancelar').addEventListener('click', () => dialogo.close());
 document.getElementById('si-cancelar').addEventListener('click', (evento) => {
     dialogo.close();
-    cambiar('CANCELAR', evento.currentTarget);
+    cambiar(accionPorConfirmar ?? 'CANCELAR', evento.currentTarget);
 });
 
 async function iniciar() {

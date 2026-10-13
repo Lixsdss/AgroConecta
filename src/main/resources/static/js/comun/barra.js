@@ -1,7 +1,7 @@
 /**
  * Barra inferior del celular (diseño: navegación principal), para agricultor y comprador:
  * - Agricultor: Inicio · Vender · Mis ventas · Mensajes.
- * - Comprador: Inicio · Buscar · Mis compras · Mensajes ("Agrupados" llega con RF-10).
+ * - Comprador: Inicio · Buscar · Agrupados · Mensajes (como en el diseño; "Mis compras" está en el inicio).
  * Se muestra solo en las pantallas principales; los pasos de "Vender", el chat y la entrega usan "atrás".
  * "Mensajes" muestra los no leídos (GET /api/v1/conversaciones/no-leidos) y la campana de avisos los avisos sin leer
  * (GET /api/v1/notificaciones/no-leidas), cada 30 segundos.
@@ -23,7 +23,7 @@ const OPCIONES = {
     COMPRADOR: [
         ['inicio', 'Inicio', 'house', '/pages/usuario/inicio.html'],
         ['buscar', 'Buscar', 'search', '/pages/publicacion/buscar.html'],
-        ['ventas', 'Mis compras', 'clipboard-list', '/pages/venta/historial.html'],
+        ['agrupados', 'Agrupados', 'layers', '/pages/ventaagrupada/lotes.html'],
         ['mensajes', 'Mensajes', 'message-circle', '/pages/mensajeria/conversaciones.html']
     ]
 };

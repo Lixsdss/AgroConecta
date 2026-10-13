@@ -4,7 +4,7 @@
 
 /** Estado → [texto, ícono]. El color nunca va solo: siempre con texto. */
 export const ESTADOS = {
-    PROPUESTA: ['Propuesta', 'hand-coins'],
+    PROPUESTA: ['Propuesta conjunta', 'layers'],
     ACORDADA: ['Venta acordada', 'handshake'],
     RECOGIDO: ['Ya recogieron', 'package-check'],
     EN_CAMINO: ['En camino', 'truck'],
@@ -19,7 +19,9 @@ export const ACCIONES = {
     CONFIRMAR_RECEPCION: ['Confirmar que recibí', 'circle-check', 'btn-primary'],
     RECOGIDO: ['Ya recogieron la carga', 'package-check', 'btn-outline-primary'],
     EN_CAMINO: ['La carga va en camino', 'truck', 'btn-outline-primary'],
-    CANCELAR: ['Cancelar venta', 'x', 'btn-outline-danger']
+    CANCELAR: ['Cancelar venta', 'x', 'btn-outline-danger'],
+    ACEPTAR: ['Aceptar mi parte', 'check', 'btn-primary'],
+    RECHAZAR: ['Rechazar', 'x', 'btn-outline-danger']
 };
 
 /** @returns {string} texto del estado */

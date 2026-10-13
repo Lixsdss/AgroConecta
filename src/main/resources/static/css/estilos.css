@@ -1230,3 +1230,27 @@ body.ac-con-barra .ac-pantalla {
 .ac-banner[hidden] {
     display: none;
 }
+
+/* ===== Venta agrupada (RF-10) ===== */
+.ac-datos-lote {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: .5rem;
+    text-align: center;
+    background: var(--ac-verde-claro);
+    border-radius: 12px;
+    padding: .625rem .25rem;
+}
+
+.ac-avance {
+    height: .75rem;
+    border-radius: 999px;
+    background: var(--ac-linea);
+    overflow: hidden;
+}
+
+.ac-avance > span {
+    display: block;
+    height: 100%;
+    background: var(--ac-verde);
+}

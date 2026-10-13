@@ -170,6 +170,6 @@ if (sesion) {
     document.getElementById('titulo').textContent = titulo;
     document.title = `${titulo} · AgroConecta`;
     document.getElementById('etiqueta-contraparte').textContent = comprador ? 'Agricultor' : 'Comprador';
-    ponerBarra('ventas');
+    ponerBarra(comprador ? null : 'ventas');
     cargar();
 }

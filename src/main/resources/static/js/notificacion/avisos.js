@@ -17,7 +17,7 @@ const TIPOS = {
     MENSAJE: ['Mensaje', 'message-circle', 'Abrir chat', (id) => `/pages/mensajeria/chat.html?id=${id}`],
     VENTA: ['Venta', 'handshake', 'Ver entrega', (id) => `/pages/venta/venta.html?id=${id}`],
     CALIFICACION: ['Calificación', 'star', 'Ver calificación', (id) => `/pages/venta/venta.html?id=${id}`],
-    PROPUESTA_CONJUNTA: ['Propuesta conjunta', 'layers', null, null],
+    PROPUESTA_CONJUNTA: ['Propuesta conjunta', 'layers', 'Ver propuesta', (id) => `/pages/venta/venta.html?id=${id}`],
     RECLAMO: ['Reclamo', 'flag', null, null],
     CUENTA: ['Cuenta', 'user', null, null]
 };
