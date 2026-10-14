@@ -19,6 +19,8 @@
 --   transacciones apunta a conversaciones (de ahi salen publicacion y comprador):
 --   se elimina la ruta duplicada transaccion->publicacion / transaccion->comprador.
 --
+-- Cambio V3 (migracion V3__bloqueo_sobre_corregida.sql, aprobado el 09/10/2026): trg_revisiones_bi acepta
+--   BLOQUEO sobre una publicacion BLOQUEADA marcada CORREGIDA ("Mantener oculta").
 -- Cambios v4.1 (decisiones del 27/09/2026):
 --   - Moderacion POSTERIOR: la publicacion nace PUBLICADA. El administrador
 --     revisa las marcadas por el sistema y puede dejarla CONFORME, ADVERTIR,
@@ -657,12 +659,17 @@ CREATE TRIGGER trg_revisiones_bi BEFORE INSERT ON revisiones_publicacion
 FOR EACH ROW
 BEGIN
     DECLARE v_estado VARCHAR(12);
+    DECLARE v_marca  VARCHAR(20);
 
     IF fn_rol_usuario(NEW.id_administrador) <> 'ADMINISTRADOR' THEN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Solo un ADMINISTRADOR revisa publicaciones';
     END IF;
-    SET v_estado = (SELECT estado FROM publicaciones WHERE id_publicacion = NEW.id_publicacion);
-    IF NEW.decision IN ('CONFORME', 'ADVERTENCIA', 'BLOQUEO') AND v_estado <> 'PUBLICADA' THEN
+    SELECT estado, marca_revision INTO v_estado, v_marca
+    FROM publicaciones WHERE id_publicacion = NEW.id_publicacion;
+
+    -- V3 (slice 11): BLOQUEO tambien sobre una BLOQUEADA corregida ("Mantener oculta")
+    IF NEW.decision IN ('CONFORME', 'ADVERTENCIA', 'BLOQUEO') AND v_estado <> 'PUBLICADA'
+       AND NOT (NEW.decision = 'BLOQUEO' AND v_estado = 'BLOQUEADA' AND v_marca = 'CORREGIDA') THEN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Solo se revisa, advierte o bloquea una publicacion PUBLICADA';
     END IF;
     IF NEW.decision = 'DESBLOQUEO' AND v_estado <> 'BLOQUEADA' THEN

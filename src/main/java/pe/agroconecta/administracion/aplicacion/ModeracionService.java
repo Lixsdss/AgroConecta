@@ -42,6 +42,7 @@ public class ModeracionService {
 
     private static final String PUBLICADA = "PUBLICADA";
     private static final String BLOQUEADA = "BLOQUEADA";
+    private static final String CORREGIDA = "CORREGIDA";
 
     private static final Logger LOG = LoggerFactory.getLogger(ModeracionService.class);
 
@@ -140,7 +141,10 @@ public class ModeracionService {
             }
             return;
         }
-        if (!PUBLICADA.equals(publicacion.estado())) {
+        // V3: "Mantener oculta" una publicación oculta que el agricultor corrigió (BLOQUEO sobre BLOQUEADA + CORREGIDA)
+        boolean mantenerOculta = decision == DecisionModeracion.BLOQUEO && BLOQUEADA.equals(publicacion.estado())
+                && CORREGIDA.equals(publicacion.marcaRevision());
+        if (!PUBLICADA.equals(publicacion.estado()) && !mantenerOculta) {
             throw new ReglaNegocioException(MENSAJE_NO_VISIBLE);
         }
         if (decision == DecisionModeracion.CONFORME && publicacion.marcaRevision() == null) {

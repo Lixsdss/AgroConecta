@@ -5,6 +5,7 @@ import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.not;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -179,6 +180,34 @@ class ModeracionIntegracionTest {
     }
 
     // ---------- Utilidades ----------
+
+    @Test
+    void mantenerOcultaUnaPublicacionCorregidaLaSacaDeLaCola() throws Exception {
+        long id = publicar(1, "30");
+        String ocultar = """
+                {"decision":"BLOQUEO","motivo":"PRECIO_NO_COINCIDE",
+                 "mensaje":"El precio no coincide con el mercado de hoy. Revise el precio por jaba."}""";
+        mvc.perform(decidir(id, ocultar)).andExpect(status().isCreated());
+        // Oculta y sin corregir: no se puede volver a ocultar
+        mvc.perform(decidir(id, ocultar)).andExpect(status().isUnprocessableContent());
+
+        mvc.perform(put("/api/v1/publicaciones/" + id + "/correccion").header("Authorization", bearer(tokenAgricultor))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"cantidad\":30,\"pesoUnidadKg\":20,\"precioUnitario\":40}"))
+                .andExpect(status().isOk());
+        assertThat(marcaDe(id)).isEqualTo("CORREGIDA");
+
+        // V3: "Mantener oculta" (BLOQUEO sobre una BLOQUEADA corregida)
+        mvc.perform(decidir(id, """
+                        {"decision":"BLOQUEO","motivo":"PRECIO_NO_COINCIDE",
+                         "mensaje":"El precio sigue alto para el mercado de hoy."}"""))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.estadoPublicacion").value("BLOQUEADA"));
+        assertThat(marcaDe(id)).isNull();
+        assertThat(avisosDeModeracion()).isEqualTo(2);
+        mvc.perform(get("/api/v1/moderacion/publicaciones").header("Authorization", bearer(tokenAdmin)))
+                .andExpect(jsonPath("$.content[*].id").value(not(hasItem((int) id))));
+    }
 
     private long publicar(int idDistrito, String jabas) throws Exception {
         String json = """

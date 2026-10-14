@@ -141,8 +141,9 @@ con `marca_revision` no nula.
   agricultor cambia sus datos (variedad, distrito, unidad, cantidad, peso,
   precio o fechas).
 - `trg_revisiones_bi` solo acepta CONFORME, ADVERTENCIA y BLOQUEO sobre una
-  PUBLICADA y DESBLOQUEO sobre una BLOQUEADA; `chk_revision_coherencia` exige
-  motivo y mensaje en ADVERTENCIA y BLOQUEO.
+  PUBLICADA y DESBLOQUEO sobre una BLOQUEADA; desde la migración V3 también
+  acepta BLOQUEO sobre una BLOQUEADA marcada CORREGIDA ("Mantener oculta");
+  `chk_revision_coherencia` exige motivo y mensaje en ADVERTENCIA y BLOQUEO.
 - `trg_revisiones_ai` aplica la decisión, borra la marca y notifica al
   agricultor (MODERACION) salvo en CONFORME.
 
@@ -151,8 +152,8 @@ con `marca_revision` no nula.
   publicar (umbrales a definir en el slice de RF-09).
 - Que solo el administrador desbloquee: `trg_publicaciones_bu` también
   admite BLOQUEADA → PUBLICADA con un UPDATE directo.
-- Que una publicación CORREGIDA que el administrador no acepta salga de la
-  cola: sobre una BLOQUEADA solo se admite DESBLOQUEO.
+- ~~Que una publicación CORREGIDA que el administrador no acepta salga de la
+  cola~~: resuelto con la migración V3 (BLOQUEO sobre una BLOQUEADA corregida).
 
 **Regla en el service:** el módulo `publicacion` nunca cambia el estado de
 una BLOQUEADA (solo sus datos); el desbloqueo pasa siempre por
