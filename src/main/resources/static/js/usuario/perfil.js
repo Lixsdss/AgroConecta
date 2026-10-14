@@ -3,7 +3,7 @@
  * GET y PUT /api/v1/usuarios/me, PUT /api/v1/usuarios/me/contrasena, GET /api/v1/catalogo/distritos.
  */
 import { api } from '../api.js';
-import { requerirSesion } from '../comun/sesion.js';
+import { requerirSesion, cerrarSesion } from '../comun/sesion.js';
 import { mostrarReputacion } from '../venta/reputacion.js';
 import { limpiarErrores, mostrarErrores, mostrarAlerta, marcarOcupado } from '../comun/formulario.js';
 
@@ -114,3 +114,8 @@ async function iniciar() {
 }
 
 iniciar();
+
+document.getElementById('salir').addEventListener('click', () => {
+    cerrarSesion();
+    window.location.assign('/pages/usuario/ingresar.html');
+});

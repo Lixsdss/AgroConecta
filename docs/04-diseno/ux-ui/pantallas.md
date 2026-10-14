@@ -25,7 +25,7 @@ Relaciona cada pantalla del prototipo (numeración del diseño) con su archivo e
 | 03 | Crear cuenta · ¿Quién es usted? | `pages/usuario/rol.html` | `js/usuario/rol.js` | — | Continuar → 04 con `?rol=AGRICULTOR` o `COMPRADOR` |
 | 04 | Crear cuenta · datos | `pages/usuario/registro.html` | `js/usuario/registro.js` | `GET /api/v1/catalogo/distritos`, `POST /api/v1/auth/registro` | Agricultor → 05 · Comprador → inicio |
 | 05 | Bienvenida (3 tarjetas) | `pages/usuario/bienvenida.html` | `js/usuario/bienvenida.js` | — | "Saltar" o "Empezar" → inicio |
-| 06 / 14 | Inicio del agricultor / del comprador (versión sencilla) | `pages/usuario/inicio.html` | `js/usuario/inicio.js` | `GET /api/v1/usuarios/me`, `GET /api/v1/precios/vigentes` (slice 4), `GET /api/v1/conversaciones/no-leidos` (slice 6) | Vender mi cosecha → 07 (agricultor) · Mensajes (slice 6) · Buscar productos (slice 5) · Ver todos los precios → 01 · Mi perfil · Salir → 02 |
+| 06 / 14 | Inicio del agricultor / del comprador | `pages/usuario/inicio.html` | `js/usuario/inicio.js` | `GET /api/v1/usuarios/me`, `GET /api/v1/precios/vigentes`, `GET /api/v1/conversaciones/no-leidos`, `GET /api/v1/publicaciones/mias` (agricultor), `GET /api/v1/ventas?grupo=EN_CURSO` (comprador) | Agricultor: Vender mi cosecha → 07 · Mis ventas · Mensajes. Comprador: Buscar productos · Lotes agrupados · compra en curso → Entrega · Mis compras. Campana → Avisos · iniciales → Mi perfil (ahí está Salir → 02) · Ver todos los precios → 01 |
 | — | Mi perfil (datos y contraseña) | `pages/usuario/perfil.html` | `js/usuario/perfil.js` | `GET /api/v1/catalogo/distritos`, `GET` y `PUT /api/v1/usuarios/me`, `PUT /api/v1/usuarios/me/contrasena` | Atrás → inicio |
 
 ### Diferencias con el diseño (aprobadas en el plan del slice 1)
@@ -213,7 +213,7 @@ Piezas compartidas: `js/comun/precios.js` (tarjeta de precio, tendencia, fuentes
 
 - **Alcance visual:** 01, 06, 14 y 11b son funcionales y sencillas, con la paleta y los componentes existentes; el pulido del diseño queda para después.
 - **01:** cultivo y zona tienen la opción "Todos" / "Todas" (en UC-02 la zona es opcional); el gráfico de 30 días aparece solo con un cultivo y una zona elegidos. Sin resultados: "Sin resultados en esta zona. Pruebe con «Todas»." (UC-02 A3).
-- **06 / 14:** solo el bloque "Precios de hoy en {distrito}"; si el distrito del usuario no es zona de precio, se muestran todas las zonas. El resto de esos inicios llega con sus RF.
+- **06 / 14:** como en el diseño, tarjetas de acción con ícono, título, el dato del día ("1 venta por vencer", "2 mensajes nuevos", "1 compra en curso") y flecha, en lugar de una lista de botones; precios en tarjeta corta. Si el distrito del usuario no es zona de precio, se muestran todas las zonas (con su nombre). El comprador tiene además la tarjeta "Mis compras"; "Buscar productos" ya no está en el inicio del agricultor (sigue en la portada) y "Salir" pasó a "Mi perfil".
 - **11b:** se agregan el campo **Fecha** (hoy por defecto), el botón **Editar ese precio** cuando ya existe (409) y la sección **Cargar archivo** (Excel o CSV) con la lista de filas no guardadas. "X de N cargados hoy" cuenta cultivos activos × 4 zonas.
 
 ## Barra inferior del celular (después del slice 7)
@@ -230,7 +230,7 @@ Los pasos de "Vender", el chat, la entrega, el acuerdo y el detalle de la cosech
 ### Diferencias con el diseño (aprobadas)
 
 - **"Mis ventas" del agricultor:** desde el slice 9 abre la lista de sus cosechas con acciones rápidas, como en el diseño; el historial de ventas queda enlazado desde ahí.
-- **"Agrupados" del comprador:** desde el slice 10, como en el diseño; "Mis compras" quedó como botón del inicio.
+- **"Agrupados" del comprador:** desde el slice 10, como en el diseño; "Mis compras" quedó como tarjeta del inicio.
 
 ## Sesión en el navegador
 

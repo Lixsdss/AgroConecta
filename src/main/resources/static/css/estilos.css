@@ -1413,3 +1413,150 @@ body.ac-con-barra .ac-pantalla {
         grid-template-columns: 1fr;
     }
 }
+
+/* ===== Inicio del agricultor y del comprador (diseños 06 y 14) ===== */
+.ac-cabecera-inicio {
+    display: flex;
+    align-items: center;
+    gap: .25rem;
+    margin: -.25rem 0 1rem;
+    padding-bottom: .5rem;
+    border-bottom: 1px solid #EBE6DC;
+}
+
+.ac-marca-chica {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    margin-right: auto;
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--ac-verde);
+}
+
+.ac-avatar {
+    width: 44px;
+    height: 44px;
+    border: 1px solid var(--ac-linea);
+    border-radius: 50%;
+    background: var(--ac-superficie);
+    color: var(--ac-texto);
+    font-size: .9375rem;
+    font-weight: 700;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.ac-avatar:focus-visible,
+.ac-accion:focus-visible,
+.ac-mosaico a:focus-visible {
+    outline: 3px solid var(--ac-ambar);
+    outline-offset: 2px;
+}
+
+.ac-acciones {
+    display: grid;
+    gap: .75rem;
+}
+
+.ac-accion {
+    display: flex;
+    align-items: center;
+    gap: .875rem;
+    min-height: 96px;
+    padding: 1rem;
+    border: 1px solid var(--ac-linea);
+    border-radius: 12px;
+    background: var(--ac-superficie);
+    color: var(--ac-texto);
+    text-decoration: none;
+}
+
+.ac-accion:hover {
+    color: var(--ac-texto);
+    background: var(--ac-verde-claro);
+}
+
+.ac-accion-principal {
+    border: 2px solid var(--ac-verde);
+}
+
+.ac-accion-icono {
+    width: 56px;
+    height: 56px;
+    flex: none;
+    border-radius: 50%;
+    background: var(--ac-verde-claro);
+    color: var(--ac-verde);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.ac-accion-icono .ac-icono {
+    width: 30px;
+    height: 30px;
+}
+
+.ac-accion-texto {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: .125rem;
+}
+
+.ac-accion-texto strong {
+    font-size: 1.1875rem;
+    line-height: 1.25;
+}
+
+.ac-accion-texto span {
+    color: var(--ac-texto-suave);
+}
+
+.ac-mosaico {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: .625rem;
+}
+
+.ac-mosaico a {
+    min-height: 96px;
+    padding: .75rem;
+    border: 1.5px solid var(--ac-verde);
+    border-radius: var(--ac-radio);
+    background: var(--ac-superficie);
+    color: var(--ac-verde);
+    font-size: 1.125rem;
+    font-weight: 700;
+    text-decoration: none;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.ac-mosaico a .ac-icono {
+    width: 28px;
+    height: 28px;
+}
+
+.ac-mosaico .ac-mosaico-principal {
+    border-color: var(--ac-verde);
+    background: var(--ac-verde);
+    color: #fff;
+}
+
+.ac-separador {
+    margin: 1.25rem 0 .75rem;
+    border-color: #EBE6DC;
+    opacity: 1;
+}
+
+.ac-subtitulo {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: 1.5rem;
+    font-weight: 600;
+}

@@ -43,9 +43,11 @@ export function fechaCorta(iso) {
  * Crea la tarjeta de un precio vigente.
  *
  * @param {object} p precio vigente de GET /api/v1/precios/vigentes
+ * @param {{compacta?: boolean, conZona?: boolean}} [opciones] compacta: sin la línea "Actualizado" (inicio,
+ *        diseños 06 y 14); conZona: muestra la zona junto al cultivo (por defecto sí)
  * @returns {HTMLElement} tarjeta
  */
-export function tarjetaPrecio(p) {
+export function tarjetaPrecio(p, { compacta = false, conZona = true } = {}) {
     const tarjeta = document.createElement('article');
     tarjeta.className = 'ac-tarjeta-precio';
 
@@ -56,7 +58,9 @@ export function tarjetaPrecio(p) {
     const zona = document.createElement('span');
     zona.className = 'ac-suave fw-normal';
     zona.textContent = ` · ${p.zona}`;
-    nombre.append(zona);
+    if (conZona) {
+        nombre.append(zona);
+    }
     const [textoTendencia, iconoTendencia] = TENDENCIAS[p.tendencia] ?? TENDENCIAS.SIN_DATO;
     const tendencia = document.createElement('span');
     tendencia.className = `ac-tendencia ac-tendencia-${p.tendencia.toLowerCase()}`;
@@ -79,10 +83,12 @@ export function tarjetaPrecio(p) {
         local.textContent = `≈ ${soles(p.precioUnidadLocal)} por ${p.unidadLocal.toLowerCase()}`;
         tarjeta.append(local);
     }
-    const pie = document.createElement('div');
-    pie.className = 'ac-suave small mt-1';
-    pie.textContent = `Actualizado ${textoActualizado(p.actualizado)} · ${FUENTES[p.fuente] ?? p.fuente}`;
-    tarjeta.append(pie);
+    if (!compacta) {
+        const pie = document.createElement('div');
+        pie.className = 'ac-suave small mt-1';
+        pie.textContent = `Actualizado ${textoActualizado(p.actualizado)} · ${FUENTES[p.fuente] ?? p.fuente}`;
+        tarjeta.append(pie);
+    }
     return tarjeta;
 }
 
@@ -92,8 +98,9 @@ export function tarjetaPrecio(p) {
  * @param {HTMLElement} contenedor contenedor
  * @param {Array<object>} precios precios vigentes
  * @param {string} [mensajeVacio] texto cuando no hay precios
+ * @param {{compacta?: boolean, conZona?: boolean}} [opciones] opciones de cada tarjeta
  */
-export function mostrarTarjetas(contenedor, precios, mensajeVacio = 'Todavía no hay precios cargados.') {
+export function mostrarTarjetas(contenedor, precios, mensajeVacio = 'Todavía no hay precios cargados.', opciones = {}) {
     contenedor.replaceChildren();
     if (precios.length === 0) {
         const vacio = document.createElement('p');
@@ -102,7 +109,7 @@ export function mostrarTarjetas(contenedor, precios, mensajeVacio = 'Todavía no
         contenedor.append(vacio);
         return;
     }
-    precios.forEach((p) => contenedor.append(tarjetaPrecio(p)));
+    precios.forEach((p) => contenedor.append(tarjetaPrecio(p, opciones)));
 }
 
 /**
