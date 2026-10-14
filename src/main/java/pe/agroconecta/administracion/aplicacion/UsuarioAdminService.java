@@ -172,7 +172,8 @@ public class UsuarioAdminService {
             throw new ReglaNegocioException(MENSAJE_FUNDADOS.formatted(fundados));
         }
         String texto = StringUtils.normalizeSpace(detalle);
-        suspensiones.saveAndFlush(new Suspension(idUsuario, idAdministrador, motivo, texto));
+        Suspension suspension = suspensiones.saveAndFlush(new Suspension(idUsuario, idAdministrador, motivo, texto));
+        entityManager.refresh(suspension); // fecha_inicio la fija la base de datos
         notificaciones.crear(new NuevaNotificacionDto(idUsuario, "CUENTA", "Su cuenta fue suspendida",
                 "Motivo: %s. %s".formatted(MOTIVOS.get(motivo), texto), null));
         for (VentaEnCursoDto venta : ventas.enCursoDe(idUsuario)) {
