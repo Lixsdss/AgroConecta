@@ -999,7 +999,7 @@ Resuelve un reclamo PENDIENTE, una sola vez (UC-11 parte 3, paso 3). Cuerpo `{ "
 
 ### GET `/api/v1/admin/usuarios?rol=&estado=&q=&page=0`
 
-"Usuarios" (pantalla 11e, `v_resumen_usuario`). Filtros opcionales: `rol`, `estado` y `q` (nombre, negocio o celular). Orden por nombre. 20 por página.
+"Usuarios" (pantalla 11e, `v_resumen_usuario`). Filtros opcionales: `rol`, `estado` y `q` (nombre, negocio o celular). Orden por nombre. 20 por página. Un rol o estado que no existe devuelve 400 "El filtro de rol o estado no es válido."
 
 **200** — lista paginada de:
 ```json
@@ -1011,7 +1011,7 @@ Resuelve un reclamo PENDIENTE, una sola vez (UC-11 parte 3, paso 3). Cuerpo `{ "
 
 ### GET `/api/v1/admin/usuarios/{id}`
 
-Detalle: lo mismo, más `ultimoAcceso`, `suspension` vigente (`{ motivo, detalle, fechaInicio, administrador }` o `null`) y `ventasEnCurso` (PROPUESTA, ACORDADA, RECOGIDO, EN_CAMINO o ENTREGADO; aviso de UC-11 A1). **Errores:** 404 "El usuario no existe."
+Detalle: lo mismo, más `ultimoAcceso`, `suspension` vigente (`{ motivo, detalle, fechaInicio, administrador }` o `null`) y `ventasEnCurso` (PROPUESTA, ACORDADA, RECOGIDO, EN_CAMINO o ENTREGADO; aviso de UC-11 A1), cada una `{ idVenta, estado, idContraparte, producto }`. **Errores:** 404 "El usuario no existe."
 
 ### POST `/api/v1/admin/usuarios/{id}/suspension`
 
@@ -1027,6 +1027,7 @@ Suspende (UC-11 parte 1, paso 4). Cuerpo `{ "motivo": "RECLAMOS_FUNDADOS" | "DAT
 | 404 | El usuario no existe | "El usuario no existe." |
 | 422 | Es administrador | "No se suspende a un administrador." |
 | 422 | Ya está suspendido | "El usuario ya está suspendido." |
+| 422 | La cuenta está desactivada (INACTIVO) | "Solo se suspende una cuenta activa." |
 | 422 | RECLAMOS_FUNDADOS con menos de 3 | "Se requieren al menos 3 reclamos fundados (tiene 1)." |
 
 ### POST `/api/v1/admin/usuarios/{id}/reactivacion`
@@ -1045,7 +1046,7 @@ Desactivar (ACTIVO → INACTIVO: no puede entrar) o volver a activar (INACTIVO �
 
 ### POST `/api/v1/admin/administradores`
 
-Crea otro administrador (UC-10 A5). Cuerpo `{ "nombreCompleto", "celular", "idDistrito", "contrasena" }` con las mismas reglas del registro. **201** — el usuario creado. **Errores:** 400 · 409 "Ese celular ya está registrado."
+Crea otro administrador (UC-10 A5). Cuerpo `{ "nombreCompleto", "celular", "idDistrito", "contrasena" }` con las mismas reglas del registro. **201** — el usuario creado (formato del detalle). **Errores:** 400 · 409 "Este celular ya está registrado." · 422 "El distrito elegido no existe."
 
 ### GET `/api/v1/admin/panel`
 
@@ -1061,7 +1062,7 @@ Panel (pantalla 11a, UC-11 parte 4).
                         "agricultor": "Juan Carlos Chunga", "distrito": "Tambogrande", "marcaRevision": "PRIMERA_PUBLICACION",
                         "fechaPublicacion": "2026-10-12T08:00:00" } ],
   "mes": "2026-10",
-  "kilosPorCultivo": [ { "cultivo": "Mango", "ventasCompletadas": 4, "kilosVendidos": 800.00, "montoTotal": 1120.00 } ],
+  "kilosPorCultivo": [ { "mes": "2026-10", "cultivo": "Mango", "ventasCompletadas": 4, "kilosVendidos": 800.00, "montoTotal": 1120.00 } ],
   "embudo": [ { "idPublicacion": 15, "producto": "Mango Kent", "agricultor": "Juan Carlos Chunga",
                 "clicsWhatsapp": 2, "contactos": 3, "ofertas": 4, "acuerdos": 2, "completadas": 1 } ],
   "mejorReputacion": [ { "id": 3, "nombre": "Juan Carlos Chunga", "rol": "AGRICULTOR", "calificacion": 5.0,
@@ -1070,7 +1071,7 @@ Panel (pantalla 11a, UC-11 parte 4).
 }
 ```
 
-- `colaPorRevisar`: las 3 más antiguas de la cola. `kilosPorCultivo`: del mes actual. `embudo`: las 10 publicaciones con más contactos. Reputación: 5 mejores y 5 peores con al menos una calificación.
+- `colaPorRevisar`: las 3 más antiguas de la cola. `kilosPorCultivo`: del mes actual. `embudo`: las 10 publicaciones con más contactos. Reputación: 5 mejores y 5 peores con al menos una calificación (las peores no repiten a las mejores; el nombre es el del negocio si es comprador).
 
 ### GET `/api/v1/admin/panel/exportar`
 

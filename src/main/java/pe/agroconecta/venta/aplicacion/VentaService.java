@@ -276,6 +276,50 @@ public class VentaService {
         return pendientes.size();
     }
 
+    /**
+     * Venta para la administración (reclamos, RF-09): partes, términos, estado, si llegó a ACORDADA y su línea de
+     * tiempo. No comprueba quién la pide: la usa el módulo {@code administracion}.
+     *
+     * @param idVenta venta
+     * @return la venta
+     * @throws RecursoNoEncontradoException si no existe
+     */
+    @Transactional(readOnly = true)
+    public VentaParaAdministracionDto paraAdministracion(long idVenta) {
+        VentaHistorial v = vistaVentas.findById(idVenta)
+                .orElseThrow(() -> new RecursoNoEncontradoException(MENSAJE_NO_EXISTE));
+        List<HistorialTransaccion> pasos = historial.findByIdTransaccionOrderByFechaAscIdAsc(idVenta);
+        Map<Long, UsuarioResumenDto> autores = usuarios.buscarResumenes(pasos.stream()
+                .map(HistorialTransaccion::getIdUsuario).filter(Objects::nonNull).collect(Collectors.toSet()));
+        List<PasoDto> linea = pasos.stream()
+                .map(p -> new PasoDto(p.getEstado().name(), p.getFecha(),
+                        p.getIdUsuario() == null ? null : autores.get(p.getIdUsuario()).nombreCompleto(), false))
+                .toList();
+        String singular = catalogo.listarUnidades().stream()
+                .filter(u -> u.nombrePlural().equals(v.getUnidadPlural())).map(UnidadDto::nombre).findFirst()
+                .orElse(v.getUnidadPlural());
+        return new VentaParaAdministracionDto(v.getId(), v.getIdComprador(), v.getComprador(), v.getIdAgricultor(),
+                v.getAgricultor(), v.getCultivo(), v.getVariedad(), v.getCantidad(), singular, v.getUnidadPlural(),
+                v.getCantidadKg(), v.getMontoTotal(), v.getEstado().name(),
+                pasos.stream().anyMatch(p -> p.getEstado() == EstadoTransaccion.ACORDADA), linea);
+    }
+
+    /**
+     * Ventas en curso de un usuario (PROPUESTA a ENTREGADO), para avisar a las contrapartes al suspenderlo
+     * (UC-11 A1).
+     *
+     * @param idUsuario usuario
+     * @return ventas en curso, la más reciente primero
+     */
+    @Transactional(readOnly = true)
+    public List<VentaEnCursoDto> enCursoDe(long idUsuario) {
+        return vistaVentas.deUsuarioEnEstados(idUsuario, EstadoTransaccion.EN_CURSO).stream()
+                .map(v -> new VentaEnCursoDto(v.getId(), v.getEstado().name(),
+                        v.getIdComprador() == idUsuario ? v.getIdAgricultor() : v.getIdComprador(),
+                        "Común".equals(v.getVariedad()) ? v.getCultivo() + " común" : v.getCultivo() + " " + v.getVariedad()))
+                .toList();
+    }
+
     /** "Aceptar mi parte": bloquea la publicación y verifica que todavía haya kilos (UC-12 paso 7 y A5). */
     private void aceptar(Transaccion venta, ParticipantesDto partes, long idUsuario) {
         PublicacionResumenDto publicacion = publicaciones.bloquearParaVenta(partes.idPublicacion())

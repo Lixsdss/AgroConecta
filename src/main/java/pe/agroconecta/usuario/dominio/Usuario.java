@@ -111,6 +111,20 @@ public class Usuario {
     }
 
     /**
+     * Desactiva la cuenta (ACTIVO → INACTIVO): ya no puede iniciar sesión.
+     */
+    public void desactivar() {
+        this.estado = EstadoUsuario.INACTIVO;
+    }
+
+    /**
+     * Vuelve a activar una cuenta desactivada (INACTIVO → ACTIVO).
+     */
+    public void activar() {
+        this.estado = EstadoUsuario.ACTIVO;
+    }
+
+    /**
      * Indica si el usuario puede usar la plataforma.
      *
      * @return {@code true} si está ACTIVO
