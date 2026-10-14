@@ -54,6 +54,21 @@ Base: `/api/v1`. Formato JSON (UTF-8). Autenticación con JWT en la cabecera `Au
 | GET | `/api/v1/propuestas/{id}` | COMPRADOR (dueño) | RF-10 | ventaagrupada |
 | POST | `/api/v1/propuestas/{id}/cerrar` | COMPRADOR (dueño) | RF-10 | ventaagrupada |
 | POST | `/api/v1/propuestas/{id}/cancelar` | COMPRADOR (dueño) | RF-10 | ventaagrupada |
+| POST | `/api/v1/reclamos` | Parte de la venta | RF-09 | administracion |
+| GET | `/api/v1/reclamos/mios` | AGRICULTOR, COMPRADOR | RF-09 | administracion |
+| GET | `/api/v1/admin/reclamos` | ADMINISTRADOR | RF-09 | administracion |
+| GET | `/api/v1/admin/reclamos/{id}` | ADMINISTRADOR | RF-09 | administracion |
+| POST | `/api/v1/admin/reclamos/{id}/resolucion` | ADMINISTRADOR | RF-09 | administracion |
+| GET | `/api/v1/admin/usuarios` | ADMINISTRADOR | RF-09, RF-08 | administracion |
+| GET | `/api/v1/admin/usuarios/{id}` | ADMINISTRADOR | RF-09, RF-08 | administracion |
+| POST | `/api/v1/admin/usuarios/{id}/suspension` | ADMINISTRADOR | RF-09 | administracion |
+| POST | `/api/v1/admin/usuarios/{id}/reactivacion` | ADMINISTRADOR | RF-09 | administracion |
+| POST | `/api/v1/admin/usuarios/{id}/contrasena-temporal` | ADMINISTRADOR | RF-08 | administracion |
+| POST | `/api/v1/admin/usuarios/{id}/desactivacion` | ADMINISTRADOR | RF-08 | administracion |
+| POST | `/api/v1/admin/usuarios/{id}/activacion` | ADMINISTRADOR | RF-08 | administracion |
+| POST | `/api/v1/admin/administradores` | ADMINISTRADOR | RF-08 | administracion |
+| GET | `/api/v1/admin/panel` | ADMINISTRADOR | RF-09 | administracion |
+| GET | `/api/v1/admin/panel/exportar` | ADMINISTRADOR | RF-09 | administracion |
 | GET | `/api/v1/notificaciones` | Autenticado | RF-07 | notificacion |
 | GET | `/api/v1/notificaciones/no-leidas` | Autenticado | RF-07 | notificacion |
 | POST | `/api/v1/notificaciones/{id}/leida` | Autenticado (dueño) | RF-07 | notificacion |
@@ -928,6 +943,141 @@ Avance de una propuesta (UC-12 paso 8). **200** — la propuesta. **Errores:** 4
 
 ---
 
+## Administración: reclamos, usuarios y panel (`administracion`)
+
+RF-09 y UC-11 (partes 1, 3 y 4). Todo lo que empieza con `/api/v1/admin/` exige el rol **ADMINISTRADOR**. Los reclamos los registran las partes de una venta.
+
+### POST `/api/v1/reclamos`
+
+**Parte de la venta** (UC-11 parte 3, paso 1). Reclama sobre una venta que **llegó a ACORDADA** (según su línea de tiempo), aunque después se haya cancelado o terminado. Uno por venta y persona.
+
+| Campo | Obligatorio | Regla |
+|---|---|---|
+| `idVenta` | Sí | La venta |
+| `motivo` | Sí | `NO_SE_PRESENTO`, `PRODUCTO_NO_COINCIDE`, `CANTIDAD_INCOMPLETA`, `INCUMPLIO_PAGO` o `MAL_TRATO` |
+| `descripcion` | Sí | 1 a 300 caracteres |
+
+**201** — el reclamo:
+```json
+{ "id": 5, "idVenta": 21, "motivo": "CANTIDAD_INCOMPLETA", "descripcion": "Llegaron 8 jabas, no 10.",
+  "estado": "PENDIENTE", "respuesta": null, "fechaRegistro": "2026-10-14T10:00:00", "fechaResolucion": null,
+  "producto": "Mango Kent", "reclamante": "Restaurante El Chalán", "contraparte": "Juan Carlos Chunga" }
+```
+
+Avisa a la otra parte (**RECLAMO**, "Se registró un reclamo sobre su venta de Mango Kent").
+
+**Errores:** 400 · 403 no es parte de la venta · 404 "La venta no existe." · 409 "Ya registró un reclamo sobre esta venta." · 422 "Solo se reclama sobre una venta que llegó a acordarse."
+
+### GET `/api/v1/reclamos/mios?idVenta=`
+
+Roles **AGRICULTOR** y **COMPRADOR**. Los reclamos que registré, el más reciente primero; con `idVenta`, solo los de esa venta. **200** — lista de reclamos.
+
+### GET `/api/v1/admin/reclamos?estado=PENDIENTE&page=0`
+
+Reclamos por estado (`PENDIENTE`, `FUNDADO`, `INFUNDADO`; sin estado, todos), el más antiguo primero entre los pendientes y el más reciente entre los resueltos. 20 por página. **200** — lista paginada de reclamos.
+
+### GET `/api/v1/admin/reclamos/{id}`
+
+El reclamo con la venta (cantidad, precio, total, estado) y su línea de tiempo (UC-11 parte 3, paso 2).
+
+**200**
+```json
+{ "reclamo": { "id": 5, "...": "..." },
+  "venta": { "id": 21, "cultivo": "Mango", "variedad": "Kent", "cantidad": 10.00, "unidadPlural": "jabas",
+             "cantidadKg": 200.00, "montoTotal": 280.00, "estado": "COMPLETADA",
+             "comprador": "Restaurante El Chalán", "agricultor": "Juan Carlos Chunga",
+             "lineaDeTiempo": [ { "estado": "ACORDADA", "fecha": "2026-10-06T10:30:00", "autor": "Rosa Quispe" } ] } }
+```
+
+**Errores:** 404 "El reclamo no existe."
+
+### POST `/api/v1/admin/reclamos/{id}/resolucion`
+
+Resuelve un reclamo PENDIENTE, una sola vez (UC-11 parte 3, paso 3). Cuerpo `{ "estado": "FUNDADO" | "INFUNDADO", "respuesta": "…" }` (respuesta de 1 a 300 caracteres). `trg_reclamos_bu` fija la fecha de resolución. Avisa a las dos partes (**RECLAMO**).
+
+**200** — el reclamo resuelto. **Errores:** 400 · 404 · 422 "El reclamo ya fue resuelto."
+
+### GET `/api/v1/admin/usuarios?rol=&estado=&q=&page=0`
+
+"Usuarios" (pantalla 11e, `v_resumen_usuario`). Filtros opcionales: `rol`, `estado` y `q` (nombre, negocio o celular). Orden por nombre. 20 por página.
+
+**200** — lista paginada de:
+```json
+{ "id": 3, "rol": "AGRICULTOR", "nombre": "Juan Carlos Chunga", "chacra": "Las Lomas", "negocio": null,
+  "tipoComprador": null, "celular": "987654321", "distrito": "Tambogrande", "estado": "ACTIVO",
+  "motivoSuspension": null, "operacionesCompletadas": 3, "calificacion": 4.5, "totalCalificaciones": 2,
+  "reclamosFundados": 0, "fechaRegistro": "2026-09-27T09:00:00" }
+```
+
+### GET `/api/v1/admin/usuarios/{id}`
+
+Detalle: lo mismo, más `ultimoAcceso`, `suspension` vigente (`{ motivo, detalle, fechaInicio, administrador }` o `null`) y `ventasEnCurso` (PROPUESTA, ACORDADA, RECOGIDO, EN_CAMINO o ENTREGADO; aviso de UC-11 A1). **Errores:** 404 "El usuario no existe."
+
+### POST `/api/v1/admin/usuarios/{id}/suspension`
+
+Suspende (UC-11 parte 1, paso 4). Cuerpo `{ "motivo": "RECLAMOS_FUNDADOS" | "DATOS_FALSOS" | "PUBLICACIONES_ENGANOSAS" | "USO_INDEBIDO", "detalle": "…" }` (detalle de 1 a 300 caracteres). `trg_suspensiones_ai` pasa al usuario a SUSPENDIDO: pierde el acceso en su siguiente petición (401). Avisa al usuario (**CUENTA**) y a la otra parte de cada venta ACORDADA o PROPUESTA (**VENTA**: "puede cancelarla si lo necesita"); las ventas no cambian solas.
+
+**200** — el usuario actualizado (formato del detalle).
+
+**Errores**
+
+| Código | Cuándo | `mensaje` |
+|---|---|---|
+| 400 | Falta motivo o detalle (UC-11 A3) | "Los datos enviados no son válidos." (con `errores`) |
+| 404 | El usuario no existe | "El usuario no existe." |
+| 422 | Es administrador | "No se suspende a un administrador." |
+| 422 | Ya está suspendido | "El usuario ya está suspendido." |
+| 422 | RECLAMOS_FUNDADOS con menos de 3 | "Se requieren al menos 3 reclamos fundados (tiene 1)." |
+
+### POST `/api/v1/admin/usuarios/{id}/reactivacion`
+
+Levanta la suspensión vigente (registra `fecha_fin`; `trg_suspensiones_au` lo devuelve a ACTIVO) y avisa al usuario (**CUENTA**). **200** — el usuario. **Errores:** 404 · 422 "El usuario no está suspendido."
+
+### POST `/api/v1/admin/usuarios/{id}/contrasena-temporal`
+
+Reinicia la contraseña de un agricultor o comprador (UC-11 parte 1): genera una temporal de 10 caracteres con letras y números, la guarda con BCrypt y la devuelve **una sola vez** para comunicarla por teléfono. El usuario la cambia en "Mi perfil".
+
+**200** `{ "contrasenaTemporal": "k4Rt8mPq2z" }` — **Errores:** 404 · 422 "La contraseña de un administrador no se reinicia desde aquí."
+
+### POST `/api/v1/admin/usuarios/{id}/desactivacion` y `/activacion`
+
+Desactivar (ACTIVO → INACTIVO: no puede entrar) o volver a activar (INACTIVO → ACTIVO) una cuenta de agricultor o comprador. **200** — el usuario. **Errores:** 404 · 422 "Solo se desactiva una cuenta activa." / "Solo se activa una cuenta desactivada." / "No se desactiva a un administrador."
+
+### POST `/api/v1/admin/administradores`
+
+Crea otro administrador (UC-10 A5). Cuerpo `{ "nombreCompleto", "celular", "idDistrito", "contrasena" }` con las mismas reglas del registro. **201** — el usuario creado. **Errores:** 400 · 409 "Ese celular ya está registrado."
+
+### GET `/api/v1/admin/panel`
+
+Panel (pantalla 11a, UC-11 parte 4).
+
+**200**
+```json
+{
+  "tarjetas": { "publicacionesActivas": 12, "publicadasUltimos7Dias": 5, "porRevisar": 3,
+                "porRevisarMasAntigua": "2026-10-12T08:00:00", "conformesHoy": 1, "bloqueadasHoy": 0,
+                "preciosCargadosHoy": 10, "preciosEsperadosHoy": 16, "reclamosPendientes": 1 },
+  "colaPorRevisar": [ { "id": 15, "cultivo": "Mango", "variedad": "Kent", "cantidad": 30.00, "unidadPlural": "jabas",
+                        "agricultor": "Juan Carlos Chunga", "distrito": "Tambogrande", "marcaRevision": "PRIMERA_PUBLICACION",
+                        "fechaPublicacion": "2026-10-12T08:00:00" } ],
+  "mes": "2026-10",
+  "kilosPorCultivo": [ { "cultivo": "Mango", "ventasCompletadas": 4, "kilosVendidos": 800.00, "montoTotal": 1120.00 } ],
+  "embudo": [ { "idPublicacion": 15, "producto": "Mango Kent", "agricultor": "Juan Carlos Chunga",
+                "clicsWhatsapp": 2, "contactos": 3, "ofertas": 4, "acuerdos": 2, "completadas": 1 } ],
+  "mejorReputacion": [ { "id": 3, "nombre": "Juan Carlos Chunga", "rol": "AGRICULTOR", "calificacion": 5.0,
+                         "totalCalificaciones": 2 } ],
+  "peorReputacion": [ ]
+}
+```
+
+- `colaPorRevisar`: las 3 más antiguas de la cola. `kilosPorCultivo`: del mes actual. `embudo`: las 10 publicaciones con más contactos. Reputación: 5 mejores y 5 peores con al menos una calificación.
+
+### GET `/api/v1/admin/panel/exportar`
+
+Excel (Apache POI) con las hojas Resumen, Ventas por mes (todos los meses), Embudo y Usuarios. **200** — `AgroConecta_Panel_{fecha}.xlsx`.
+
+---
+
 ## Avisos (`notificacion`)
 
 Centro de avisos (RF-07, UC-09 paso 2). Cualquier usuario autenticado ve **solo los suyos**. Los crean los triggers (`MODERACION`), el evento diario (`POR_VENCER`) y los módulos que ejecutan cada acción (`MENSAJE`, `OFERTA`, `VENTA`, `CALIFICACION`…). No se borran.
@@ -938,7 +1088,7 @@ Centro de avisos (RF-07, UC-09 paso 2). Cualquier usuario autenticado ve **solo 
   "contenido": "30 jabas · Tambogrande", "idReferencia": 15, "leida": false, "fechaCreacion": "2026-10-09T06:00:00" }
 ```
 
-`idReferencia` según el tipo: POR_VENCER y MODERACION → publicación; MENSAJE y OFERTA → conversación; VENTA, CALIFICACION y PROPUESTA_CONJUNTA → venta.
+`idReferencia` según el tipo: POR_VENCER y MODERACION → publicación; MENSAJE y OFERTA → conversación; VENTA, CALIFICACION, PROPUESTA_CONJUNTA y RECLAMO → venta; CUENTA → sin referencia.
 
 ### GET `/api/v1/notificaciones?page=0`
 
@@ -998,6 +1148,8 @@ Decisiones registradas ese día (por defecto, hoy), de la más reciente a la má
 ```
 
 ### POST `/api/v1/moderacion/publicaciones/{id}/decisiones`
+
+> Desde la migración **V3** (slice 11): `BLOQUEO` también se acepta sobre una publicación **BLOQUEADA marcada CORREGIDA** ("Mantener oculta"): sigue oculta, sale de la cola y el agricultor recibe el aviso con el nuevo motivo.
 
 Registra una decisión sobre la publicación (UC-11, parte 2). `trg_revisiones_ai` aplica el cambio, borra la marca y avisa al agricultor.
 
