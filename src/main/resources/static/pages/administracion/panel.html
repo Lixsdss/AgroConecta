@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Panel · AgroConecta</title>
+    <link rel="stylesheet" href="/vendor/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/css/estilos.css">
+    <script type="module" src="/js/administracion/panel.js"></script>
+</head>
+<body>
+<!-- Formato escritorio del administrador (diseño 11a, 1440×900, RF-09) -->
+<div class="ac-escritorio">
+    <aside class="ac-lateral" aria-label="Menú de administración">
+        <div>
+            <p class="ac-marca mb-1">AgroConecta</p>
+            <p class="ac-suave mb-0">Administración</p>
+        </div>
+        <nav>
+            <a href="/pages/administracion/panel.html" aria-current="page">
+                <svg class="ac-icono" aria-hidden="true" focusable="false"><use href="/img/iconos.svg#layout-dashboard"></use></svg>
+                <span>Panel</span>
+            </a>
+            <a href="/pages/administracion/moderacion.html">
+                <svg class="ac-icono" aria-hidden="true" focusable="false"><use href="/img/iconos.svg#shield-check"></use></svg>
+                <span>Moderación</span>
+            </a>
+            <a href="/pages/administracion/precios.html">
+                <svg class="ac-icono" aria-hidden="true" focusable="false"><use href="/img/iconos.svg#chart-line"></use></svg>
+                <span>Precios de mercado</span>
+            </a>
+            <a href="/pages/administracion/usuarios.html">
+                <svg class="ac-icono" aria-hidden="true" focusable="false"><use href="/img/iconos.svg#users"></use></svg>
+                <span>Usuarios</span>
+            </a>
+            <a href="/pages/administracion/reclamos.html">
+                <svg class="ac-icono" aria-hidden="true" focusable="false"><use href="/img/iconos.svg#flag"></use></svg>
+                <span>Reclamos</span>
+            </a>
+        </nav>
+        <div class="ac-usuario-lateral">
+            <span class="ac-iniciales" id="iniciales" aria-hidden="true"></span>
+            <div>
+                <strong id="nombre-admin"></strong>
+                <div class="ac-suave">Administración</div>
+            </div>
+        </div>
+        <button class="btn btn-outline-primary w-100" type="button" id="salir">
+            <svg class="ac-icono" aria-hidden="true" focusable="false"><use href="/img/iconos.svg#log-out"></use></svg>
+            <span>Salir</span>
+        </button>
+    </aside>
+
+    <main class="ac-contenido">
+        <p class="ac-alerta ac-alerta-info ac-solo-escritorio">Esta sección está pensada para una computadora.</p>
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+            <div>
+                <h1 class="mb-0">Panel</h1>
+                <p class="ac-suave mb-0" id="fecha-hoy"></p>
+            </div>
+            <button class="btn btn-outline-primary" type="button" id="exportar">
+                <svg class="ac-icono" aria-hidden="true" focusable="false"><use href="/img/iconos.svg#clipboard-list"></use></svg>
+                <span>Descargar Excel</span>
+            </button>
+        </div>
+
+        <div id="aviso" class="ac-alerta" role="status" tabindex="-1" hidden></div>
+
+        <section class="ac-kpis mb-4" id="tarjetas" aria-label="Resumen" aria-live="polite"></section>
+
+        <div class="ac-panel-admin">
+            <section class="ac-caja" aria-labelledby="titulo-cola">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h2 class="h5 fw-semibold mb-0" id="titulo-cola">Cola de moderación</h2>
+                    <span class="ac-suave" id="cola-total"></span>
+                </div>
+                <div id="cola"></div>
+                <a class="btn btn-outline-primary w-100 mt-2" href="/pages/administracion/moderacion.html">Ir a moderación</a>
+            </section>
+
+            <section class="ac-caja" aria-labelledby="titulo-kilos">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h2 class="h5 fw-semibold mb-0" id="titulo-kilos">Kilos vendidos por cultivo</h2>
+                    <span class="ac-suave" id="mes"></span>
+                </div>
+                <div id="kilos"></div>
+            </section>
+
+            <section class="ac-caja" aria-labelledby="titulo-precios">
+                <h2 class="h5 fw-semibold" id="titulo-precios">Precios de hoy</h2>
+                <p class="fs-4 fw-semibold mb-1" id="precios-hoy"></p>
+                <a class="btn btn-outline-primary w-100 mt-2" href="/pages/administracion/precios.html">Cargar precios</a>
+            </section>
+        </div>
+
+        <section class="ac-caja mt-4" aria-labelledby="titulo-embudo">
+            <h2 class="h5 fw-semibold" id="titulo-embudo">Embudo: publicaciones con más contactos</h2>
+            <p class="ac-suave">De cada publicación: cuántos compradores escribieron, ofertaron, acordaron y terminaron la venta.</p>
+            <div class="table-responsive">
+                <table class="table align-middle mb-0">
+                    <thead>
+                    <tr>
+                        <th scope="col">Publicación</th>
+                        <th scope="col">Agricultor</th>
+                        <th scope="col" class="text-end">WhatsApp</th>
+                        <th scope="col" class="text-end">Contactos</th>
+                        <th scope="col" class="text-end">Ofertas</th>
+                        <th scope="col" class="text-end">Acuerdos</th>
+                        <th scope="col" class="text-end">Completadas</th>
+                    </tr>
+                    </thead>
+                    <tbody id="embudo"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <div class="ac-panel-admin ac-panel-admin-2 mt-4">
+            <section class="ac-caja" aria-labelledby="titulo-mejor">
+                <h2 class="h5 fw-semibold" id="titulo-mejor">Mejor reputación</h2>
+                <ol class="ac-ranking" id="mejor"></ol>
+            </section>
+            <section class="ac-caja" aria-labelledby="titulo-peor">
+                <h2 class="h5 fw-semibold" id="titulo-peor">Reputación más baja</h2>
+                <ol class="ac-ranking" id="peor"></ol>
+            </section>
+        </div>
+    </main>
+</div>
+</body>
+</html>

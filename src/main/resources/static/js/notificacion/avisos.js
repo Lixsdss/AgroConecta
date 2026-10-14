@@ -18,7 +18,7 @@ const TIPOS = {
     VENTA: ['Venta', 'handshake', 'Ver entrega', (id) => `/pages/venta/venta.html?id=${id}`],
     CALIFICACION: ['Calificación', 'star', 'Ver calificación', (id) => `/pages/venta/venta.html?id=${id}`],
     PROPUESTA_CONJUNTA: ['Propuesta conjunta', 'layers', 'Ver propuesta', (id) => `/pages/venta/venta.html?id=${id}`],
-    RECLAMO: ['Reclamo', 'flag', null, null],
+    RECLAMO: ['Reclamo', 'flag', 'Ver venta', (id) => `/pages/venta/venta.html?id=${id}`],
     CUENTA: ['Cuenta', 'user', null, null]
 };
 

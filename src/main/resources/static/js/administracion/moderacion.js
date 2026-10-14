@@ -1,7 +1,8 @@
 /**
  * "Moderación de publicaciones" (diseño 11c y 11d, formato escritorio, RF-09 moderación posterior).
  * GET /api/v1/moderacion/publicaciones?vista=, GET /api/v1/moderacion/decisiones,
- * POST /api/v1/moderacion/publicaciones/{id}/decisiones y GET /api/v1/usuarios/me.
+ * POST /api/v1/moderacion/publicaciones/{id}/decisiones y GET /api/v1/usuarios/me. "Mantener oculta" (V3) es un
+ * BLOQUEO sobre una publicación oculta que el agricultor corrigió.
  */
 import { api } from '../api.js';
 import { requerirSesion, cerrarSesion } from '../comun/sesion.js';
@@ -220,6 +221,10 @@ function mostrarDetalle(p) {
     if (p.estado === 'BLOQUEADA') {
         detalle.append(crear('p', 'ac-alerta ac-alerta-error', 'Esta publicación está oculta: los compradores no la ven.'),
             botonAccion('eye', 'Volver a mostrar', 'btn-primary', 'DESBLOQUEO'));
+        if (p.marcaRevision === 'CORREGIDA') {
+            // V3: la corrección no basta; sigue oculta con un nuevo motivo y sale de la cola
+            detalle.append(botonAccion('eye-off', 'Mantener oculta', 'btn-outline-primary', 'BLOQUEO'));
+        }
     } else {
         if (p.marcaRevision) {
             detalle.append(botonAccion('circle-check', 'Conforme', 'btn-primary', 'CONFORME'));
@@ -240,7 +245,9 @@ async function decidir(decision, boton, motivo = null, mensaje = null) {
         const textos = {
             CONFORME: 'Publicación marcada como conforme.',
             ADVERTENCIA: `Advertencia enviada a ${nombre}.`,
-            BLOQUEO: `Publicación ocultada. Se avisó a ${nombre}.`,
+            BLOQUEO: elegida.estado === 'BLOQUEADA'
+                ? `La publicación sigue oculta. Se avisó a ${nombre}.`
+                : `Publicación ocultada. Se avisó a ${nombre}.`,
             DESBLOQUEO: `Publicación visible de nuevo. Se avisó a ${nombre}.`
         };
         dialogo.close();
@@ -260,9 +267,11 @@ async function decidir(decision, boton, motivo = null, mensaje = null) {
 
 function actualizarVista() {
     const producto = `${elegida.cultivo} ${elegida.variedad}`.toLowerCase();
-    document.getElementById('vista-titulo').textContent = decisionEnCurso === 'BLOQUEO'
-        ? `Su ${producto} fue ocultado.`
-        : `Aviso sobre su ${producto}.`;
+    let titulo = `Aviso sobre su ${producto}.`;
+    if (decisionEnCurso === 'BLOQUEO') {
+        titulo = elegida.estado === 'BLOQUEADA' ? `Su ${producto} sigue oculto.` : `Su ${producto} fue ocultado.`;
+    }
+    document.getElementById('vista-titulo').textContent = titulo;
     const motivo = formMotivo.querySelector('input[name="motivo"]:checked');
     const etiqueta = MOTIVOS.find(([clave]) => clave === motivo?.value)?.[1] ?? '';
     document.getElementById('vista-mensaje').textContent =
@@ -273,8 +282,11 @@ function abrirDialogo(decision) {
     decisionEnCurso = decision;
     limpiarErrores(formMotivo, alertaDialogo);
     const confirmar = document.getElementById('confirmar');
-    document.getElementById('dialogo-titulo').textContent = decision === 'BLOQUEO' ? 'Ocultar publicación' : 'Advertir al agricultor';
-    confirmar.textContent = decision === 'BLOQUEO' ? 'Ocultar y avisar' : 'Advertir y avisar';
+    const mantener = decision === 'BLOQUEO' && elegida.estado === 'BLOQUEADA';
+    const titulos = mantener ? ['Mantener oculta', 'Mantener oculta y avisar']
+        : decision === 'BLOQUEO' ? ['Ocultar publicación', 'Ocultar y avisar'] : ['Advertir al agricultor', 'Advertir y avisar'];
+    document.getElementById('dialogo-titulo').textContent = titulos[0];
+    confirmar.textContent = titulos[1];
     confirmar.disabled = false;
     document.getElementById('dialogo-sub').textContent =
         `${elegida.cultivo} ${elegida.variedad} · ${cantidadTexto(elegida)} (≈${numero(elegida.cantidadKg)} kg) · ${elegida.agricultor?.nombreCompleto ?? ''}`;

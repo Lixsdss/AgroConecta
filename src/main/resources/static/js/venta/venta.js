@@ -3,6 +3,7 @@
  * que el usuario puede hacer ahora. GET /api/v1/ventas/{id} y POST /api/v1/ventas/{id}/estado.
  * RF-05: calificaciones dada y recibida, y la hoja "¿Cómo le fue con…?" (POST /api/v1/ventas/{id}/calificacion).
  * Con ?calificar=1 la hoja se abre sola (enlace "Calificar" del historial).
+ * RF-09: "Registrar reclamo" cuando la venta llegó a acordarse (js/venta/reclamo.js).
  */
 import { api } from '../api.js';
 import { requerirSesion } from '../comun/sesion.js';
@@ -13,6 +14,7 @@ import {
 import { numero, soles } from '../publicacion/borrador.js';
 import { ACCIONES, textoEstado } from './estados.js';
 import { TEXTOS_ESTRELLAS, tarjetaCalificacion } from './estrellas.js';
+import { mostrarReclamo } from './reclamo.js';
 
 const id = new URLSearchParams(window.location.search).get('id');
 const alerta = document.getElementById('alerta');
@@ -235,6 +237,7 @@ function mostrar(venta) {
     ayuda(venta);
     dibujarAcciones(venta);
     dibujarCalificaciones(venta);
+    mostrarReclamo(venta);
     document.getElementById('contenido').hidden = false;
 }
 

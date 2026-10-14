@@ -1254,3 +1254,162 @@ body.ac-con-barra .ac-pantalla {
     height: 100%;
     background: var(--ac-verde);
 }
+
+/* ===== Administración: panel, usuarios y reclamos (RF-09) ===== */
+.ac-kpis {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1rem;
+}
+
+.ac-kpi,
+.ac-caja {
+    background: var(--ac-superficie);
+    border: 1px solid var(--ac-linea);
+    border-radius: 12px;
+    padding: 1.25rem;
+}
+
+.ac-kpi {
+    display: flex;
+    flex-direction: column;
+    gap: .25rem;
+}
+
+.ac-kpi-etiqueta {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    color: var(--ac-texto-suave);
+    font-weight: 600;
+}
+
+.ac-kpi-valor {
+    font-size: 2rem;
+    line-height: 1.1;
+}
+
+.ac-panel-admin {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1rem;
+    align-items: start;
+}
+
+.ac-panel-admin-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.ac-barras {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    gap: .75rem;
+}
+
+.ac-barras li {
+    display: grid;
+    grid-template-columns: 6rem minmax(0, 1fr) auto;
+    align-items: center;
+    gap: .75rem;
+}
+
+.ac-barra-pista {
+    height: 12px;
+    border-radius: 0 4px 4px 0;
+}
+
+.ac-barra-dato {
+    display: block;
+    height: 100%;
+    background: var(--ac-verde);
+    border-radius: 0 4px 4px 0;
+}
+
+.ac-barra-valor {
+    font-weight: 700;
+}
+
+.ac-ranking {
+    padding-left: 1.25rem;
+    margin: 0;
+}
+
+.ac-ranking li {
+    padding: .5rem 0;
+    border-bottom: 1px solid var(--ac-linea);
+}
+
+.ac-ranking li:last-child {
+    border-bottom: 0;
+}
+
+.ac-ranking li > * {
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.ac-ranking-valor {
+    float: right;
+    font-weight: 700;
+}
+
+.ac-filtros {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: .75rem;
+}
+
+.ac-filtros .form-select,
+.ac-filtros .form-control {
+    min-height: 48px;
+}
+
+.ac-tabla-usuarios tr[aria-current="true"] td {
+    background: var(--ac-verde-claro);
+}
+
+.ac-estado {
+    display: inline-block;
+    padding: .125rem .625rem;
+    border-radius: 999px;
+    font-size: .9375rem;
+    font-weight: 600;
+    background: var(--ac-verde-claro);
+    color: var(--ac-verde-oscuro);
+}
+
+.ac-estado-SUSPENDIDO { background: var(--ac-error-claro); color: var(--ac-error); }
+.ac-estado-INACTIVO { background: var(--ac-fondo); color: var(--ac-texto-suave); }
+.ac-estado-PENDIENTE { background: var(--ac-ambar-claro); color: var(--ac-texto); }
+.ac-estado-INFUNDADO { background: var(--ac-fondo); color: var(--ac-texto-suave); }
+
+.ac-contrasena-temporal {
+    font-family: ui-monospace, monospace;
+    font-size: 2rem;
+    letter-spacing: .15em;
+    text-align: center;
+    padding: 1rem;
+    border-radius: 12px;
+    background: var(--ac-fondo);
+}
+
+.ac-linea-admin {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 1rem;
+    border-left: 2px solid var(--ac-linea);
+}
+
+.ac-linea-admin li {
+    padding: 0 0 .75rem 1rem;
+}
+
+@media (max-width: 991.98px) {
+    .ac-panel-admin,
+    .ac-panel-admin-2 {
+        grid-template-columns: 1fr;
+    }
+}

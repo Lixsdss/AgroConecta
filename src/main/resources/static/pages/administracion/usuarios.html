@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Usuarios · AgroConecta</title>
+    <link rel="stylesheet" href="/vendor/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/css/estilos.css">
+    <script type="module" src="/js/administracion/usuarios.js"></script>
+</head>
+<body>
+<!-- Formato escritorio del administrador (diseño 11e, 1440×900, RF-08 y RF-09) -->
+<div class="ac-escritorio">
+    <aside class="ac-lateral" aria-label="Menú de administración">
+        <div>
+            <p class="ac-marca mb-1">AgroConecta</p>
+            <p class="ac-suave mb-0">Administración</p>
+        </div>
+        <nav>
+            <a href="/pages/administracion/panel.html">
+                <svg class="ac-icono" aria-hidden="true" focusable="false"><use href="/img/iconos.svg#layout-dashboard"></use></svg>
+                <span>Panel</span>
+            </a>
+            <a href="/pages/administracion/moderacion.html">
+                <svg class="ac-icono" aria-hidden="true" focusable="false"><use href="/img/iconos.svg#shield-check"></use></svg>
+                <span>Moderación</span>
+            </a>
+            <a href="/pages/administracion/precios.html">
+                <svg class="ac-icono" aria-hidden="true" focusable="false"><use href="/img/iconos.svg#chart-line"></use></svg>
+                <span>Precios de mercado</span>
+            </a>
+            <a href="/pages/administracion/usuarios.html" aria-current="page">
+                <svg class="ac-icono" aria-hidden="true" focusable="false"><use href="/img/iconos.svg#users"></use></svg>
+                <span>Usuarios</span>
+            </a>
+            <a href="/pages/administracion/reclamos.html">
+                <svg class="ac-icono" aria-hidden="true" focusable="false"><use href="/img/iconos.svg#flag"></use></svg>
+                <span>Reclamos</span>
+            </a>
+        </nav>
+        <div class="ac-usuario-lateral">
+            <span class="ac-iniciales" id="iniciales" aria-hidden="true"></span>
+            <div>
+                <strong id="nombre-admin"></strong>
+                <div class="ac-suave">Administración</div>
+            </div>
+        </div>
+        <button class="btn btn-outline-primary w-100" type="button" id="salir">
+            <svg class="ac-icono" aria-hidden="true" focusable="false"><use href="/img/iconos.svg#log-out"></use></svg>
+            <span>Salir</span>
+        </button>
+    </aside>
+
+    <main class="ac-contenido">
+        <p class="ac-alerta ac-alerta-info ac-solo-escritorio">Esta sección está pensada para una computadora.</p>
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+            <h1 class="mb-0">Usuarios</h1>
+            <button class="btn btn-outline-primary" type="button" id="nuevo-admin">
+                <svg class="ac-icono" aria-hidden="true" focusable="false"><use href="/img/iconos.svg#user-plus"></use></svg>
+                <span>Nuevo administrador</span>
+            </button>
+        </div>
+
+        <div id="aviso" class="ac-alerta" role="status" tabindex="-1" hidden></div>
+
+        <form class="ac-filtros mb-3" id="filtros" role="search" novalidate>
+            <div class="ac-chips" id="roles" role="radiogroup" aria-label="Rol"></div>
+            <div class="d-flex flex-wrap gap-2">
+                <label class="visually-hidden" for="estado">Estado</label>
+                <select class="form-select w-auto" id="estado" name="estado">
+                    <option value="">Todos los estados</option>
+                    <option value="ACTIVO">Activos</option>
+                    <option value="SUSPENDIDO">Suspendidos</option>
+                    <option value="INACTIVO">Desactivados</option>
+                </select>
+                <label class="visually-hidden" for="q">Buscar</label>
+                <input class="form-control w-auto" id="q" name="q" type="search" placeholder="Nombre, negocio o celular">
+                <button class="btn btn-primary" type="submit">Buscar</button>
+            </div>
+        </form>
+
+        <div class="ac-moderacion">
+            <section aria-label="Lista de usuarios">
+                <p class="ac-suave" id="total" aria-live="polite"></p>
+                <div class="table-responsive">
+                    <table class="table align-middle ac-tabla-usuarios">
+                        <thead>
+                        <tr>
+                            <th scope="col">Nombre</th>
+                            <th scope="col">Estado</th>
+                            <th scope="col">Rol</th>
+                            <th scope="col">Distrito</th>
+                            <th scope="col">Celular</th>
+                            <th scope="col">Calificación</th>
+                            <th scope="col" class="text-end">Ventas</th>
+                        </tr>
+                        </thead>
+                        <tbody id="filas"></tbody>
+                    </table>
+                </div>
+                <nav class="d-flex justify-content-between d-none" aria-label="Páginas" id="paginas">
+                    <button class="btn btn-outline-primary" type="button" id="anterior">Anterior</button>
+                    <span class="ac-suave align-self-center" id="pagina"></span>
+                    <button class="btn btn-outline-primary" type="button" id="siguiente">Siguiente</button>
+                </nav>
+            </section>
+            <section class="ac-panel" aria-label="Detalle del usuario" id="detalle" hidden></section>
+        </div>
+    </main>
+</div>
+
+<dialog class="ac-dialogo" id="dialogo-suspender" aria-labelledby="titulo-suspender">
+    <form method="dialog" id="form-suspender" novalidate>
+        <h2 class="h4 fw-semibold" id="titulo-suspender">Suspender cuenta</h2>
+        <p class="ac-suave" id="sub-suspender"></p>
+        <div id="ventas-en-curso" class="ac-alerta ac-alerta-info" hidden></div>
+        <fieldset class="ac-motivos mb-3">
+            <legend class="form-label">Motivo</legend>
+            <div id="motivos-suspension"></div>
+            <div class="invalid-feedback d-block" data-error-de="motivo"></div>
+        </fieldset>
+        <div class="mb-3">
+            <label class="form-label" for="detalle-suspension">Detalle</label>
+            <textarea class="form-control" id="detalle-suspension" name="detalle" rows="3" maxlength="300"
+                      aria-describedby="ayuda-detalle"></textarea>
+            <div class="form-text" id="ayuda-detalle">Explique qué pasó. El usuario lo verá en su aviso.</div>
+            <div class="invalid-feedback d-block" data-error-de="detalle"></div>
+        </div>
+        <div id="alerta-suspender" class="ac-alerta" role="alert" tabindex="-1" hidden></div>
+        <div class="d-flex gap-2 justify-content-end">
+            <button class="btn btn-outline-primary" type="button" data-cerrar>Cancelar</button>
+            <button class="btn btn-primary" type="submit" id="confirmar-suspender">Suspender y avisar</button>
+        </div>
+    </form>
+</dialog>
+
+<dialog class="ac-dialogo" id="dialogo-contrasena" aria-labelledby="titulo-contrasena">
+    <h2 class="h4 fw-semibold" id="titulo-contrasena">Contraseña temporal</h2>
+    <div id="paso-confirmar">
+        <p id="texto-contrasena"></p>
+        <div id="alerta-contrasena" class="ac-alerta" role="alert" tabindex="-1" hidden></div>
+        <div class="d-flex gap-2 justify-content-end">
+            <button class="btn btn-outline-primary" type="button" data-cerrar>Cancelar</button>
+            <button class="btn btn-primary" type="button" id="generar-contrasena">Generar contraseña</button>
+        </div>
+    </div>
+    <div id="paso-mostrar" hidden>
+        <p>Dicte esta contraseña al usuario por teléfono. <strong>No se volverá a mostrar.</strong></p>
+        <p class="ac-contrasena-temporal" id="contrasena-temporal"></p>
+        <p class="ac-suave">El usuario puede cambiarla en “Mi perfil”.</p>
+        <div class="d-flex justify-content-end">
+            <button class="btn btn-primary" type="button" data-cerrar>Listo</button>
+        </div>
+    </div>
+</dialog>
+
+<dialog class="ac-dialogo" id="dialogo-admin" aria-labelledby="titulo-admin">
+    <form method="dialog" id="form-admin" novalidate>
+        <h2 class="h4 fw-semibold" id="titulo-admin">Nuevo administrador</h2>
+        <div class="mb-3">
+            <label class="form-label" for="admin-nombre">Nombre completo</label>
+            <input class="form-control" id="admin-nombre" name="nombreCompleto" maxlength="120" autocomplete="off">
+            <div class="invalid-feedback" data-error-de="nombreCompleto"></div>
+        </div>
+        <div class="mb-3">
+            <label class="form-label" for="admin-celular">Celular</label>
+            <input class="form-control" id="admin-celular" name="celular" inputmode="numeric" maxlength="11" autocomplete="off">
+            <div class="invalid-feedback" data-error-de="celular"></div>
+        </div>
+        <div class="mb-3">
+            <label class="form-label" for="admin-distrito">Distrito</label>
+            <select class="form-select" id="admin-distrito" name="idDistrito"></select>
+            <div class="invalid-feedback" data-error-de="idDistrito"></div>
+        </div>
+        <div class="mb-3">
+            <label class="form-label" for="admin-contrasena">Contraseña inicial</label>
+            <input class="form-control" id="admin-contrasena" name="contrasena" type="password" autocomplete="new-password"
+                   aria-describedby="ayuda-admin-contrasena">
+            <div class="form-text" id="ayuda-admin-contrasena">Al menos 8 caracteres, con letras y números.</div>
+            <div class="invalid-feedback" data-error-de="contrasena"></div>
+        </div>
+        <div id="alerta-admin" class="ac-alerta" role="alert" tabindex="-1" hidden></div>
+        <div class="d-flex gap-2 justify-content-end">
+            <button class="btn btn-outline-primary" type="button" data-cerrar>Cancelar</button>
+            <button class="btn btn-primary" type="submit" id="crear-admin">Crear administrador</button>
+        </div>
+    </form>
+</dialog>
+</body>
+</html>
