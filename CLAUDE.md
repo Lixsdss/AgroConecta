@@ -187,6 +187,7 @@ Never reimplement these side effects in Java and never use `@Scheduled` for the 
 - **Proportional split (RF-10, implemented in slice 10):** the `ventaagrupada` service splits the joint proposal's kilos among the listings of the lot in proportion to each listing's available kilos, rounded down to whole units of that listing, and creates one PROPUESTA sale **per listing** (usually one per farmer; approved in the slice 10 plan) through `venta.aplicacion`, in the listing's unit, with price per unit = price per kg × kg per unit. A listing whose share is less than one unit receives no proposal. The farmer accepts the whole part or rejects it (accepting locks the listing like an agreement); closing or cancelling the proposal cancels the parts still in PROPUESTA, and accepted parts follow the normal sale cycle.
 - **Offers (RF-04):** reject OFERTA messages on a listing that is not PUBLICADA before inserting (friendly 422).
 - **Cancellation (RF-06):** only an ACORDADA sale can be cancelled; after pick-up, point the user to a complaint (`reclamos`).
+- **Complaints and accounts (RF-09, approved in slice 11):** a RECLAMO notice goes to the other party when a complaint is registered and to both parties when it is resolved. Suspending sends CUENTA to the user and VENTA to the other party of each ACORDADA or PROPUESTA sale; sales never change automatically. Only an ACTIVO farmer or buyer is suspended or deactivated. The temporary password (10 letters and digits, BCrypt) is returned once and never logged.
 
 ## 7. Configuration
 

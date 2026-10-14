@@ -16,7 +16,7 @@ Relaciona cada requisito funcional con su caso de uso, módulo, tablas, endpoint
 | **RF-06** | **Registro e historial de transacciones** | **UC-05, UC-06 A1, UC-08** | **venta** | **7** | **Implementado (slice 7)**; calificaciones en el detalle con RF-05 (slice 8); reclamos con RF-09 (slice 11); PROPUESTA con RF-10 (slice 10) |
 | **RF-07** | **Alertas de vencimiento** | **UC-09** | **notificacion, publicacion** | **9** | **Implementado (slice 9)** |
 | **RF-08** | **Registro y gestión de usuarios** | **UC-10** | **usuario (+ catalogo)** | **1** | **Implementado** (gestión por el administrador: slice 11) |
-| **RF-09** | **Panel administrativo** | **UC-11** | **administracion** | **3 y 11** | **Moderación implementada (slice 3)**; reclamos, suspensiones, usuarios y panel: slice 11; corrección de una publicación bloqueada (CORREGIDA): implementada en el slice 9 |
+| **RF-09** | **Panel administrativo** | **UC-11** | **administracion** | **3 y 11** | **Implementado**: moderación (slice 3); corrección de una publicación bloqueada (CORREGIDA, slice 9); reclamos, usuarios, suspensiones, panel y "Mantener oculta" (V3) (slice 11) |
 | **RF-10** | **Venta agrupada** | **UC-12** | **ventaagrupada** | **10** | **Implementado (slice 10)** |
 | **RF-11** | **Seguimiento de entrega** | **UC-06** | **venta** | **7** | **Implementado (slice 7)** |
 
@@ -162,6 +162,21 @@ Reglas aprobadas en el plan del slice 10: una parte por publicación del lote; l
 | Endpoints | `GET /api/v1/moderacion/publicaciones`, `GET /api/v1/moderacion/decisiones`, `POST /api/v1/moderacion/publicaciones/{id}/decisiones` |
 | Pantallas | 11c Moderación y 11d Advertir u ocultar (`pages/administracion/moderacion.html`, formato escritorio) |
 | Pruebas | Unitarias: `ModeracionServiceTest`, `PublicacionServiceTest` (CANTIDAD_INUSUAL y consultas), `UsuarioConsultaServiceTest`. Integración (MariaDB): `ModeracionIntegracionTest` (cola, conforme, advertir con aviso, ocultar y volver a mostrar, 400/403/404/422, CANTIDAD_INUSUAL). Arquitectura: `ArquitecturaTest` |
+
+### RF-09 — Reclamos, usuarios, suspensiones y panel (slice 11)
+
+| Elemento | Trazas |
+|---|---|
+| Caso de uso | UC-11 parte 1 (usuarios: lista, detalle, suspender con motivo y detalle, reactivar; A1 ventas en curso; A3 motivo o detalle vacío 400), parte 2 paso 4 ("Mantener oculta" una publicación corregida, migración V3), parte 3 (reclamo de una parte sobre una venta que llegó a ACORDADA; resolución FUNDADO / INFUNDADO una sola vez), parte 4 (panel y Excel); UC-10 A5 (crear otro administrador); RF-08 (contraseña temporal, desactivar y activar) |
+| Módulos | `administracion` (dueño de reclamos, suspensiones y las vistas del panel); `usuario` (`GestionCuentasService`: contraseña temporal, desactivar/activar, crear administrador); `venta` (venta con línea de tiempo y ventas en curso, vía `venta.aplicacion`); `publicacion` (producto del embudo); `notificacion` (avisos RECLAMO, CUENTA y VENTA) |
+| Tablas y vistas | reclamos, suspensiones (escritura); usuarios (estado y contraseña, por `usuario`); `v_resumen_usuario`, `v_panel_admin`, `v_ventas_mensuales_cultivo`, `v_conversion_publicacion`, `v_historial_transacciones`, transacciones_historial (lectura) |
+| Triggers y restricciones | `trg_reclamos_bi` (llegó a ACORDADA, es parte, nace PENDIENTE), `trg_reclamos_bu` (solo un administrador resuelve, una vez; fija `fecha_resolucion`), `uk_reclamo_trans_reclamante`; `trg_suspensiones_bi` (no a un administrador, una abierta, RECLAMOS_FUNDADOS ≥ 3), `trg_suspensiones_ai` / `_au` (SUSPENDIDO / ACTIVO); `trg_revisiones_bi` de V3 (BLOQUEO sobre BLOQUEADA + CORREGIDA) |
+| Endpoints | `POST /api/v1/reclamos`, `GET /api/v1/reclamos/mios`, `GET /api/v1/admin/reclamos`, `GET /api/v1/admin/reclamos/{id}`, `POST /api/v1/admin/reclamos/{id}/resolucion`, `GET /api/v1/admin/usuarios`, `GET /api/v1/admin/usuarios/{id}`, `POST /api/v1/admin/usuarios/{id}/suspension`, `/reactivacion`, `/contrasena-temporal`, `/desactivacion`, `/activacion`, `POST /api/v1/admin/administradores`, `GET /api/v1/admin/panel`, `GET /api/v1/admin/panel/exportar` |
+| Pantallas | 11a Panel, 11e Usuarios (con Suspender, Contraseña temporal y Nuevo administrador), Reclamos (escritorio); "Mantener oculta" en 11c; "Registrar reclamo" en la Entrega del celular; el aviso RECLAMO lleva a la venta |
+| Pruebas | Unitarias: `ReclamoServiceTest`, `UsuarioAdminServiceTest`, `PanelServiceTest`, `GestionCuentasServiceTest`. Integración (MariaDB): `AdministracionIntegracionTest` (reclamo y resolución única con avisos, 403/404/409/400, venta cancelada que llegó a acordarse; filtros de usuarios; suspensión con 401 en la siguiente petición y avisos A1, reactivación; reglas de suspensión; contraseña temporal que permite entrar; desactivar/activar; crear administrador; panel y Excel), `ModeracionIntegracionTest` (Mantener oculta, V3). Arquitectura: `ArquitecturaTest` |
+| RNF | RNF-03 (confirmación y aviso de ventas en curso antes de suspender), RNF-04 (Javadoc), RNF-05 (triggers como última barrera) |
+
+Reglas aprobadas en el plan del slice 11: sin "editar datos básicos"; contraseña temporal de 10 letras y números, mostrada una sola vez (no se obliga a cambiarla); el aviso RECLAMO llega a la otra parte al registrar y a las dos al resolver; al suspender se avisa al usuario (CUENTA) y a la otra parte de sus ventas ACORDADA o PROPUESTA (VENTA), sin cambiarlas; el panel muestra los kilos del mes, el embudo de las 10 publicaciones con más contactos, las 5 mejores y 5 peores reputaciones y la cola más antigua; rutas `/api/v1/admin/**`; el administrador entra al Panel.
 
 ### Resto de requisitos
 

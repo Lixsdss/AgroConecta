@@ -63,7 +63,7 @@ El borrador de los 3 pasos vive en `sessionStorage` (`js/publicacion/borrador.js
 | 11c | Moderación | `pages/administracion/moderacion.html` | `js/administracion/moderacion.js` | `GET /api/v1/moderacion/publicaciones?vista=POR_REVISAR` y `OCULTAS`, `GET /api/v1/moderacion/decisiones` | Pestañas Por revisar / Ocultas / Decisiones de hoy; lista y detalle |
 | 11d | Advertir u ocultar (en el diseño: "Rechazar con motivo") | ventana `<dialog>` de la misma página | — | `POST /api/v1/moderacion/publicaciones/{id}/decisiones` | Cancelar · Advertir y avisar / Ocultar y avisar |
 
-El administrador entra por la misma pantalla "Ingresar"; el inicio lo lleva directo a Moderación. La barra lateral muestra Moderación y Precios de mercado (slice 4); Panel y Usuarios se agregan en sus slices.
+El administrador entra por la misma pantalla "Ingresar"; desde el slice 11 el inicio lo lleva al **Panel**. La barra lateral muestra Panel · Moderación · Precios de mercado · Usuarios · Reclamos (`js/administracion/comun.js` exige el rol y conecta "Salir").
 
 ### Diferencias con el diseño (moderación posterior de v4.1, aprobadas en el plan del slice 3)
 
@@ -164,6 +164,24 @@ El administrador entra por la misma pantalla "Ingresar"; el inicio lo lleva dire
 - **Calificación y compras** junto al nombre ("★ 4.7 · 32 compras"): llegan con el módulo `venta`.
 - **Barra inferior:** se agregó después del slice 7 (ver "Barra inferior del celular").
 - **Cosecha no disponible:** el chat sigue abierto para coordinar; se oculta "Hacer oferta" y se muestra un aviso.
+
+## Administrador · Panel, usuarios y reclamos (RF-09, slice 11) — formato escritorio
+
+| # | Pantalla del diseño | Archivo | JS | Endpoints | Navegación |
+|---|---|---|---|---|---|
+| 11a | Panel | `pages/administracion/panel.html` | `js/administracion/panel.js` | `GET /api/v1/admin/panel`, `GET /api/v1/admin/panel/exportar` | Ir a moderación · Cargar precios · Descargar Excel |
+| 11e | Usuarios | `pages/administracion/usuarios.html` | `js/administracion/usuarios.js` | `GET /api/v1/admin/usuarios`, `GET /api/v1/admin/usuarios/{id}`, `POST …/suspension`, `/reactivacion`, `/contrasena-temporal`, `/desactivacion`, `/activacion`, `POST /api/v1/admin/administradores`, `GET /api/v1/catalogo/distritos` | Filtros (rol, estado, texto) · nombre → detalle; ventanas Suspender, Contraseña temporal y Nuevo administrador |
+| — | Reclamos (no está en el diseño) | `pages/administracion/reclamos.html` | `js/administracion/reclamos.js` | `GET /api/v1/admin/reclamos?estado=`, `GET /api/v1/admin/reclamos/{id}`, `POST /api/v1/admin/reclamos/{id}/resolucion` | Pestañas Pendientes / Fundados / Infundados; lista y detalle con la línea de tiempo |
+| 11c | Moderación: "Mantener oculta" | `pages/administracion/moderacion.html` | `js/administracion/moderacion.js` | `POST /api/v1/moderacion/publicaciones/{id}/decisiones` (BLOQUEO) | En una publicación oculta y corregida: Volver a mostrar · Mantener oculta |
+| — | Entrega: "Registrar reclamo" (celular) | `pages/venta/venta.html` | `js/venta/reclamo.js` | `GET /api/v1/reclamos/mios?idVenta=`, `POST /api/v1/reclamos` | Aparece si la venta llegó a acordarse; muestra el estado y la respuesta del reclamo |
+
+### Diferencias con el diseño (aprobadas en el plan del slice 11)
+
+- **Alcance visual:** funcional y sencillo, con la paleta y los componentes existentes; el pulido queda para después.
+- **11a:** las tarjetas son publicaciones activas, por revisar, decisiones de hoy y reclamos pendientes; se agregan el embudo (10 publicaciones con más contactos), las mejores y peores reputaciones y "Descargar Excel" (hojas Resumen, Ventas por mes, Embudo y Usuarios). La cola muestra las 3 más antiguas.
+- **11e:** la acción de cada fila se abre con el nombre; el detalle agrega último ingreso, suspensión vigente y ventas en curso. Suspender avisa antes cuántas ventas en curso tiene (UC-11 A1). La contraseña temporal se muestra una sola vez y se borra al cerrar la ventana. No hay "editar datos básicos".
+- **Reclamos:** pantalla nueva del administrador; la resolución pide resultado y respuesta para las dos partes.
+- **Avisos:** RECLAMO lleva a la venta ("Ver venta"); CUENTA no tiene botón.
 
 ## Búsqueda (RF-03, slice 5)
 
