@@ -26,8 +26,10 @@ import org.springframework.stereotype.Component;
 import pe.agroconecta.compartido.error.SolicitudInvalidaException;
 
 /**
- * Lee archivos de precios (UC-02 A2): Excel {@code .xlsx} con Apache POI o CSV separado por coma o punto y coma.
- * Solo comprueba la forma del archivo (cabecera, cantidad de filas); los datos de cada fila los valida el
+ * Lee archivos de precios (UC-02 A2): Excel {@code .xlsx} con Apache POI o CSV
+ * separado por coma o punto y coma.
+ * Solo comprueba la forma del archivo (cabecera, cantidad de filas); los datos
+ * de cada fila los valida el
  * servicio de carga.
  */
 @Component
@@ -46,7 +48,8 @@ public class LectorArchivoPrecios {
      * @param nombreArchivo nombre original (define el formato por su extensión)
      * @param contenido     bytes del archivo
      * @return filas de datos
-     * @throws SolicitudInvalidaException si el archivo está vacío, no es .xlsx ni .csv, no tiene las columnas
+     * @throws SolicitudInvalidaException si el archivo está vacío, no es .xlsx ni
+     *                                    .csv, no tiene las columnas
      *                                    esperadas o supera el máximo de filas
      */
     public List<FilaArchivoPrecio> leer(String nombreArchivo, byte[] contenido) {
@@ -132,7 +135,10 @@ public class LectorArchivoPrecios {
         return filas;
     }
 
-    /** Divide una línea CSV respetando comillas dobles ("a;b" queda como un solo valor). */
+    /**
+     * Divide una línea CSV respetando comillas dobles ("a;b" queda como un solo
+     * valor).
+     */
     private static List<String> dividirCsv(String linea, char separador) {
         List<String> valores = new ArrayList<>();
         StringBuilder actual = new StringBuilder();

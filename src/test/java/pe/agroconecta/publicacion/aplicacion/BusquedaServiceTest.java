@@ -36,10 +36,13 @@ import pe.agroconecta.publicacion.infraestructura.PublicacionDisponibleRepositor
 @ExtendWith(MockitoExtension.class)
 class BusquedaServiceTest {
 
-    private static final FiltroBusquedaDto SIN_FILTROS = new FiltroBusquedaDto(null, null, null, null, null, null, null);
+    private static final FiltroBusquedaDto SIN_FILTROS = new FiltroBusquedaDto(null, null, null, null, null, null,
+            null);
 
-    @Mock private PublicacionDisponibleRepository disponibles;
-    @Mock private CatalogoService catalogo;
+    @Mock
+    private PublicacionDisponibleRepository disponibles;
+    @Mock
+    private CatalogoService catalogo;
 
     private BusquedaService servicio;
 
