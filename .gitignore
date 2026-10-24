@@ -32,6 +32,9 @@ build/
 ### VS Code ###
 .vscode/
 
+### Logs de la aplicación (logback-spring.xml, perfil prod) ###
+logs/
+
 ### Secretos locales (nunca a Git) ###
 .env
 *.env
