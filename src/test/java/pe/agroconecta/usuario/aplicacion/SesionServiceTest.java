@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -24,6 +25,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import pe.agroconecta.compartido.error.AutenticacionFallidaException;
+import pe.agroconecta.compartido.error.DemasiadosIntentosException;
 import pe.agroconecta.usuario.dominio.EstadoUsuario;
 import pe.agroconecta.usuario.dominio.Rol;
 import pe.agroconecta.usuario.dominio.Usuario;
@@ -38,13 +40,15 @@ class SesionServiceTest {
     @Mock private UsuarioRepository usuarios;
     @Mock private PasswordEncoder passwordEncoder;
     @Mock private EmisorToken emisorToken;
+    @Mock private LimiteIntentosLogin limiteIntentos;
 
     private SesionService servicio;
 
     @BeforeEach
     void preparar() {
         when(passwordEncoder.encode(anyString())).thenReturn("hash-de-relleno");
-        servicio = new SesionService(usuarios, passwordEncoder, emisorToken, Clock.fixed(AHORA, LIMA));
+        servicio = new SesionService(usuarios, passwordEncoder, emisorToken, limiteIntentos,
+                Clock.fixed(AHORA, LIMA));
     }
 
     @Test
@@ -57,6 +61,18 @@ class SesionServiceTest {
 
         assertThat(servicio.iniciarSesion(" 911 111 111 ", "clave2026")).isSameAs(sesion);
         assertThat(usuario.getUltimoAcceso()).isEqualTo(LocalDateTime.ofInstant(AHORA, LIMA));
+        verify(limiteIntentos).verificarPermitido("911111111");
+        verify(limiteIntentos).reiniciar("911111111");
+    }
+
+    @Test
+    void unCelularBloqueadoNoLlegaAVerificarLaContrasena() {
+        doThrow(new DemasiadosIntentosException("bloqueado")).when(limiteIntentos).verificarPermitido("911111111");
+
+        assertThatThrownBy(() -> servicio.iniciarSesion("911 111 111", "clave2026"))
+                .isInstanceOf(DemasiadosIntentosException.class);
+        verify(usuarios, never()).findByCelular(anyString());
+        verify(passwordEncoder, never()).matches(any(), any());
     }
 
     @Test
@@ -67,6 +83,8 @@ class SesionServiceTest {
         assertThatThrownBy(() -> servicio.iniciarSesion("911111111", "otra"))
                 .isInstanceOf(AutenticacionFallidaException.class)
                 .hasMessage(SesionService.MENSAJE_CREDENCIALES);
+        verify(limiteIntentos).registrarFallo("911111111");
+        verify(limiteIntentos, never()).reiniciar(anyString());
     }
 
     @Test
@@ -78,6 +96,7 @@ class SesionServiceTest {
                 .hasMessage(SesionService.MENSAJE_CREDENCIALES);
         verify(passwordEncoder).matches(eq("clave2026"), eq("hash-de-relleno"));
         verify(emisorToken, never()).emitir(any());
+        verify(limiteIntentos).registrarFallo("911111111");
     }
 
     @Test
@@ -88,6 +107,7 @@ class SesionServiceTest {
         assertThatThrownBy(() -> servicio.iniciarSesion("911111111", "clave2026"))
                 .isInstanceOf(AutenticacionFallidaException.class)
                 .hasMessage(SesionService.MENSAJE_SUSPENDIDA);
+        verify(limiteIntentos, never()).registrarFallo(anyString());
     }
 
     @Test

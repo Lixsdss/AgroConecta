@@ -18,7 +18,7 @@ Base: `/api/v1`. Formato JSON (UTF-8). Autenticación con JWT en la cabecera `Au
   ```
 
   `errores` solo tiene elementos en 400; en los demás casos es `[]`.
-- **Códigos:** 400 validación · 401 sin sesión, credenciales incorrectas o usuario no ACTIVO · 403 rol incorrecto · 404 no existe · 409 dato duplicado · 422 regla de negocio o de la base de datos · 500 error interno.
+- **Códigos:** 400 validación · 401 sin sesión, credenciales incorrectas o usuario no ACTIVO · 403 rol incorrecto · 404 no existe · 409 dato duplicado · 422 regla de negocio o de la base de datos · 429 demasiados intentos (inicio de sesión) · 500 error interno.
 - **Listas paginadas:** parámetros `page` (desde 0) y `size`. Respuesta:
 
   ```json
@@ -231,6 +231,9 @@ Público. Inicia sesión con celular y contraseña; actualiza `ultimo_acceso`.
 | 401 | Celular o contraseña incorrectos (no se indica cuál) | "Celular o contraseña incorrectos." |
 | 401 | Usuario SUSPENDIDO | "Su cuenta está suspendida. Comuníquese con el administrador." |
 | 401 | Usuario INACTIVO | "Su cuenta está desactivada. Comuníquese con el administrador." |
+| 429 | El celular acumuló 5 intentos fallidos en la ventana de 15 minutos | "Demasiados intentos fallidos. Espere 15 minutos e intente de nuevo." |
+
+**Límite de intentos:** cada intento con celular o contraseña incorrectos cuenta para el celular normalizado (sin espacios). Al quinto fallo el celular queda bloqueado: todos los intentos siguientes, incluso con la contraseña correcta, responden **429** hasta que pasan 15 minutos desde el **primer** fallo (ventana fija); luego el contador empieza de cero. Un inicio de sesión correcto antes del bloqueo reinicia el contador. Los intentos con cuenta SUSPENDIDA o INACTIVA (credenciales correctas) no cuentan. El bloqueo se registra en el log con el celular enmascarado. Los contadores viven en memoria (`usuario.aplicacion.LimiteIntentosLogin`, Guava Cache): se pierden al reiniciar la aplicación y no se comparten entre instancias.
 
 **Token:** JWT HS256, emisor `agroconecta`, `sub` = id del usuario, claim `roles` = `["AGRICULTOR"]` (o `COMPRADOR`, `ADMINISTRADOR`), vigencia de 12 horas (`agroconecta.jwt.expiracion`). En cada petición se verifica además que el usuario siga ACTIVO; si no, 401.
 

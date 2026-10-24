@@ -147,6 +147,17 @@ class ManejadorGlobalExcepcionesTest {
     }
 
     @Test
+    void demasiadosIntentosDevuelve429ConSuMensaje() {
+        ResponseEntity<ErrorResponse> respuesta = manejador.manejarDemasiadosIntentos(
+                new DemasiadosIntentosException("Demasiados intentos fallidos."), request);
+
+        assertThat(respuesta.getStatusCode()).isEqualTo(HttpStatus.TOO_MANY_REQUESTS);
+        assertThat(respuesta.getBody().error()).isEqualTo("Too Many Requests");
+        assertThat(respuesta.getBody().mensaje()).isEqualTo("Demasiados intentos fallidos.");
+        assertThat(respuesta.getBody().errores()).isEmpty();
+    }
+
+    @Test
     void otroErrorDeBaseDeDatosDevuelve500Generico() {
         var sql = new SQLException("Communications link failure", "08S01", 0);
 

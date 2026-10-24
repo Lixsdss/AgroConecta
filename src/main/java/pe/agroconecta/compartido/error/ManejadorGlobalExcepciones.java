@@ -128,6 +128,19 @@ public class ManejadorGlobalExcepciones extends ResponseEntityExceptionHandler {
     }
 
     /**
+     * Responde 429 cuando se superó un límite de intentos.
+     *
+     * @param ex      excepción con el mensaje para el usuario
+     * @param request petición que falló
+     * @return 429 con el mensaje de la excepción
+     */
+    @ExceptionHandler(DemasiadosIntentosException.class)
+    public ResponseEntity<ErrorResponse> manejarDemasiadosIntentos(DemasiadosIntentosException ex,
+            HttpServletRequest request) {
+        return responder(HttpStatus.TOO_MANY_REQUESTS, ex.getMessage(), request.getRequestURI());
+    }
+
+    /**
      * Traduce los errores de acceso a datos según el error de base de datos que los originó.
      *
      * @param ex      excepción de Spring Data, JPA o Hibernate
