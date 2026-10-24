@@ -8,6 +8,7 @@ Archivos de este directorio:
 |---|---|
 | `arquitectura-general.svg` / `.png` | Vista general: cliente, servidor (seguridad, capas, módulos) y base de datos |
 | `dependencias-modulos.svg` / `.png` | Matriz de dependencias entre módulos |
+| [`diagramas-codigo.md`](diagramas-codigo.md) | Diagramas Mermaid obtenidos del código: estructura de módulos y paquetes, capas y diagrama de clases del módulo `precio` |
 
 Los `.svg` se editan con cualquier editor de SVG (por ejemplo, Inkscape o draw.io). Los `.png` (a doble resolución, para el informe) se regeneran con `rsvg-convert -z 2 -o archivo.png archivo.svg`.
 
