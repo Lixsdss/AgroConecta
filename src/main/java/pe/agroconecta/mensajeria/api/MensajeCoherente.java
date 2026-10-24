@@ -19,12 +19,24 @@ import jakarta.validation.Payload;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface MensajeCoherente {
 
-    /** @return mensaje por defecto */
+    /**
+     * Devuelve el mensaje por defecto.
+     *
+     * @return mensaje por defecto
+     */
     String message() default "El mensaje no es válido.";
 
-    /** @return grupos de validación */
+    /**
+     * Devuelve los grupos de validación.
+     *
+     * @return grupos de validación
+     */
     Class<?>[] groups() default {};
 
-    /** @return carga útil */
+    /**
+     * Devuelve la carga útil.
+     *
+     * @return carga útil
+     */
     Class<? extends Payload>[] payload() default {};
 }

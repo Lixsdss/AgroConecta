@@ -61,57 +61,101 @@ public class PrecioVigente {
     protected PrecioVigente() {
     }
 
-    /** @return id del cultivo */
+    /**
+     * Devuelve el id del cultivo.
+     *
+     * @return id del cultivo
+     */
     public Integer getIdCultivo() {
         return idCultivo;
     }
 
-    /** @return id de la zona */
+    /**
+     * Devuelve el id de la zona.
+     *
+     * @return id de la zona
+     */
     public Integer getIdDistrito() {
         return idDistrito;
     }
 
-    /** @return nombre del cultivo */
+    /**
+     * Devuelve el nombre del cultivo.
+     *
+     * @return nombre del cultivo
+     */
     public String getCultivo() {
         return cultivo;
     }
 
-    /** @return nombre de la zona */
+    /**
+     * Devuelve el nombre de la zona.
+     *
+     * @return nombre de la zona
+     */
     public String getZona() {
         return zona;
     }
 
-    /** @return día del último precio */
+    /**
+     * Devuelve el día del último precio.
+     *
+     * @return día del último precio
+     */
     public LocalDate getFecha() {
         return fecha;
     }
 
-    /** @return soles por kilo */
+    /**
+     * Devuelve los soles por kilo.
+     *
+     * @return soles por kilo
+     */
     public BigDecimal getPrecioKg() {
         return precioKg;
     }
 
-    /** @return unidad local del cultivo */
+    /**
+     * Devuelve la unidad local del cultivo.
+     *
+     * @return unidad local del cultivo
+     */
     public String getUnidadLocal() {
         return unidadLocal;
     }
 
-    /** @return soles por unidad local, o {@code null} si no hay peso de referencia */
+    /**
+     * Devuelve los soles por unidad local, o {@code null} si no hay peso de referencia.
+     *
+     * @return soles por unidad local, o {@code null} si no hay peso de referencia
+     */
     public BigDecimal getPrecioUnidadLocal() {
         return precioUnidadLocal;
     }
 
-    /** @return SUBE, BAJA, IGUAL o SIN_DATO */
+    /**
+     * Devuelve SUBE, BAJA, IGUAL o SIN_DATO.
+     *
+     * @return SUBE, BAJA, IGUAL o SIN_DATO
+     */
     public String getTendencia() {
         return tendencia;
     }
 
-    /** @return fuente del precio */
+    /**
+     * Devuelve la fuente del precio.
+     *
+     * @return fuente del precio
+     */
     public String getFuente() {
         return fuente;
     }
 
-    /** @return última carga o edición */
+    /**
+     * Devuelve la última carga o edición.
+     *
+     * @return última carga o edición
+     */
     public LocalDateTime getActualizado() {
         return actualizado;
     }

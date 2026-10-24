@@ -37,27 +37,47 @@ public class VentaMensualCultivo {
     protected VentaMensualCultivo() {
     }
 
-    /** @return mes y cultivo */
+    /**
+     * Devuelve el mes y cultivo.
+     *
+     * @return mes y cultivo
+     */
     public VentaMensualCultivoId getId() {
         return id;
     }
 
-    /** @return nombre del cultivo */
+    /**
+     * Devuelve el nombre del cultivo.
+     *
+     * @return nombre del cultivo
+     */
     public String getCultivo() {
         return cultivo;
     }
 
-    /** @return ventas completadas */
+    /**
+     * Devuelve las ventas completadas.
+     *
+     * @return ventas completadas
+     */
     public Long getVentasCompletadas() {
         return ventasCompletadas;
     }
 
-    /** @return kilos vendidos */
+    /**
+     * Devuelve los kilos vendidos.
+     *
+     * @return kilos vendidos
+     */
     public BigDecimal getKilosVendidos() {
         return kilosVendidos;
     }
 
-    /** @return monto total en soles */
+    /**
+     * Devuelve el monto total en soles.
+     *
+     * @return monto total en soles
+     */
     public BigDecimal getMontoTotal() {
         return montoTotal;
     }

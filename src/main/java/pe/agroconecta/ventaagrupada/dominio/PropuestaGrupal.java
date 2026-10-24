@@ -89,47 +89,83 @@ public class PropuestaGrupal {
         this.estado = nuevo;
     }
 
-    /** @return id de la propuesta */
+    /**
+     * Devuelve el id de la propuesta.
+     *
+     * @return id de la propuesta
+     */
     public Long getId() {
         return id;
     }
 
-    /** @return comprador */
+    /**
+     * Devuelve el comprador.
+     *
+     * @return comprador
+     */
     public Long getIdComprador() {
         return idComprador;
     }
 
-    /** @return variedad del lote */
+    /**
+     * Devuelve la variedad del lote.
+     *
+     * @return variedad del lote
+     */
     public Integer getIdVariedad() {
         return idVariedad;
     }
 
-    /** @return distrito del lote */
+    /**
+     * Devuelve el distrito del lote.
+     *
+     * @return distrito del lote
+     */
     public Integer getIdDistrito() {
         return idDistrito;
     }
 
-    /** @return kilos pedidos */
+    /**
+     * Devuelve los kilos pedidos.
+     *
+     * @return kilos pedidos
+     */
     public BigDecimal getCantidadKg() {
         return cantidadKg;
     }
 
-    /** @return soles por kilo */
+    /**
+     * Devuelve los soles por kilo.
+     *
+     * @return soles por kilo
+     */
     public BigDecimal getPrecioKg() {
         return precioKg;
     }
 
-    /** @return día de recojo */
+    /**
+     * Devuelve el día de recojo.
+     *
+     * @return día de recojo
+     */
     public LocalDate getFechaRecojo() {
         return fechaRecojo;
     }
 
-    /** @return estado */
+    /**
+     * Devuelve el estado.
+     *
+     * @return estado
+     */
     public EstadoPropuesta getEstado() {
         return estado;
     }
 
-    /** @return fecha y hora de creación (la pone la base de datos) */
+    /**
+     * Devuelve la fecha y hora de creación (la pone la base de datos).
+     *
+     * @return fecha y hora de creación (la pone la base de datos)
+     */
     public LocalDateTime getFechaCreacion() {
         return fechaCreacion;
     }

@@ -102,52 +102,92 @@ public class PrecioMercado {
         this.idAdministrador = idAdministrador;
     }
 
-    /** @return id del precio */
+    /**
+     * Devuelve el id del precio.
+     *
+     * @return id del precio
+     */
     public Long getId() {
         return id;
     }
 
-    /** @return id del cultivo */
+    /**
+     * Devuelve el id del cultivo.
+     *
+     * @return id del cultivo
+     */
     public Integer getIdCultivo() {
         return idCultivo;
     }
 
-    /** @return id de la zona de precio */
+    /**
+     * Devuelve el id de la zona de precio.
+     *
+     * @return id de la zona de precio
+     */
     public Integer getIdDistrito() {
         return idDistrito;
     }
 
-    /** @return día del precio */
+    /**
+     * Devuelve el día del precio.
+     *
+     * @return día del precio
+     */
     public LocalDate getFecha() {
         return fecha;
     }
 
-    /** @return soles por kilo */
+    /**
+     * Devuelve los soles por kilo.
+     *
+     * @return soles por kilo
+     */
     public BigDecimal getPrecioKg() {
         return precioKg;
     }
 
-    /** @return fuente */
+    /**
+     * Devuelve la fuente.
+     *
+     * @return fuente
+     */
     public FuentePrecio getFuente() {
         return fuente;
     }
 
-    /** @return método de carga */
+    /**
+     * Devuelve el método de carga.
+     *
+     * @return método de carga
+     */
     public MetodoCarga getMetodo() {
         return metodo;
     }
 
-    /** @return id del administrador responsable */
+    /**
+     * Devuelve el id del administrador responsable.
+     *
+     * @return id del administrador responsable
+     */
     public Long getIdAdministrador() {
         return idAdministrador;
     }
 
-    /** @return fecha y hora de registro (la fija la base de datos) */
+    /**
+     * Devuelve la fecha y hora de registro (la fija la base de datos).
+     *
+     * @return fecha y hora de registro (la fija la base de datos)
+     */
     public LocalDateTime getFechaRegistro() {
         return fechaRegistro;
     }
 
-    /** @return fecha y hora de la última edición, o {@code null} */
+    /**
+     * Devuelve la fecha y hora de la última edición, o {@code null}.
+     *
+     * @return fecha y hora de la última edición, o {@code null}
+     */
     public LocalDateTime getFechaActualizacion() {
         return fechaActualizacion;
     }

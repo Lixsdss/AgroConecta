@@ -67,32 +67,56 @@ public class Conversacion {
         clicsWhatsapp++;
     }
 
-    /** @return id de la conversación */
+    /**
+     * Devuelve el id de la conversación.
+     *
+     * @return id de la conversación
+     */
     public Long getId() {
         return id;
     }
 
-    /** @return id de la publicación */
+    /**
+     * Devuelve el id de la publicación.
+     *
+     * @return id de la publicación
+     */
     public Long getIdPublicacion() {
         return idPublicacion;
     }
 
-    /** @return id del comprador */
+    /**
+     * Devuelve el id del comprador.
+     *
+     * @return id del comprador
+     */
     public Long getIdComprador() {
         return idComprador;
     }
 
-    /** @return canal por el que empezó */
+    /**
+     * Devuelve el canal por el que empezó.
+     *
+     * @return canal por el que empezó
+     */
     public CanalInicio getCanalInicio() {
         return canalInicio;
     }
 
-    /** @return clics en "WhatsApp" */
+    /**
+     * Devuelve los clics en "WhatsApp".
+     *
+     * @return clics en "WhatsApp"
+     */
     public int getClicsWhatsapp() {
         return clicsWhatsapp;
     }
 
-    /** @return fecha y hora de inicio (la pone la base de datos) */
+    /**
+     * Devuelve la fecha y hora de inicio (la pone la base de datos).
+     *
+     * @return fecha y hora de inicio (la pone la base de datos)
+     */
     public LocalDateTime getFechaInicio() {
         return fechaInicio;
     }

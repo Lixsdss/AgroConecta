@@ -45,37 +45,65 @@ public class ConversionPublicacion {
     protected ConversionPublicacion() {
     }
 
-    /** @return publicación */
+    /**
+     * Devuelve la publicación.
+     *
+     * @return publicación
+     */
     public Long getIdPublicacion() {
         return idPublicacion;
     }
 
-    /** @return agricultor */
+    /**
+     * Devuelve el agricultor.
+     *
+     * @return agricultor
+     */
     public Long getIdAgricultor() {
         return idAgricultor;
     }
 
-    /** @return clics en el botón de WhatsApp */
+    /**
+     * Devuelve los clics en el botón de WhatsApp.
+     *
+     * @return clics en el botón de WhatsApp
+     */
     public BigDecimal getClicsWhatsapp() {
         return clicsWhatsapp;
     }
 
-    /** @return conversaciones abiertas */
+    /**
+     * Devuelve las conversaciones abiertas.
+     *
+     * @return conversaciones abiertas
+     */
     public Long getContactos() {
         return contactos;
     }
 
-    /** @return mensajes OFERTA */
+    /**
+     * Devuelve los mensajes OFERTA.
+     *
+     * @return mensajes OFERTA
+     */
     public Long getOfertas() {
         return ofertas;
     }
 
-    /** @return ventas que llegaron a acordarse y siguen en curso o terminaron */
+    /**
+     * Devuelve las ventas que llegaron a acordarse y siguen en curso o terminaron.
+     *
+     * @return ventas que llegaron a acordarse y siguen en curso o terminaron
+     */
     public Long getAcuerdos() {
         return acuerdos;
     }
 
-    /** @return ventas COMPLETADA */
+    /**
+     * Devuelve las ventas COMPLETADA.
+     *
+     * @return ventas COMPLETADA
+     */
     public Long getCompletadas() {
         return completadas;
     }

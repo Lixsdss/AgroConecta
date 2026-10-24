@@ -91,52 +91,92 @@ public class Reclamo {
         this.respuesta = respuesta;
     }
 
-    /** @return id del reclamo */
+    /**
+     * Devuelve el id del reclamo.
+     *
+     * @return id del reclamo
+     */
     public Long getId() {
         return id;
     }
 
-    /** @return venta reclamada */
+    /**
+     * Devuelve la venta reclamada.
+     *
+     * @return venta reclamada
+     */
     public Long getIdTransaccion() {
         return idTransaccion;
     }
 
-    /** @return parte que reclama */
+    /**
+     * Devuelve la parte que reclama.
+     *
+     * @return parte que reclama
+     */
     public Long getIdReclamante() {
         return idReclamante;
     }
 
-    /** @return motivo */
+    /**
+     * Devuelve el motivo.
+     *
+     * @return motivo
+     */
     public MotivoReclamo getMotivo() {
         return motivo;
     }
 
-    /** @return descripción */
+    /**
+     * Devuelve la descripción.
+     *
+     * @return descripción
+     */
     public String getDescripcion() {
         return descripcion;
     }
 
-    /** @return estado */
+    /**
+     * Devuelve el estado.
+     *
+     * @return estado
+     */
     public EstadoReclamo getEstado() {
         return estado;
     }
 
-    /** @return administrador que resolvió, o {@code null} */
+    /**
+     * Devuelve el administrador que resolvió, o {@code null}.
+     *
+     * @return administrador que resolvió, o {@code null}
+     */
     public Long getIdAdministrador() {
         return idAdministrador;
     }
 
-    /** @return respuesta, o {@code null} */
+    /**
+     * Devuelve la respuesta, o {@code null}.
+     *
+     * @return respuesta, o {@code null}
+     */
     public String getRespuesta() {
         return respuesta;
     }
 
-    /** @return fecha y hora de registro */
+    /**
+     * Devuelve la fecha y hora de registro.
+     *
+     * @return fecha y hora de registro
+     */
     public LocalDateTime getFechaRegistro() {
         return fechaRegistro;
     }
 
-    /** @return fecha y hora de resolución, o {@code null} */
+    /**
+     * Devuelve la fecha y hora de resolución, o {@code null}.
+     *
+     * @return fecha y hora de resolución, o {@code null}
+     */
     public LocalDateTime getFechaResolucion() {
         return fechaResolucion;
     }

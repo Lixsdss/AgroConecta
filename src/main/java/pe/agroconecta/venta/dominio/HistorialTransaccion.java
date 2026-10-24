@@ -44,27 +44,47 @@ public class HistorialTransaccion {
     protected HistorialTransaccion() {
     }
 
-    /** @return id del paso */
+    /**
+     * Devuelve el id del paso.
+     *
+     * @return id del paso
+     */
     public Long getId() {
         return id;
     }
 
-    /** @return venta */
+    /**
+     * Devuelve la venta.
+     *
+     * @return venta
+     */
     public Long getIdTransaccion() {
         return idTransaccion;
     }
 
-    /** @return estado al que pasó */
+    /**
+     * Devuelve el estado al que pasó.
+     *
+     * @return estado al que pasó
+     */
     public EstadoTransaccion getEstado() {
         return estado;
     }
 
-    /** @return autor ({@code null}: proceso automático) */
+    /**
+     * Devuelve el autor ({@code null}: proceso automático).
+     *
+     * @return autor ({@code null}: proceso automático)
+     */
     public Long getIdUsuario() {
         return idUsuario;
     }
 
-    /** @return fecha y hora */
+    /**
+     * Devuelve la fecha y hora.
+     *
+     * @return fecha y hora
+     */
     public LocalDateTime getFecha() {
         return fecha;
     }

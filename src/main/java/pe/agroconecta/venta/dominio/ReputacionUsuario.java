@@ -32,17 +32,29 @@ public class ReputacionUsuario {
     protected ReputacionUsuario() {
     }
 
-    /** @return id del usuario */
+    /**
+     * Devuelve el id del usuario.
+     *
+     * @return id del usuario
+     */
     public Long getIdUsuario() {
         return idUsuario;
     }
 
-    /** @return cantidad de calificaciones recibidas */
+    /**
+     * Devuelve la cantidad de calificaciones recibidas.
+     *
+     * @return cantidad de calificaciones recibidas
+     */
     public Long getTotal() {
         return total;
     }
 
-    /** @return promedio de estrellas, con un decimal */
+    /**
+     * Devuelve el promedio de estrellas, con un decimal.
+     *
+     * @return promedio de estrellas, con un decimal
+     */
     public BigDecimal getPromedio() {
         return promedio;
     }

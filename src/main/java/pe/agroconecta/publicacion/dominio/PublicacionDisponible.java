@@ -111,132 +111,236 @@ public class PublicacionDisponible {
     protected PublicacionDisponible() {
     }
 
-    /** @return id de la publicación */
+    /**
+     * Devuelve el id de la publicación.
+     *
+     * @return id de la publicación
+     */
     public Long getId() {
         return id;
     }
 
-    /** @return id del agricultor */
+    /**
+     * Devuelve el id del agricultor.
+     *
+     * @return id del agricultor
+     */
     public Long getIdAgricultor() {
         return idAgricultor;
     }
 
-    /** @return nombre completo del agricultor */
+    /**
+     * Devuelve el nombre completo del agricultor.
+     *
+     * @return nombre completo del agricultor
+     */
     public String getAgricultor() {
         return agricultor;
     }
 
-    /** @return promedio de calificaciones del agricultor (1 a 5), o {@code null} si no tiene */
+    /**
+     * Devuelve el promedio de calificaciones del agricultor (1 a 5), o {@code null} si no tiene.
+     *
+     * @return promedio de calificaciones del agricultor (1 a 5), o {@code null} si no tiene
+     */
     public BigDecimal getCalificacionAgricultor() {
         return calificacionAgricultor;
     }
 
-    /** @return id del cultivo */
+    /**
+     * Devuelve el id del cultivo.
+     *
+     * @return id del cultivo
+     */
     public Integer getIdCultivo() {
         return idCultivo;
     }
 
-    /** @return nombre del cultivo */
+    /**
+     * Devuelve el nombre del cultivo.
+     *
+     * @return nombre del cultivo
+     */
     public String getCultivo() {
         return cultivo;
     }
 
-    /** @return id de la variedad */
+    /**
+     * Devuelve el id de la variedad.
+     *
+     * @return id de la variedad
+     */
     public Integer getIdVariedad() {
         return idVariedad;
     }
 
-    /** @return nombre de la variedad */
+    /**
+     * Devuelve el nombre de la variedad.
+     *
+     * @return nombre de la variedad
+     */
     public String getVariedad() {
         return variedad;
     }
 
-    /** @return id del distrito */
+    /**
+     * Devuelve el id del distrito.
+     *
+     * @return id del distrito
+     */
     public Integer getIdDistrito() {
         return idDistrito;
     }
 
-    /** @return nombre del distrito */
+    /**
+     * Devuelve el nombre del distrito.
+     *
+     * @return nombre del distrito
+     */
     public String getDistrito() {
         return distrito;
     }
 
-    /** @return id de la provincia */
+    /**
+     * Devuelve el id de la provincia.
+     *
+     * @return id de la provincia
+     */
     public Integer getIdProvincia() {
         return idProvincia;
     }
 
-    /** @return nombre de la provincia */
+    /**
+     * Devuelve el nombre de la provincia.
+     *
+     * @return nombre de la provincia
+     */
     public String getProvincia() {
         return provincia;
     }
 
-    /** @return id de la unidad */
+    /**
+     * Devuelve el id de la unidad.
+     *
+     * @return id de la unidad
+     */
     public Integer getIdUnidad() {
         return idUnidad;
     }
 
-    /** @return nombre de la unidad en plural */
+    /**
+     * Devuelve el nombre de la unidad en plural.
+     *
+     * @return nombre de la unidad en plural
+     */
     public String getUnidadPlural() {
         return unidadPlural;
     }
 
-    /** @return cantidad publicada en la unidad elegida */
+    /**
+     * Devuelve la cantidad publicada en la unidad elegida.
+     *
+     * @return cantidad publicada en la unidad elegida
+     */
     public BigDecimal getCantidad() {
         return cantidad;
     }
 
-    /** @return kilos por unidad */
+    /**
+     * Devuelve los kilos por unidad.
+     *
+     * @return kilos por unidad
+     */
     public BigDecimal getPesoUnidadKg() {
         return pesoUnidadKg;
     }
 
-    /** @return soles por unidad */
+    /**
+     * Devuelve los soles por unidad.
+     *
+     * @return soles por unidad
+     */
     public BigDecimal getPrecioUnitario() {
         return precioUnitario;
     }
 
-    /** @return soles por kilo */
+    /**
+     * Devuelve los soles por kilo.
+     *
+     * @return soles por kilo
+     */
     public BigDecimal getPrecioKg() {
         return precioKg;
     }
 
-    /** @return kilos publicados */
+    /**
+     * Devuelve los kilos publicados.
+     *
+     * @return kilos publicados
+     */
     public BigDecimal getCantidadKg() {
         return cantidadKg;
     }
 
-    /** @return kilos aún no comprometidos en ventas */
+    /**
+     * Devuelve los kilos aún no comprometidos en ventas.
+     *
+     * @return kilos aún no comprometidos en ventas
+     */
     public BigDecimal getDisponibleKg() {
         return disponibleKg;
     }
 
-    /** @return fecha de cosecha */
+    /**
+     * Devuelve la fecha de cosecha.
+     *
+     * @return fecha de cosecha
+     */
     public LocalDate getFechaCosecha() {
         return fechaCosecha;
     }
 
-    /** @return fecha límite de venta */
+    /**
+     * Devuelve la fecha límite de venta.
+     *
+     * @return fecha límite de venta
+     */
     public LocalDate getFechaLimite() {
         return fechaLimite;
     }
 
-    /** @return días que faltan para la fecha límite */
+    /**
+     * Devuelve los días que faltan para la fecha límite.
+     *
+     * @return días que faltan para la fecha límite
+     */
     public Integer getDiasRestantes() {
         return diasRestantes;
     }
 
-    /** @return {@code true} si está PUBLICADA y faltan 3 días o menos */
+    /**
+     * Devuelve {@code true} si está PUBLICADA y faltan 3 días o menos.
+     *
+     * @return {@code true} si está PUBLICADA y faltan 3 días o menos
+     */
     public boolean isPorVencer() {
         return porVencer != null && porVencer != 0;
     }
 
-    /** @return estado de la publicación */
+    /**
+     * Devuelve el estado de la publicación.
+     *
+     * @return estado de la publicación
+     */
     public EstadoPublicacion getEstado() {
         return estado;
     }
 
-    /** @return fecha y hora de publicación */
+    /**
+     * Devuelve la fecha y hora de publicación.
+     *
+     * @return fecha y hora de publicación
+     */
     public LocalDateTime getFechaPublicacion() {
         return fechaPublicacion;
     }

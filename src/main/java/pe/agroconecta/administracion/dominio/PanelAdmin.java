@@ -50,47 +50,83 @@ public class PanelAdmin {
     protected PanelAdmin() {
     }
 
-    /** @return publicaciones PUBLICADA */
+    /**
+     * Devuelve las publicaciones PUBLICADA.
+     *
+     * @return publicaciones PUBLICADA
+     */
     public Long getPublicacionesActivas() {
         return publicacionesActivas;
     }
 
-    /** @return publicadas en los últimos 7 días que siguen PUBLICADA */
+    /**
+     * Devuelve las publicadas en los últimos 7 días que siguen PUBLICADA.
+     *
+     * @return publicadas en los últimos 7 días que siguen PUBLICADA
+     */
     public Long getPublicadasUltimos7Dias() {
         return publicadasUltimos7Dias;
     }
 
-    /** @return publicaciones en la cola "Por revisar" */
+    /**
+     * Devuelve las publicaciones en la cola "Por revisar".
+     *
+     * @return publicaciones en la cola "Por revisar"
+     */
     public Long getPorRevisar() {
         return porRevisar;
     }
 
-    /** @return publicación más antigua de la cola, o {@code null} */
+    /**
+     * Devuelve la publicación más antigua de la cola, o {@code null}.
+     *
+     * @return publicación más antigua de la cola, o {@code null}
+     */
     public LocalDateTime getPorRevisarMasAntigua() {
         return porRevisarMasAntigua;
     }
 
-    /** @return decisiones CONFORME de hoy */
+    /**
+     * Devuelve las decisiones CONFORME de hoy.
+     *
+     * @return decisiones CONFORME de hoy
+     */
     public Long getConformesHoy() {
         return conformesHoy;
     }
 
-    /** @return decisiones BLOQUEO de hoy */
+    /**
+     * Devuelve las decisiones BLOQUEO de hoy.
+     *
+     * @return decisiones BLOQUEO de hoy
+     */
     public Long getBloqueadasHoy() {
         return bloqueadasHoy;
     }
 
-    /** @return precios de referencia cargados hoy */
+    /**
+     * Devuelve los precios de referencia cargados hoy.
+     *
+     * @return precios de referencia cargados hoy
+     */
     public Long getPreciosCargadosHoy() {
         return preciosCargadosHoy;
     }
 
-    /** @return precios esperados hoy (cultivos activos × zonas de precio) */
+    /**
+     * Devuelve los precios esperados hoy (cultivos activos × zonas de precio).
+     *
+     * @return precios esperados hoy (cultivos activos × zonas de precio)
+     */
     public Long getPreciosEsperadosHoy() {
         return preciosEsperadosHoy;
     }
 
-    /** @return reclamos PENDIENTE */
+    /**
+     * Devuelve las reclamos PENDIENTE.
+     *
+     * @return reclamos PENDIENTE
+     */
     public Long getReclamosPendientes() {
         return reclamosPendientes;
     }

@@ -28,7 +28,11 @@ public record PublicacionResumenDto(Long id, Long idAgricultor, String agriculto
         BigDecimal precioUnitario, BigDecimal precioKg, BigDecimal disponibleKg, BigDecimal unidadesDisponibles,
         Integer diasRestantes, Integer idUnidad) {
 
-    /** @return {@code true} si la publicación está PUBLICADA */
+    /**
+     * Devuelve {@code true} si la publicación está PUBLICADA.
+     *
+     * @return {@code true} si la publicación está PUBLICADA
+     */
     public boolean estaPublicada() {
         return "PUBLICADA".equals(estado);
     }

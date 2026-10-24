@@ -31,7 +31,11 @@ public enum EstadoTransaccion {
     /** Estados finales: la venta ya no se modifica ("Terminadas"). */
     public static final Set<EstadoTransaccion> TERMINADAS = EnumSet.of(COMPLETADA, RECHAZADA, CANCELADA);
 
-    /** @return {@code true} si la venta ya no se modifica */
+    /**
+     * Devuelve {@code true} si la venta ya no se modifica.
+     *
+     * @return {@code true} si la venta ya no se modifica
+     */
     public boolean esFinal() {
         return TERMINADAS.contains(this);
     }

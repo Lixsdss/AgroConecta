@@ -37,7 +37,11 @@ public record VentaParaAdministracionDto(Long id, Long idComprador, String compr
         return idUsuario == idComprador || idUsuario == idAgricultor;
     }
 
-    /** @return "Mango Kent" (sin repetir "Común") */
+    /**
+     * Devuelve "Mango Kent" (sin repetir "Común").
+     *
+     * @return "Mango Kent" (sin repetir "Común")
+     */
     public String producto() {
         return "Común".equals(variedad) ? cultivo + " común" : cultivo + " " + variedad;
     }

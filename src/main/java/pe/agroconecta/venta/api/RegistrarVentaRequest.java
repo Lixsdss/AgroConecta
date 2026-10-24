@@ -37,7 +37,11 @@ public record RegistrarVentaRequest(
         @NotNull(message = "Indique el día de recojo.")
         @FutureOrPresent(message = "El día de recojo no puede ser anterior a hoy.") LocalDate fechaRecojo) {
 
-    /** @return los datos para el servicio */
+    /**
+     * Devuelve los datos para el servicio.
+     *
+     * @return los datos para el servicio
+     */
     public NuevaVentaDto aDto() {
         return new NuevaVentaDto(idConversacion, idUnidad, cantidad, pesoUnidadKg, precioUnitario, fechaRecojo);
     }

@@ -31,7 +31,11 @@ public record EnviarMensajeRequest(
         @Digits(integer = 8, fraction = 2, message = "El precio puede tener hasta 2 decimales.")
         BigDecimal ofertaPrecioUnitario) {
 
-    /** @return los datos para el servicio */
+    /**
+     * Devuelve los datos para el servicio.
+     *
+     * @return los datos para el servicio
+     */
     public NuevoMensajeDto aDto() {
         return new NuevoMensajeDto(tipo, contenido, ofertaCantidad, ofertaPrecioUnitario);
     }

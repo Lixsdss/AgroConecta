@@ -173,82 +173,146 @@ public class Publicacion {
         this.precioUnitario = precioUnitario;
     }
 
-    /** @return id de la publicación */
+    /**
+     * Devuelve el id de la publicación.
+     *
+     * @return id de la publicación
+     */
     public Long getId() {
         return id;
     }
 
-    /** @return id del agricultor */
+    /**
+     * Devuelve el id del agricultor.
+     *
+     * @return id del agricultor
+     */
     public Long getIdAgricultor() {
         return idAgricultor;
     }
 
-    /** @return id de la variedad */
+    /**
+     * Devuelve el id de la variedad.
+     *
+     * @return id de la variedad
+     */
     public Integer getIdVariedad() {
         return idVariedad;
     }
 
-    /** @return id del distrito */
+    /**
+     * Devuelve el id del distrito.
+     *
+     * @return id del distrito
+     */
     public Integer getIdDistrito() {
         return idDistrito;
     }
 
-    /** @return id de la unidad */
+    /**
+     * Devuelve el id de la unidad.
+     *
+     * @return id de la unidad
+     */
     public Integer getIdUnidad() {
         return idUnidad;
     }
 
-    /** @return cantidad en la unidad elegida */
+    /**
+     * Devuelve la cantidad en la unidad elegida.
+     *
+     * @return cantidad en la unidad elegida
+     */
     public BigDecimal getCantidad() {
         return cantidad;
     }
 
-    /** @return kilos por unidad */
+    /**
+     * Devuelve los kilos por unidad.
+     *
+     * @return kilos por unidad
+     */
     public BigDecimal getPesoUnidadKg() {
         return pesoUnidadKg;
     }
 
-    /** @return soles por unidad */
+    /**
+     * Devuelve los soles por unidad.
+     *
+     * @return soles por unidad
+     */
     public BigDecimal getPrecioUnitario() {
         return precioUnitario;
     }
 
-    /** @return kilos totales (columna generada) */
+    /**
+     * Devuelve los kilos totales (columna generada).
+     *
+     * @return kilos totales (columna generada)
+     */
     public BigDecimal getCantidadKg() {
         return cantidadKg;
     }
 
-    /** @return soles por kilo (columna generada) */
+    /**
+     * Devuelve los soles por kilo (columna generada).
+     *
+     * @return soles por kilo (columna generada)
+     */
     public BigDecimal getPrecioKg() {
         return precioKg;
     }
 
-    /** @return fecha de cosecha */
+    /**
+     * Devuelve la fecha de cosecha.
+     *
+     * @return fecha de cosecha
+     */
     public LocalDate getFechaCosecha() {
         return fechaCosecha;
     }
 
-    /** @return fecha límite de venta */
+    /**
+     * Devuelve la fecha límite de venta.
+     *
+     * @return fecha límite de venta
+     */
     public LocalDate getFechaLimite() {
         return fechaLimite;
     }
 
-    /** @return estado */
+    /**
+     * Devuelve el estado.
+     *
+     * @return estado
+     */
     public EstadoPublicacion getEstado() {
         return estado;
     }
 
-    /** @return marca de la cola de moderación, o {@code null} */
+    /**
+     * Devuelve la marca de la cola de moderación, o {@code null}.
+     *
+     * @return marca de la cola de moderación, o {@code null}
+     */
     public MarcaRevision getMarcaRevision() {
         return marcaRevision;
     }
 
-    /** @return fecha y hora de publicación (la fija la base de datos) */
+    /**
+     * Devuelve la fecha y hora de publicación (la fija la base de datos).
+     *
+     * @return fecha y hora de publicación (la fija la base de datos)
+     */
     public LocalDateTime getFechaPublicacion() {
         return fechaPublicacion;
     }
 
-    /** @return fecha y hora del último cambio, o {@code null} */
+    /**
+     * Devuelve la fecha y hora del último cambio, o {@code null}.
+     *
+     * @return fecha y hora del último cambio, o {@code null}
+     */
     public LocalDateTime getFechaActualizacion() {
         return fechaActualizacion;
     }

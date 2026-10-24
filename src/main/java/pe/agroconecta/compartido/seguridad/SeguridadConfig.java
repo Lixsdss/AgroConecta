@@ -29,6 +29,10 @@ public class SeguridadConfig {
 
     private static final String[] DOCUMENTACION_API = {"/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html"};
 
+    /** Crea la configuración de seguridad. */
+    public SeguridadConfig() {
+    }
+
     /**
      * Cadena de filtros de seguridad.
      *

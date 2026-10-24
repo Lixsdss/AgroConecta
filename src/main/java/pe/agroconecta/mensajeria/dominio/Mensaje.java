@@ -95,47 +95,83 @@ public class Mensaje {
         return new Mensaje(idConversacion, idRemitente, TipoMensaje.OFERTA, null, cantidad, precioUnitario);
     }
 
-    /** @return id del mensaje */
+    /**
+     * Devuelve el id del mensaje.
+     *
+     * @return id del mensaje
+     */
     public Long getId() {
         return id;
     }
 
-    /** @return id de la conversación */
+    /**
+     * Devuelve el id de la conversación.
+     *
+     * @return id de la conversación
+     */
     public Long getIdConversacion() {
         return idConversacion;
     }
 
-    /** @return id de quien lo envió */
+    /**
+     * Devuelve el id de quien lo envió.
+     *
+     * @return id de quien lo envió
+     */
     public Long getIdRemitente() {
         return idRemitente;
     }
 
-    /** @return tipo de mensaje */
+    /**
+     * Devuelve el tipo de mensaje.
+     *
+     * @return tipo de mensaje
+     */
     public TipoMensaje getTipo() {
         return tipo;
     }
 
-    /** @return texto (solo TEXTO) */
+    /**
+     * Devuelve el texto (solo TEXTO).
+     *
+     * @return texto (solo TEXTO)
+     */
     public String getContenido() {
         return contenido;
     }
 
-    /** @return cantidad ofertada (solo OFERTA) */
+    /**
+     * Devuelve la cantidad ofertada (solo OFERTA).
+     *
+     * @return cantidad ofertada (solo OFERTA)
+     */
     public BigDecimal getOfertaCantidad() {
         return ofertaCantidad;
     }
 
-    /** @return precio por unidad ofertado (solo OFERTA) */
+    /**
+     * Devuelve el precio por unidad ofertado (solo OFERTA).
+     *
+     * @return precio por unidad ofertado (solo OFERTA)
+     */
     public BigDecimal getOfertaPrecioUnitario() {
         return ofertaPrecioUnitario;
     }
 
-    /** @return {@code true} si la otra parte ya lo leyó */
+    /**
+     * Devuelve {@code true} si la otra parte ya lo leyó.
+     *
+     * @return {@code true} si la otra parte ya lo leyó
+     */
     public boolean isLeido() {
         return leido;
     }
 
-    /** @return fecha y hora de envío (la pone la base de datos) */
+    /**
+     * Devuelve la fecha y hora de envío (la pone la base de datos).
+     *
+     * @return fecha y hora de envío (la pone la base de datos)
+     */
     public LocalDateTime getFechaEnvio() {
         return fechaEnvio;
     }

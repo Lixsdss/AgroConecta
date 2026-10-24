@@ -67,37 +67,65 @@ public class Suspension {
         this.detalle = detalle;
     }
 
-    /** @return id de la suspensión */
+    /**
+     * Devuelve el id de la suspensión.
+     *
+     * @return id de la suspensión
+     */
     public Long getId() {
         return id;
     }
 
-    /** @return usuario suspendido */
+    /**
+     * Devuelve el usuario suspendido.
+     *
+     * @return usuario suspendido
+     */
     public Long getIdUsuario() {
         return idUsuario;
     }
 
-    /** @return administrador que suspendió */
+    /**
+     * Devuelve el administrador que suspendió.
+     *
+     * @return administrador que suspendió
+     */
     public Long getIdAdministrador() {
         return idAdministrador;
     }
 
-    /** @return motivo */
+    /**
+     * Devuelve el motivo.
+     *
+     * @return motivo
+     */
     public MotivoSuspension getMotivo() {
         return motivo;
     }
 
-    /** @return justificación */
+    /**
+     * Devuelve la justificación.
+     *
+     * @return justificación
+     */
     public String getDetalle() {
         return detalle;
     }
 
-    /** @return inicio de la suspensión */
+    /**
+     * Devuelve el inicio de la suspensión.
+     *
+     * @return inicio de la suspensión
+     */
     public LocalDateTime getFechaInicio() {
         return fechaInicio;
     }
 
-    /** @return fecha de reactivación, o {@code null} si sigue vigente */
+    /**
+     * Devuelve la fecha de reactivación, o {@code null} si sigue vigente.
+     *
+     * @return fecha de reactivación, o {@code null} si sigue vigente
+     */
     public LocalDateTime getFechaFin() {
         return fechaFin;
     }

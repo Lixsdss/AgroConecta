@@ -18,6 +18,10 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 @Profile("dev")
 public class CorsConfig {
 
+    /** Crea la configuración de CORS. */
+    public CorsConfig() {
+    }
+
     /**
      * Orígenes permitidos para la API en desarrollo.
      *

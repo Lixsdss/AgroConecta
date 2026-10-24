@@ -8,7 +8,9 @@ import java.util.Objects;
  */
 public class ClaveLote implements Serializable {
 
+    /** Id de la variedad. */
     private Integer idVariedad;
+    /** Id del distrito. */
     private Integer idDistrito;
 
     /** Constructor requerido por JPA. */
@@ -38,7 +40,11 @@ public class ClaveLote implements Serializable {
                 && Objects.equals(idDistrito, c.idDistrito);
     }
 
-    /** @return código hash de la variedad y el distrito */
+    /**
+     * Devuelve el código hash de la variedad y el distrito.
+     *
+     * @return código hash de la variedad y el distrito
+     */
     @Override
     public int hashCode() {
         return Objects.hash(idVariedad, idDistrito);

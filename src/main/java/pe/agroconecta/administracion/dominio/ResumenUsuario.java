@@ -73,77 +73,137 @@ public class ResumenUsuario {
     protected ResumenUsuario() {
     }
 
-    /** @return id del usuario */
+    /**
+     * Devuelve el id del usuario.
+     *
+     * @return id del usuario
+     */
     public Long getId() {
         return id;
     }
 
-    /** @return rol */
+    /**
+     * Devuelve el rol.
+     *
+     * @return rol
+     */
     public String getRol() {
         return rol;
     }
 
-    /** @return nombre completo */
+    /**
+     * Devuelve el nombre completo.
+     *
+     * @return nombre completo
+     */
     public String getNombreCompleto() {
         return nombreCompleto;
     }
 
-    /** @return chacra (agricultor), o {@code null} */
+    /**
+     * Devuelve la chacra (agricultor), o {@code null}.
+     *
+     * @return chacra (agricultor), o {@code null}
+     */
     public String getNombreChacra() {
         return nombreChacra;
     }
 
-    /** @return negocio (comprador), o {@code null} */
+    /**
+     * Devuelve el negocio (comprador), o {@code null}.
+     *
+     * @return negocio (comprador), o {@code null}
+     */
     public String getNombreNegocio() {
         return nombreNegocio;
     }
 
-    /** @return tipo de comprador, o {@code null} */
+    /**
+     * Devuelve el tipo de comprador, o {@code null}.
+     *
+     * @return tipo de comprador, o {@code null}
+     */
     public String getTipoComprador() {
         return tipoComprador;
     }
 
-    /** @return celular */
+    /**
+     * Devuelve el celular.
+     *
+     * @return celular
+     */
     public String getCelular() {
         return celular;
     }
 
-    /** @return distrito */
+    /**
+     * Devuelve el distrito.
+     *
+     * @return distrito
+     */
     public String getDistrito() {
         return distrito;
     }
 
-    /** @return estado */
+    /**
+     * Devuelve el estado.
+     *
+     * @return estado
+     */
     public String getEstado() {
         return estado;
     }
 
-    /** @return motivo de la suspensión vigente, o {@code null} */
+    /**
+     * Devuelve el motivo de la suspensión vigente, o {@code null}.
+     *
+     * @return motivo de la suspensión vigente, o {@code null}
+     */
     public String getMotivoSuspension() {
         return motivoSuspension;
     }
 
-    /** @return ventas COMPLETADA en las que participó */
+    /**
+     * Devuelve las ventas COMPLETADA en las que participó.
+     *
+     * @return ventas COMPLETADA en las que participó
+     */
     public Long getOperacionesCompletadas() {
         return operacionesCompletadas;
     }
 
-    /** @return promedio de estrellas, o {@code null} sin calificaciones */
+    /**
+     * Devuelve el promedio de estrellas, o {@code null} sin calificaciones.
+     *
+     * @return promedio de estrellas, o {@code null} sin calificaciones
+     */
     public BigDecimal getPromedioPuntuacion() {
         return promedioPuntuacion;
     }
 
-    /** @return calificaciones recibidas */
+    /**
+     * Devuelve las calificaciones recibidas.
+     *
+     * @return calificaciones recibidas
+     */
     public Long getTotalCalificaciones() {
         return totalCalificaciones;
     }
 
-    /** @return reclamos FUNDADO en su contra */
+    /**
+     * Devuelve las reclamos FUNDADO en su contra.
+     *
+     * @return reclamos FUNDADO en su contra
+     */
     public Long getReclamosFundados() {
         return reclamosFundados;
     }
 
-    /** @return fecha de registro */
+    /**
+     * Devuelve la fecha de registro.
+     *
+     * @return fecha de registro
+     */
     public LocalDateTime getFechaRegistro() {
         return fechaRegistro;
     }

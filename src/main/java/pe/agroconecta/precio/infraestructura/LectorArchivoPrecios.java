@@ -42,6 +42,10 @@ public class LectorArchivoPrecios {
 
     private static final DateTimeFormatter ISO = DateTimeFormatter.ISO_LOCAL_DATE;
 
+    /** Crea el lector. */
+    public LectorArchivoPrecios() {
+    }
+
     /**
      * Lee las filas de datos del archivo, saltando las vacías.
      *

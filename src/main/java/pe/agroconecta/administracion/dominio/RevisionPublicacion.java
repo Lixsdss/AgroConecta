@@ -73,37 +73,65 @@ public class RevisionPublicacion {
         this.mensaje = mensaje;
     }
 
-    /** @return id de la revisión */
+    /**
+     * Devuelve el id de la revisión.
+     *
+     * @return id de la revisión
+     */
     public Long getId() {
         return id;
     }
 
-    /** @return id de la publicación */
+    /**
+     * Devuelve el id de la publicación.
+     *
+     * @return id de la publicación
+     */
     public Long getIdPublicacion() {
         return idPublicacion;
     }
 
-    /** @return id del administrador */
+    /**
+     * Devuelve el id del administrador.
+     *
+     * @return id del administrador
+     */
     public Long getIdAdministrador() {
         return idAdministrador;
     }
 
-    /** @return decisión */
+    /**
+     * Devuelve la decisión.
+     *
+     * @return decisión
+     */
     public DecisionModeracion getDecision() {
         return decision;
     }
 
-    /** @return motivo, o {@code null} */
+    /**
+     * Devuelve el motivo, o {@code null}.
+     *
+     * @return motivo, o {@code null}
+     */
     public MotivoModeracion getMotivo() {
         return motivo;
     }
 
-    /** @return mensaje al agricultor, o {@code null} */
+    /**
+     * Devuelve el mensaje al agricultor, o {@code null}.
+     *
+     * @return mensaje al agricultor, o {@code null}
+     */
     public String getMensaje() {
         return mensaje;
     }
 
-    /** @return fecha y hora de la decisión (la fija la base de datos) */
+    /**
+     * Devuelve la fecha y hora de la decisión (la fija la base de datos).
+     *
+     * @return fecha y hora de la decisión (la fija la base de datos)
+     */
     public LocalDateTime getFecha() {
         return fecha;
     }

@@ -64,6 +64,10 @@ public class ManejadorGlobalExcepciones extends ResponseEntityExceptionHandler {
     static final String MENSAJE_CHECK = "Los datos no cumplen las reglas del sistema.";
     static final String MENSAJE_INTERNO = "Ocurrió un error interno. Intente nuevamente más tarde.";
 
+    /** Crea el manejador. */
+    public ManejadorGlobalExcepciones() {
+    }
+
     /**
      * Responde 422 cuando un servicio rechaza una regla de negocio.
      *

@@ -60,32 +60,56 @@ public class Calificacion {
         this.comentario = comentario;
     }
 
-    /** @return id de la calificación */
+    /**
+     * Devuelve el id de la calificación.
+     *
+     * @return id de la calificación
+     */
     public Long getId() {
         return id;
     }
 
-    /** @return venta calificada */
+    /**
+     * Devuelve la venta calificada.
+     *
+     * @return venta calificada
+     */
     public Long getIdTransaccion() {
         return idTransaccion;
     }
 
-    /** @return parte que califica */
+    /**
+     * Devuelve la parte que califica.
+     *
+     * @return parte que califica
+     */
     public Long getIdEvaluador() {
         return idEvaluador;
     }
 
-    /** @return estrellas (1 a 5) */
+    /**
+     * Devuelve las estrellas (1 a 5).
+     *
+     * @return estrellas (1 a 5)
+     */
     public Integer getPuntuacion() {
         return puntuacion;
     }
 
-    /** @return comentario, o {@code null} */
+    /**
+     * Devuelve el comentario, o {@code null}.
+     *
+     * @return comentario, o {@code null}
+     */
     public String getComentario() {
         return comentario;
     }
 
-    /** @return fecha y hora (la pone la base de datos) */
+    /**
+     * Devuelve la fecha y hora (la pone la base de datos).
+     *
+     * @return fecha y hora (la pone la base de datos)
+     */
     public LocalDateTime getFecha() {
         return fecha;
     }

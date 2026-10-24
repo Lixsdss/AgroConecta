@@ -87,92 +87,164 @@ public class VentaHistorial {
     protected VentaHistorial() {
     }
 
-    /** @return id de la venta */
+    /**
+     * Devuelve el id de la venta.
+     *
+     * @return id de la venta
+     */
     public Long getId() {
         return id;
     }
 
-    /** @return id del comprador */
+    /**
+     * Devuelve el id del comprador.
+     *
+     * @return id del comprador
+     */
     public Long getIdComprador() {
         return idComprador;
     }
 
-    /** @return nombre del negocio del comprador */
+    /**
+     * Devuelve el nombre del negocio del comprador.
+     *
+     * @return nombre del negocio del comprador
+     */
     public String getComprador() {
         return comprador;
     }
 
-    /** @return id del agricultor */
+    /**
+     * Devuelve el id del agricultor.
+     *
+     * @return id del agricultor
+     */
     public Long getIdAgricultor() {
         return idAgricultor;
     }
 
-    /** @return nombre del agricultor */
+    /**
+     * Devuelve el nombre del agricultor.
+     *
+     * @return nombre del agricultor
+     */
     public String getAgricultor() {
         return agricultor;
     }
 
-    /** @return propuesta conjunta, o {@code null} */
+    /**
+     * Devuelve la propuesta conjunta, o {@code null}.
+     *
+     * @return propuesta conjunta, o {@code null}
+     */
     public Long getIdPropuestaGrupal() {
         return idPropuestaGrupal;
     }
 
-    /** @return cultivo */
+    /**
+     * Devuelve el cultivo.
+     *
+     * @return cultivo
+     */
     public String getCultivo() {
         return cultivo;
     }
 
-    /** @return variedad */
+    /**
+     * Devuelve la variedad.
+     *
+     * @return variedad
+     */
     public String getVariedad() {
         return variedad;
     }
 
-    /** @return cantidad en la unidad acordada */
+    /**
+     * Devuelve la cantidad en la unidad acordada.
+     *
+     * @return cantidad en la unidad acordada
+     */
     public BigDecimal getCantidad() {
         return cantidad;
     }
 
-    /** @return unidad acordada en plural */
+    /**
+     * Devuelve la unidad acordada en plural.
+     *
+     * @return unidad acordada en plural
+     */
     public String getUnidadPlural() {
         return unidadPlural;
     }
 
-    /** @return kilos acordados */
+    /**
+     * Devuelve los kilos acordados.
+     *
+     * @return kilos acordados
+     */
     public BigDecimal getCantidadKg() {
         return cantidadKg;
     }
 
-    /** @return soles por unidad */
+    /**
+     * Devuelve los soles por unidad.
+     *
+     * @return soles por unidad
+     */
     public BigDecimal getPrecioUnitario() {
         return precioUnitario;
     }
 
-    /** @return soles por kilo */
+    /**
+     * Devuelve los soles por kilo.
+     *
+     * @return soles por kilo
+     */
     public BigDecimal getPrecioKg() {
         return precioKg;
     }
 
-    /** @return monto total */
+    /**
+     * Devuelve el monto total.
+     *
+     * @return monto total
+     */
     public BigDecimal getMontoTotal() {
         return montoTotal;
     }
 
-    /** @return día de recojo */
+    /**
+     * Devuelve el día de recojo.
+     *
+     * @return día de recojo
+     */
     public LocalDate getFechaRecojo() {
         return fechaRecojo;
     }
 
-    /** @return estado */
+    /**
+     * Devuelve el estado.
+     *
+     * @return estado
+     */
     public EstadoTransaccion getEstado() {
         return estado;
     }
 
-    /** @return fecha y hora del acuerdo */
+    /**
+     * Devuelve la fecha y hora del acuerdo.
+     *
+     * @return fecha y hora del acuerdo
+     */
     public LocalDateTime getFechaCreacion() {
         return fechaCreacion;
     }
 
-    /** @return fecha y hora del último cambio */
+    /**
+     * Devuelve la fecha y hora del último cambio.
+     *
+     * @return fecha y hora del último cambio
+     */
     public LocalDateTime getFechaActualizacion() {
         return fechaActualizacion;
     }

@@ -44,22 +44,38 @@ public class RangoPrecioPlataforma {
     protected RangoPrecioPlataforma() {
     }
 
-    /** @return precio por kilo mínimo */
+    /**
+     * Devuelve el precio por kilo mínimo.
+     *
+     * @return precio por kilo mínimo
+     */
     public BigDecimal getMinimoKg() {
         return minimoKg;
     }
 
-    /** @return precio por kilo máximo */
+    /**
+     * Devuelve el precio por kilo máximo.
+     *
+     * @return precio por kilo máximo
+     */
     public BigDecimal getMaximoKg() {
         return maximoKg;
     }
 
-    /** @return precio por kilo promedio ponderado por kilos */
+    /**
+     * Devuelve el precio por kilo promedio ponderado por kilos.
+     *
+     * @return precio por kilo promedio ponderado por kilos
+     */
     public BigDecimal getPromedioKg() {
         return promedioKg;
     }
 
-    /** @return número de ventas consideradas */
+    /**
+     * Devuelve el número de ventas consideradas.
+     *
+     * @return número de ventas consideradas
+     */
     public Long getVentas() {
         return ventas;
     }

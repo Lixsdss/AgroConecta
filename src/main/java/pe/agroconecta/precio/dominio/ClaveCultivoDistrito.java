@@ -8,7 +8,9 @@ import java.util.Objects;
  */
 public class ClaveCultivoDistrito implements Serializable {
 
+    /** Id del cultivo. */
     private Integer idCultivo;
+    /** Id del distrito. */
     private Integer idDistrito;
 
     /** Constructor requerido por JPA. */

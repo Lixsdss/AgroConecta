@@ -33,7 +33,11 @@ public record CrearPropuestaRequest(
         @NotNull(message = "Indique el día de recojo.")
         @FutureOrPresent(message = "El día de recojo no puede ser anterior a hoy.") LocalDate fechaRecojo) {
 
-    /** @return los datos para el servicio */
+    /**
+     * Devuelve los datos para el servicio.
+     *
+     * @return los datos para el servicio
+     */
     public NuevaPropuestaDto aDto() {
         return new NuevaPropuestaDto(idVariedad, idDistrito, cantidadKg, precioKg, fechaRecojo);
     }

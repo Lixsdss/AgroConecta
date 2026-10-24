@@ -27,7 +27,11 @@ public enum OrdenBusqueda {
         this.orden = orden;
     }
 
-    /** @return orden de Spring Data sobre los atributos de la vista */
+    /**
+     * Devuelve el orden de Spring Data sobre los atributos de la vista.
+     *
+     * @return orden de Spring Data sobre los atributos de la vista
+     */
     public Sort comoSort() {
         return orden;
     }

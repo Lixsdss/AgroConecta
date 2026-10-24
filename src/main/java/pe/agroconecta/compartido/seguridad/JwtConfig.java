@@ -35,6 +35,10 @@ public class JwtConfig {
     /** Longitud mínima de la clave para HS256 (256 bits). */
     static final int BYTES_MINIMOS_SECRETO = 32;
 
+    /** Crea la configuración de JWT y de contraseñas. */
+    public JwtConfig() {
+    }
+
     /**
      * Clave simétrica con la que se firman y validan los tokens.
      *

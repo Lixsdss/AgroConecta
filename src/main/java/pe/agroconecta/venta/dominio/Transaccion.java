@@ -136,72 +136,128 @@ public class Transaccion {
         this.idActualizadoPor = idUsuario;
     }
 
-    /** @return id de la venta */
+    /**
+     * Devuelve el id de la venta.
+     *
+     * @return id de la venta
+     */
     public Long getId() {
         return id;
     }
 
-    /** @return conversación de la que nace */
+    /**
+     * Devuelve la conversación de la que nace.
+     *
+     * @return conversación de la que nace
+     */
     public Long getIdConversacion() {
         return idConversacion;
     }
 
-    /** @return propuesta conjunta, o {@code null} si nace del chat */
+    /**
+     * Devuelve la propuesta conjunta, o {@code null} si nace del chat.
+     *
+     * @return propuesta conjunta, o {@code null} si nace del chat
+     */
     public Long getIdPropuestaGrupal() {
         return idPropuestaGrupal;
     }
 
-    /** @return unidad acordada */
+    /**
+     * Devuelve la unidad acordada.
+     *
+     * @return unidad acordada
+     */
     public Integer getIdUnidad() {
         return idUnidad;
     }
 
-    /** @return cantidad en la unidad acordada */
+    /**
+     * Devuelve la cantidad en la unidad acordada.
+     *
+     * @return cantidad en la unidad acordada
+     */
     public BigDecimal getCantidad() {
         return cantidad;
     }
 
-    /** @return kilos por unidad */
+    /**
+     * Devuelve los kilos por unidad.
+     *
+     * @return kilos por unidad
+     */
     public BigDecimal getPesoUnidadKg() {
         return pesoUnidadKg;
     }
 
-    /** @return soles por unidad */
+    /**
+     * Devuelve los soles por unidad.
+     *
+     * @return soles por unidad
+     */
     public BigDecimal getPrecioUnitario() {
         return precioUnitario;
     }
 
-    /** @return kilos acordados (los calcula la base de datos) */
+    /**
+     * Devuelve los kilos acordados (los calcula la base de datos).
+     *
+     * @return kilos acordados (los calcula la base de datos)
+     */
     public BigDecimal getCantidadKg() {
         return cantidadKg;
     }
 
-    /** @return monto total (lo calcula la base de datos) */
+    /**
+     * Devuelve el monto total (lo calcula la base de datos).
+     *
+     * @return monto total (lo calcula la base de datos)
+     */
     public BigDecimal getMontoTotal() {
         return montoTotal;
     }
 
-    /** @return día de recojo */
+    /**
+     * Devuelve el día de recojo.
+     *
+     * @return día de recojo
+     */
     public LocalDate getFechaRecojo() {
         return fechaRecojo;
     }
 
-    /** @return estado */
+    /**
+     * Devuelve el estado.
+     *
+     * @return estado
+     */
     public EstadoTransaccion getEstado() {
         return estado;
     }
 
-    /** @return autor del último cambio ({@code null}: proceso automático) */
+    /**
+     * Devuelve el autor del último cambio ({@code null}: proceso automático).
+     *
+     * @return autor del último cambio ({@code null}: proceso automático)
+     */
     public Long getIdActualizadoPor() {
         return idActualizadoPor;
     }
 
-    /** @return fecha y hora del acuerdo */
+    /**
+     * Devuelve la fecha y hora del acuerdo.
+     *
+     * @return fecha y hora del acuerdo
+     */
     public LocalDateTime getFechaCreacion() {
         return fechaCreacion;
     }
 
-    /** @return fecha y hora del último cambio */
+    /**
+     * Devuelve la fecha y hora del último cambio.
+     *
+     * @return fecha y hora del último cambio
+     */
     public LocalDateTime getFechaActualizacion() {
         return fechaActualizacion;
     }

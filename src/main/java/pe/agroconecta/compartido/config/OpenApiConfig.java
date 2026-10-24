@@ -17,6 +17,10 @@ public class OpenApiConfig {
 
     private static final String ESQUEMA_JWT = "bearerAuth";
 
+    /** Crea la configuración de OpenAPI. */
+    public OpenApiConfig() {
+    }
+
     /**
      * Descripción de la API y del esquema de autenticación.
      *

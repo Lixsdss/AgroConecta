@@ -76,42 +76,74 @@ public class Notificacion {
         this.leida = true;
     }
 
-    /** @return fecha y hora de creación (la pone la base de datos) */
+    /**
+     * Devuelve la fecha y hora de creación (la pone la base de datos).
+     *
+     * @return fecha y hora de creación (la pone la base de datos)
+     */
     public LocalDateTime getFechaCreacion() {
         return fechaCreacion;
     }
 
-    /** @return id del aviso */
+    /**
+     * Devuelve el id del aviso.
+     *
+     * @return id del aviso
+     */
     public Long getId() {
         return id;
     }
 
-    /** @return usuario que lo recibe */
+    /**
+     * Devuelve el usuario que lo recibe.
+     *
+     * @return usuario que lo recibe
+     */
     public Long getIdUsuario() {
         return idUsuario;
     }
 
-    /** @return tipo de aviso */
+    /**
+     * Devuelve el tipo de aviso.
+     *
+     * @return tipo de aviso
+     */
     public TipoNotificacion getTipo() {
         return tipo;
     }
 
-    /** @return título */
+    /**
+     * Devuelve el título.
+     *
+     * @return título
+     */
     public String getTitulo() {
         return titulo;
     }
 
-    /** @return texto */
+    /**
+     * Devuelve el texto.
+     *
+     * @return texto
+     */
     public String getContenido() {
         return contenido;
     }
 
-    /** @return id del objeto del aviso */
+    /**
+     * Devuelve el id del objeto del aviso.
+     *
+     * @return id del objeto del aviso
+     */
     public Long getIdReferencia() {
         return idReferencia;
     }
 
-    /** @return {@code true} si ya se leyó */
+    /**
+     * Devuelve {@code true} si ya se leyó.
+     *
+     * @return {@code true} si ya se leyó
+     */
     public boolean isLeida() {
         return leida;
     }

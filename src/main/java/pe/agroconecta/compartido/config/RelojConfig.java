@@ -12,6 +12,10 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class RelojConfig {
 
+    /** Crea la configuración del reloj. */
+    public RelojConfig() {
+    }
+
     /**
      * Reloj del sistema en la zona horaria del servidor.
      *

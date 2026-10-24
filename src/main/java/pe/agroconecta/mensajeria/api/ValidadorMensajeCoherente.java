@@ -10,6 +10,10 @@ import org.apache.commons.lang3.StringUtils;
  */
 public class ValidadorMensajeCoherente implements ConstraintValidator<MensajeCoherente, EnviarMensajeRequest> {
 
+    /** Crea el validador. */
+    public ValidadorMensajeCoherente() {
+    }
+
     /**
      * Comprueba que el mensaje tenga los datos de su tipo.
      *

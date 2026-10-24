@@ -60,57 +60,101 @@ public class LoteAgrupado {
     protected LoteAgrupado() {
     }
 
-    /** @return variedad */
+    /**
+     * Devuelve la variedad.
+     *
+     * @return variedad
+     */
     public Integer getIdVariedad() {
         return idVariedad;
     }
 
-    /** @return distrito */
+    /**
+     * Devuelve el distrito.
+     *
+     * @return distrito
+     */
     public Integer getIdDistrito() {
         return idDistrito;
     }
 
-    /** @return cultivo */
+    /**
+     * Devuelve el cultivo.
+     *
+     * @return cultivo
+     */
     public Integer getIdCultivo() {
         return idCultivo;
     }
 
-    /** @return nombre del cultivo */
+    /**
+     * Devuelve el nombre del cultivo.
+     *
+     * @return nombre del cultivo
+     */
     public String getCultivo() {
         return cultivo;
     }
 
-    /** @return nombre de la variedad */
+    /**
+     * Devuelve el nombre de la variedad.
+     *
+     * @return nombre de la variedad
+     */
     public String getVariedad() {
         return variedad;
     }
 
-    /** @return nombre del distrito */
+    /**
+     * Devuelve el nombre del distrito.
+     *
+     * @return nombre del distrito
+     */
     public String getDistrito() {
         return distrito;
     }
 
-    /** @return agricultores distintos del lote */
+    /**
+     * Devuelve los agricultores distintos del lote.
+     *
+     * @return agricultores distintos del lote
+     */
     public Long getTotalAgricultores() {
         return totalAgricultores;
     }
 
-    /** @return publicaciones del lote */
+    /**
+     * Devuelve las publicaciones del lote.
+     *
+     * @return publicaciones del lote
+     */
     public Long getTotalPublicaciones() {
         return totalPublicaciones;
     }
 
-    /** @return kilos disponibles del lote */
+    /**
+     * Devuelve los kilos disponibles del lote.
+     *
+     * @return kilos disponibles del lote
+     */
     public BigDecimal getVolumenKg() {
         return volumenKg;
     }
 
-    /** @return precio por kilo promedio, ponderado por los kilos */
+    /**
+     * Devuelve el precio por kilo promedio, ponderado por los kilos.
+     *
+     * @return precio por kilo promedio, ponderado por los kilos
+     */
     public BigDecimal getPrecioPromedioKg() {
         return precioPromedioKg;
     }
 
-    /** @return la fecha límite más próxima del lote */
+    /**
+     * Devuelve la fecha límite más próxima del lote.
+     *
+     * @return la fecha límite más próxima del lote
+     */
     public LocalDate getFechaLimiteProxima() {
         return fechaLimiteProxima;
     }
