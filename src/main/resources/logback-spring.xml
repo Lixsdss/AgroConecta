@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
   Configuración de Logback de AgroConecta.
-  - dev y test: solo consola.
+  - dev: solo consola.
+  - test: solo consola y nivel WARN, para que la salida de las pruebas quede limpia.
   - prod: consola y archivo en logs/ con rotación por tamaño y por día, y retención limitada.
   Nunca se registran contraseñas, hashes, tokens ni el contenido de los mensajes: el celular se registra
   enmascarado (ReglasUsuario.enmascararCelular). Esta configuración no cambia esa regla del código.
@@ -26,9 +27,17 @@
     <logger name="pe.agroconecta" level="INFO"/>
     <logger name="org.hibernate.SQL" level="WARN"/>
     <logger name="org.hibernate.orm.jdbc.bind" level="WARN"/>
+    <logger name="org.springframework" level="WARN"/>
 
-    <springProfile name="!prod">
+    <springProfile name="!prod &amp; !test">
         <root level="INFO">
+            <appender-ref ref="CONSOLA"/>
+        </root>
+    </springProfile>
+
+    <springProfile name="test">
+        <logger name="pe.agroconecta" level="WARN"/>
+        <root level="WARN">
             <appender-ref ref="CONSOLA"/>
         </root>
     </springProfile>

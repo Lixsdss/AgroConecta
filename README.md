@@ -206,12 +206,20 @@ El contrato completo de los endpoints, con los códigos de estado y los mensajes
 
 Detalle y riesgos pendientes: [`docs/07-calidad/seguridad.md`](docs/07-calidad/seguridad.md).
 
-## 📝 Logs
+## 📝 Registro (logging)
 
-Logback se configura en [`logback-spring.xml`](src/main/resources/logback-spring.xml):
+Logback se configura en [`logback-spring.xml`](src/main/resources/logback-spring.xml). Formato: fecha y hora, nivel, hilo, clase abreviada y mensaje.
 
-- `dev` y `test`: solo consola.
-- `prod`: consola y archivo `logs/agroconecta.log` (o en `LOG_PATH`), que rota por día y cuando pasa de 10 MB. Se guardan 30 días, con un máximo de 1 GB.
+| Perfil | Destino | Nivel |
+|---|---|---|
+| `dev` | Solo consola | `pe.agroconecta` INFO |
+| `test` | Solo consola | WARN (salida de pruebas limpia) |
+| `prod` | Consola y archivo `logs/agroconecta.log` (carpeta configurable con `LOG_PATH`) | `pe.agroconecta` INFO |
+
+- **Rotación (prod):** un archivo por día, y se parte cuando pasa de 10 MB (`agroconecta.AAAA-MM-DD.N.log.gz`).
+- **Retención (prod):** 30 días de historial, con un máximo de 1 GB en total.
+- En todos los perfiles, `org.hibernate.SQL` y `org.springframework` quedan en WARN; la raíz, en INFO.
+- Nunca se registran contraseñas, hashes, tokens ni el texto de los mensajes; el celular aparece enmascarado. La carpeta `logs/` está en `.gitignore`.
 
 ## 🌿 Ramas, commits y CI
 
