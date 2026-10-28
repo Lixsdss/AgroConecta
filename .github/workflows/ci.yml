@@ -60,6 +60,14 @@ jobs:
           test -n "$DB_PASSWORD" || { echo "::error::Falta el secreto DB_PASSWORD"; exit 1; }
           test -n "$JWT_SECRET" || { echo "::error::Falta el secreto JWT_SECRET"; exit 1; }
 
+      # Desde MariaDB 11.5 la colación por defecto es utf8mb4_uca1400_ai_ci; el esquema (triggers y
+      # rutinas) usa utf8mb4_unicode_ci y la mezcla de ambas rompe las comparaciones de texto.
+      - name: Fijar la colación de la base de pruebas (utf8mb4_unicode_ci)
+        run: >
+          docker exec -e MYSQL_PWD="$DB_PASSWORD" ${{ job.services.mariadb.id }}
+          mariadb -u agroconecta_app -e
+          "ALTER DATABASE agroconecta_test CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"
+
       - name: Compilar, probar y verificar (Flyway, ArchUnit, JaCoCo)
         run: ./mvnw -B clean verify
 

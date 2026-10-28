@@ -108,21 +108,34 @@ Más diagramas (dependencias entre módulos, capas y clases): [`docs/04-diseno/a
 ### 1. Requisitos previos
 
 - **JDK 21**. No hace falta instalar Maven: se usa `./mvnw`.
-- **MariaDB 11+** (desarrollo) o **MySQL 8+** (producción) con:
-  - las bases `agroconecta` (desarrollo) y `agroconecta_test` (pruebas);
-  - el usuario `agroconecta_app` con privilegios CREATE, ALTER, INDEX, REFERENCES, TRIGGER, EVENT, CREATE VIEW, CREATE ROUTINE y ALTER ROUTINE sobre ambas bases;
-  - `event_scheduler=ON` en el servidor (lo usa `ev_tareas_diarias`).
+- **MariaDB 11+** (desarrollo) o **MySQL 8+** (producción).
 
-  Estas tareas las hace el administrador de la base de datos; no forman parte de las migraciones.
+### 2. Preparar la base de datos
 
-### 2. Clonar
+La aplicación crea sola las tablas, vistas, triggers, rutinas, el evento diario y los datos de Piura (Flyway, `V1` y `V2`). Antes hay que crear las bases vacías y el usuario. Ejecuta esto una sola vez como administrador de MariaDB/MySQL (por ejemplo, `sudo mariadb`), con tu propia contraseña:
+
+```sql
+CREATE DATABASE agroconecta      CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE DATABASE agroconecta_test CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE USER 'agroconecta_app'@'localhost' IDENTIFIED BY '<contraseña de agroconecta_app>';
+GRANT ALL PRIVILEGES ON agroconecta.*      TO 'agroconecta_app'@'localhost';
+GRANT ALL PRIVILEGES ON agroconecta_test.* TO 'agroconecta_app'@'localhost';
+SET GLOBAL event_scheduler = ON;   -- lo usa ev_tareas_diarias
+```
+
+> [!WARNING]
+> La colación **`utf8mb4_unicode_ci` es obligatoria**. Desde MariaDB 11.5 la colación por defecto es `utf8mb4_uca1400_ai_ci`; si la base se crea sin `COLLATE`, los triggers fallan con *Illegal mix of collations* al registrar usuarios. Si ya la creaste sin ella y aún está vacía: `ALTER DATABASE agroconecta CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;`
+
+`SET GLOBAL event_scheduler = ON` se pierde al reiniciar el servidor; para dejarlo fijo agrega `event_scheduler=ON` en la sección `[mysqld]` de la configuración del servidor. `agroconecta_test` solo se necesita para ejecutar las pruebas.
+
+### 3. Clonar
 
 ```bash
-git clone git@github.com:Lixsdss/AgroConecta.git
+git clone https://github.com/Lixsdss/AgroConecta.git
 cd AgroConecta
 ```
 
-### 3. Variables de entorno
+### 4. Variables de entorno
 
 > [!IMPORTANT]
 > Los secretos **nunca** se suben a GitHub. Guárdalos en un archivo `.env` en la raíz del proyecto, que ya está ignorado por `.gitignore`.
@@ -153,7 +166,7 @@ Para generar una `JWT_SECRET` aleatoria:
 openssl rand -base64 48
 ```
 
-### 4. Ejecutar
+### 5. Ejecutar
 
 ```bash
 set -a; . ./.env; set +a      # cargar las variables (o exportarlas a mano)
@@ -168,7 +181,7 @@ Al arrancar, Flyway aplica las migraciones pendientes.
 | Iniciar sesión | http://localhost:8080/pages/usuario/ingresar.html |
 | Swagger UI (solo `dev`) | http://localhost:8080/swagger-ui.html |
 
-### 5. Primer administrador
+### 6. Primer administrador
 
 El primer ADMINISTRADOR no se crea por SQL. Lo crea la aplicación al arrancar, **solo si no existe ninguno** y las tres variables `ADMIN_*` tienen valor. La contraseña se guarda cifrada con BCrypt y nunca aparece en el log. Después del primer arranque puedes quitar esas variables del `.env`. Los demás administradores se crean desde la aplicación.
 
