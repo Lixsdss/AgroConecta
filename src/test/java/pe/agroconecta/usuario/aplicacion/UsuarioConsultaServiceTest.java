@@ -46,4 +46,11 @@ class UsuarioConsultaServiceTest {
         assertThat(servicio.buscarResumenes(Set.of())).isEmpty();
         verifyNoInteractions(usuarios, catalogo);
     }
+
+    @Test
+    void existeCelularQuitaLosEspacios() {
+        when(usuarios.existsByCelular("911111111")).thenReturn(true);
+
+        assertThat(servicio.existeCelular("911 111 111")).isTrue();
+    }
 }

@@ -65,6 +65,7 @@ Las suscripciones (RF-12) quedan como trabajo futuro.
 | Seguridad | Spring Security 7.1.1 + OAuth2 Resource Server, JWT HS256 (`NimbusJwtEncoder`/`NimbusJwtDecoder`), BCrypt |
 | Base de datos | MySQL en producción, MariaDB 11 en desarrollo; Flyway 12.4.0 (`flyway-mysql`); MySQL Connector/J 9.7.0 |
 | Librerías del curso | Google Guava 33.7.1-jre, Apache Commons Lang3 3.20.0, Apache POI (`poi-ooxml`) 5.5.1, Logback 1.5.38 (SLF4J 2.0.18) |
+| Datos de demostración | Datafaker 2.7.0 (solo el módulo `demo`) |
 | Documentación de la API | springdoc-openapi 3.1.1 (Swagger UI) |
 | Pruebas | JUnit 6.0.3 (Jupiter), Mockito 5.23.0, Spring MockMvc, ArchUnit 1.5.1, JaCoCo 0.8.15 |
 | Frontend | HTML5 + CSS3 + JavaScript sin frameworks + Bootstrap 5.3.8 (servido localmente), íconos Lucide en un sprite SVG local |
@@ -96,6 +97,7 @@ pe.agroconecta.<modulo>/
 | `ventaagrupada` | Lotes y propuestas conjuntas (RF-10) |
 | `notificacion` | Centro de avisos (RF-07) |
 | `administracion` | Moderación, reclamos, suspensiones y panel (RF-09) |
+| `demo` | Datos de demostración con Datafaker, solo con el perfil `demo` ([ADR-006](docs/06-decisiones/ADR-006-datos-de-demostracion.md)); sin tablas propias |
 | `compartido` | Seguridad, OpenAPI, CORS y manejo unificado de errores; **sin lógica de negocio** |
 
 - Un módulo usa otro **solo a través de su capa `aplicacion`**. Estas reglas las verifica ArchUnit en [`ArquitecturaTest`](src/test/java/pe/agroconecta/ArquitecturaTest.java).
@@ -184,6 +186,28 @@ Al arrancar, Flyway aplica las migraciones pendientes.
 ### 6. Primer administrador
 
 El primer ADMINISTRADOR no se crea por SQL. Lo crea la aplicación al arrancar, **solo si no existe ninguno** y las tres variables `ADMIN_*` tienen valor. La contraseña se guarda cifrada con BCrypt y nunca aparece en el log. Después del primer arranque puedes quitar esas variables del `.env`. Los demás administradores se crean desde la aplicación.
+
+### 7. Datos de demostración (opcional)
+
+Para ver la aplicación con datos, arranca con el perfil `demo` sobre una base nueva:
+
+```bash
+set -a; . ./.env; set +a
+SPRING_PROFILES_ACTIVE=dev,demo ./mvnw spring-boot:run
+```
+
+Al arrancar se crean, a través de los mismos servicios y triggers que el uso real, 4 agricultores, 3 compradores, un administrador, precios de referencia de los últimos 14 días en las 4 zonas, 12 cosechas (algunas en la cola de moderación), una conversación con oferta, ventas en cada estado del ciclo (con su historial y calificaciones) y una propuesta conjunta. Los nombres, negocios y textos los genera [Datafaker](https://www.datafaker.net/) con una semilla fija. Si los datos ya existen, no se vuelven a crear.
+
+Todos usan la contraseña **`Demo2026`**:
+
+| Rol | Celulares |
+|---|---|
+| Administrador | `900000001` |
+| Agricultores | `911000001` y `911000002` (Tambogrande), `911000003` (Chulucanas), `911000004` (Sullana) |
+| Compradores | `922000001` (mercado mayorista), `922000002` (restaurante), `922000003` (procesadora) |
+
+> [!CAUTION]
+> El perfil `demo` crea un administrador con contraseña conocida: **nunca lo actives en el servidor desplegado**. La carga se niega a correr si también está activo `prod`.
 
 ### Producción
 

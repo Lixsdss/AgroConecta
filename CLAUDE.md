@@ -40,6 +40,7 @@ If a requirement is ambiguous or the schema lacks something the code needs: **st
 - Security: Spring Security + **OAuth2 Resource Server** with JWT signed with HMAC (HS256). Login is **mobile number (`celular`) + password** (BCrypt). Tokens are issued by the `usuario` module with `NimbusJwtEncoder`: `sub` = user ID, claim `roles`. The secret comes from the `JWT_SECRET` environment variable. No hand-written JWT filter and no JJWT.
 - On every authenticated request, the user must still be ACTIVO (SRS §9.1). Implement it as a JWT validator in `compartido.seguridad` that calls an interface `VerificadorEstadoUsuario` defined in `compartido.seguridad`; the `usuario` module implements it (primary-key lookup, no cache unless load tests require it). A SUSPENDIDO or INACTIVO user gets 401.
 - Libraries required by the course: Apache POI (`poi-ooxml`), Google Guava, Apache Commons Lang3, Logback (included by default).
+- Datafaker (`net.datafaker:datafaker`): only in the `demo` module (ADR-006).
 - springdoc-openapi (Swagger UI), version compatible with Spring Boot 4.1.
 - Tests: JUnit 5, Mockito, ArchUnit (`archunit-junit5`), JaCoCo plugin.
 - Database: MySQL in production, MariaDB in local development (Arch Linux). JDBC driver: MySQL Connector/J.
@@ -72,6 +73,7 @@ A module owns **only** the tables and views in its row; no other module maps the
 | `ventaagrupada` | RF-10 | propuestas_grupales, v_lotes_agrupados |
 | `notificacion` | RF-07 (alerts) | notificaciones |
 | `administracion` | RF-09 | revisiones_publicacion, reclamos, suspensiones, v_panel_admin, v_resumen_usuario, v_ventas_mensuales_cultivo, v_conversion_publicacion |
+| `demo` | demo data (ADR-006) | none — creates data only through the other modules' `aplicacion` layer, profile `demo` only |
 
 `pe.agroconecta.compartido` is not a business module: it holds `config/` (OpenAPI, CORS), `seguridad/` (Spring Security, JWT, the `VerificadorEstadoUsuario` interface) and `error/` (`ErrorResponse`, `ManejadorGlobalExcepciones`, `ReglaNegocioException`). It has no business logic.
 

@@ -59,6 +59,16 @@ public class UsuarioConsultaService {
                 .collect(Collectors.toMap(UsuarioResumenDto::id, Function.identity()));
     }
 
+    /**
+     * Indica si un celular ya está registrado.
+     *
+     * @param celular celular (puede traer espacios)
+     * @return {@code true} si algún usuario ya lo usa
+     */
+    public boolean existeCelular(String celular) {
+        return usuarios.existsByCelular(ReglasUsuario.normalizarCelular(celular));
+    }
+
     private static UsuarioResumenDto aDto(Usuario u, String distrito, String negocio) {
         return new UsuarioResumenDto(u.getId(), u.getNombreCompleto(), u.getCelular(), distrito,
                 u.getFechaRegistro(), u.getRol().name(), negocio);
