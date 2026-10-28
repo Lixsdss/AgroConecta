@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Mi perfil · AgroConecta</title>
+    <link rel="stylesheet" href="/vendor/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/css/estilos.css">
+    <script type="module" src="/js/usuario/perfil.js"></script>
+</head>
+<body>
+<main class="ac-pantalla">
+    <div class="ac-barra">
+        <a class="ac-atras" href="/pages/usuario/inicio.html" aria-label="Volver"><svg class="ac-icono" aria-hidden="true" focusable="false"><use href="/img/iconos.svg#arrow-left"></use></svg></a>
+        <h1>Mi perfil</h1>
+    </div>
+
+    <dl class="mb-4">
+        <div class="ac-dato"><dt>Celular</dt><dd id="dato-celular"></dd></div>
+        <div class="ac-dato"><dt>Cuenta</dt><dd id="dato-rol"></dd></div>
+    </dl>
+
+    <section class="mb-4" aria-labelledby="titulo-reputacion">
+        <h2 class="h5 fw-semibold" id="titulo-reputacion">Mi reputación</h2>
+        <div id="reputacion" hidden></div>
+    </section>
+
+    <h2 class="h5 fw-semibold">Mis datos</h2>
+    <div id="alerta-datos" class="ac-alerta" role="alert" tabindex="-1" hidden></div>
+
+    <form id="form-datos" class="mb-5" novalidate>
+        <div class="mb-3">
+            <label class="form-label" for="nombreCompleto">Su nombre</label>
+            <input class="form-control" id="nombreCompleto" name="nombreCompleto" maxlength="120" required>
+            <div class="invalid-feedback d-block" data-error-de="nombreCompleto"></div>
+        </div>
+        <div class="mb-3">
+            <label class="form-label" for="idDistrito">Su distrito</label>
+            <select class="form-select" id="idDistrito" name="idDistrito" required></select>
+            <div class="invalid-feedback d-block" data-error-de="idDistrito"></div>
+        </div>
+        <div class="mb-3" data-solo="AGRICULTOR" hidden>
+            <label class="form-label" for="nombreChacra">Nombre de su chacra <span class="fw-normal">(opcional)</span></label>
+            <input class="form-control" id="nombreChacra" name="nombreChacra" maxlength="80">
+            <div class="invalid-feedback d-block" data-error-de="nombreChacra"></div>
+        </div>
+        <div data-solo="COMPRADOR" hidden>
+            <div class="mb-3">
+                <label class="form-label" for="nombreNegocio">Nombre de su negocio</label>
+                <input class="form-control" id="nombreNegocio" name="nombreNegocio" maxlength="120">
+                <div class="invalid-feedback d-block" data-error-de="nombreNegocio"></div>
+            </div>
+            <div class="mb-3">
+                <label class="form-label" for="tipoComprador">Tipo de negocio</label>
+                <select class="form-select" id="tipoComprador" name="tipoComprador">
+                    <option value="">Elija una opción</option>
+                    <option value="MERCADO_MAYORISTA">Mercado mayorista</option>
+                    <option value="RESTAURANTE">Restaurante</option>
+                    <option value="HOTEL">Hotel</option>
+                    <option value="PROCESADORA">Procesadora</option>
+                    <option value="MOLINO">Molino</option>
+                    <option value="OTRO">Otro</option>
+                </select>
+                <div class="invalid-feedback d-block" data-error-de="tipoComprador"></div>
+            </div>
+            <div class="mb-3">
+                <label class="form-label" for="ruc">RUC <span class="fw-normal">(opcional)</span></label>
+                <input class="form-control" id="ruc" name="ruc" inputmode="numeric" maxlength="11">
+                <div class="invalid-feedback d-block" data-error-de="ruc"></div>
+            </div>
+        </div>
+        <button class="btn btn-primary w-100" type="submit" id="guardar-datos"><svg class="ac-icono" aria-hidden="true" focusable="false"><use href="/img/iconos.svg#save"></use></svg> <span>Guardar cambios</span></button>
+    </form>
+
+    <h2 class="h5 fw-semibold">Cambiar contraseña</h2>
+    <div id="alerta-contrasena" class="ac-alerta" role="alert" tabindex="-1" hidden></div>
+
+    <form id="form-contrasena" novalidate>
+        <div class="mb-3">
+            <label class="form-label" for="contrasenaActual">Contraseña actual</label>
+            <input class="form-control" id="contrasenaActual" name="contrasenaActual" type="password"
+                   autocomplete="current-password" required>
+            <div class="invalid-feedback d-block" data-error-de="contrasenaActual"></div>
+        </div>
+        <div class="mb-3">
+            <label class="form-label" for="contrasenaNueva">Nueva contraseña</label>
+            <input class="form-control" id="contrasenaNueva" name="contrasenaNueva" type="password"
+                   autocomplete="new-password" required aria-describedby="ayuda-nueva">
+            <div class="form-text" id="ayuda-nueva">Use al menos 8 caracteres, con letras y números.</div>
+            <div class="invalid-feedback d-block" data-error-de="contrasenaNueva"></div>
+        </div>
+        <button class="btn btn-primary w-100" type="submit" id="guardar-contrasena"><svg class="ac-icono" aria-hidden="true" focusable="false"><use href="/img/iconos.svg#shield-check"></use></svg> <span>Cambiar contraseña</span></button>
+    </form>
+
+    <hr class="ac-separador">
+    <button class="btn btn-outline-primary w-100 mb-4" type="button" id="salir"><svg class="ac-icono" aria-hidden="true" focusable="false"><use href="/img/iconos.svg#log-out"></use></svg> <span>Salir de mi cuenta</span></button>
+</main>
+</body>
+</html>

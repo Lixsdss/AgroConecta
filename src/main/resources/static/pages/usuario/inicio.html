@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Inicio · AgroConecta</title>
+    <link rel="stylesheet" href="/vendor/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/css/estilos.css">
+    <script type="module" src="/js/usuario/inicio.js"></script>
+</head>
+<body>
+<!-- Inicio del agricultor (diseño 06) y del comprador (diseño 14): pocas acciones grandes con su dato del día
+     y precios de hoy (RF-02). Mensajes (RF-04), Mis ventas / Mis compras (RF-06, RF-07), Lotes agrupados (RF-10). -->
+<main class="ac-pantalla">
+    <header class="ac-cabecera-inicio">
+        <p class="ac-marca-chica mb-0"><svg class="ac-icono" aria-hidden="true" focusable="false"><use href="/img/iconos.svg#sprout"></use></svg> AgroConecta</p>
+        <a class="ac-campana" href="/pages/notificacion/avisos.html" aria-label="Avisos"><svg class="ac-icono" aria-hidden="true" focusable="false"><use href="/img/iconos.svg#bell"></use></svg><span class="ac-no-leidos" data-avisos-no-leidos hidden></span></a>
+        <a class="ac-avatar" href="/pages/usuario/perfil.html" aria-label="Mi perfil" id="avatar"></a>
+    </header>
+
+    <h1 class="ac-titulo mb-1" id="saludo">Hola</h1>
+    <p class="ac-suave mb-3" id="subtitulo" hidden></p>
+
+    <div id="alerta" class="ac-alerta" role="alert" tabindex="-1" hidden></div>
+
+    <!-- Agricultor: tres acciones (diseño 06) -->
+    <nav class="ac-acciones" id="acciones-agricultor" aria-label="Qué desea hacer" hidden>
+        <a class="ac-accion ac-accion-principal" href="/pages/publicacion/paso1.html">
+            <span class="ac-accion-icono"><svg class="ac-icono" aria-hidden="true" focusable="false"><use href="/img/iconos.svg#sprout"></use></svg></span>
+            <span class="ac-accion-texto"><strong>Vender mi cosecha</strong><span>Publique en 3 pasos. Es gratis.</span></span>
+            <svg class="ac-icono" aria-hidden="true" focusable="false"><use href="/img/iconos.svg#chevron-right"></use></svg>
+        </a>
+        <a class="ac-accion" href="/pages/publicacion/mis-cosechas.html">
+            <span class="ac-accion-icono"><svg class="ac-icono" aria-hidden="true" focusable="false"><use href="/img/iconos.svg#clipboard-list"></use></svg></span>
+            <span class="ac-accion-texto"><strong>Mis ventas</strong><span id="dato-ventas">Sus cosechas a la venta</span></span>
+            <svg class="ac-icono" aria-hidden="true" focusable="false"><use href="/img/iconos.svg#chevron-right"></use></svg>
+        </a>
+        <a class="ac-accion" href="/pages/mensajeria/conversaciones.html">
+            <span class="ac-accion-icono"><svg class="ac-icono" aria-hidden="true" focusable="false"><use href="/img/iconos.svg#message-circle"></use></svg></span>
+            <span class="ac-accion-texto"><strong>Mensajes</strong><span data-dato-mensajes>Sin mensajes nuevos</span></span>
+            <svg class="ac-icono" aria-hidden="true" focusable="false"><use href="/img/iconos.svg#chevron-right"></use></svg>
+        </a>
+    </nav>
+
+    <!-- Comprador: buscar y lotes, la compra en curso y Mis compras (diseño 14) -->
+    <div id="acciones-comprador" hidden>
+        <nav class="ac-mosaico mb-3" aria-label="Qué desea hacer">
+            <a class="ac-mosaico-principal" href="/pages/publicacion/buscar.html"><svg class="ac-icono" aria-hidden="true" focusable="false"><use href="/img/iconos.svg#search"></use></svg><span>Buscar productos</span></a>
+            <a href="/pages/ventaagrupada/lotes.html"><svg class="ac-icono" aria-hidden="true" focusable="false"><use href="/img/iconos.svg#layers"></use></svg><span>Lotes agrupados</span></a>
+        </nav>
+        <div class="ac-acciones">
+            <a class="ac-accion" id="compra-en-curso" hidden>
+                <span class="ac-accion-icono"><svg class="ac-icono" aria-hidden="true" focusable="false"><use href="/img/iconos.svg#truck"></use></svg></span>
+                <span class="ac-accion-texto"><strong id="compra-titulo"></strong><span id="compra-dato"></span></span>
+                <svg class="ac-icono" aria-hidden="true" focusable="false"><use href="/img/iconos.svg#chevron-right"></use></svg>
+            </a>
+            <a class="ac-accion" href="/pages/venta/historial.html">
+                <span class="ac-accion-icono"><svg class="ac-icono" aria-hidden="true" focusable="false"><use href="/img/iconos.svg#clipboard-list"></use></svg></span>
+                <span class="ac-accion-texto"><strong>Mis compras</strong><span id="dato-compras">Sus compras y entregas</span></span>
+                <svg class="ac-icono" aria-hidden="true" focusable="false"><use href="/img/iconos.svg#chevron-right"></use></svg>
+            </a>
+        </div>
+    </div>
+
+    <hr class="ac-separador">
+    <section aria-labelledby="titulo-precios">
+        <h2 class="ac-subtitulo" id="titulo-precios">Precios de hoy</h2>
+        <div class="ac-precios mb-2" id="precios" aria-live="polite"></div>
+        <a class="btn btn-link px-0" href="/index.html"><svg class="ac-icono" aria-hidden="true" focusable="false"><use href="/img/iconos.svg#chart-line"></use></svg> <span>Ver todos los precios y su historial</span></a>
+    </section>
+</main>
+</body>
+</html>

@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Propuesta conjunta · AgroConecta</title>
+    <link rel="stylesheet" href="/vendor/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/css/estilos.css">
+    <script type="module" src="/js/ventaagrupada/propuesta.js"></script>
+</head>
+<body>
+<!-- Propuesta conjunta (diseño "propuesta", RF-10 / UC-12 pasos 2–6). -->
+<main class="ac-pantalla">
+    <div class="ac-barra">
+        <a class="ac-atras" href="/pages/ventaagrupada/lotes.html" aria-label="Volver a los lotes"><svg class="ac-icono" aria-hidden="true" focusable="false"><use href="/img/iconos.svg#arrow-left"></use></svg></a>
+        <h1>Propuesta conjunta</h1>
+    </div>
+
+    <div id="alerta" class="ac-alerta" role="alert" tabindex="-1" hidden></div>
+
+    <form id="formulario" novalidate hidden>
+        <section class="ac-tarjeta-precio mb-3">
+            <strong class="d-block" id="lote-titulo"></strong>
+            <span class="ac-suave" id="lote-detalle"></span>
+        </section>
+
+        <div class="mb-3">
+            <label class="form-label fw-semibold" for="precioKg">Precio por kilo</label>
+            <div class="input-group">
+                <span class="input-group-text">S/</span>
+                <input class="form-control" id="precioKg" name="precioKg" type="number" inputmode="decimal" min="0.01" step="0.01" required>
+            </div>
+            <div class="invalid-feedback d-block" data-error-de="precioKg"></div>
+        </div>
+        <div class="mb-3">
+            <label class="form-label fw-semibold" for="cantidadKg">Cantidad en kilos</label>
+            <div class="input-group">
+                <input class="form-control" id="cantidadKg" name="cantidadKg" type="number" inputmode="decimal" min="0.01" step="0.01" required>
+                <span class="input-group-text">kg</span>
+            </div>
+            <div class="form-text" id="maximo"></div>
+            <div class="invalid-feedback d-block" data-error-de="cantidadKg"></div>
+        </div>
+        <div class="mb-3">
+            <label class="form-label fw-semibold" for="fechaRecojo">Fecha de recojo</label>
+            <input class="form-control" id="fechaRecojo" name="fechaRecojo" type="date" required>
+            <div class="form-text">También es el último día para que los agricultores respondan.</div>
+            <div class="invalid-feedback d-block" data-error-de="fechaRecojo"></div>
+        </div>
+
+        <div class="ac-tarjeta-precio d-flex justify-content-between align-items-center mb-3" aria-live="polite">
+            <span>Total de la propuesta</span>
+            <strong class="fs-5" id="total">S/ 0.00</strong>
+        </div>
+        <p class="ac-alerta ac-alerta-info">Cada agricultor recibe la propuesta en su propia unidad y decide si acepta. El pago se hace fuera de la plataforma.</p>
+
+        <button class="btn btn-primary w-100" type="submit" id="enviar">
+            <svg class="ac-icono" aria-hidden="true" focusable="false"><use href="/img/iconos.svg#send"></use></svg>
+            <span>Enviar propuesta</span>
+        </button>
+    </form>
+
+    <section id="resultado" hidden aria-live="polite">
+        <p class="ac-alerta ac-alerta-exito" id="resultado-texto"></p>
+        <h2 class="h5">Así se repartió</h2>
+        <div class="ac-calificaciones mb-3" id="partes"></div>
+        <a class="btn btn-primary w-100" href="/pages/ventaagrupada/propuestas.html">
+            <svg class="ac-icono" aria-hidden="true" focusable="false"><use href="/img/iconos.svg#clipboard-list"></use></svg>
+            <span>Ver mis propuestas</span>
+        </a>
+    </section>
+</main>
+</body>
+</html>

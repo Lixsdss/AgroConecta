@@ -31,3 +31,14 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Logs de la aplicación (logback-spring.xml, perfil prod) ###
+logs/
+
+### Secretos locales (nunca a Git) ###
+.env
+*.env
+application-local.properties
+
+### Exportaciones de Claude Design (se guardan fuera del repositorio; ver docs/04-diseno/ux-ui/pantallas.md) ###
+docs/04-diseno/ux-ui/*.html

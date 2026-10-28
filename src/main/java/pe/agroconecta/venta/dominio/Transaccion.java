@@ -1,0 +1,264 @@
+package pe.agroconecta.venta.dominio;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+
+/**
+ * Venta entre el comprador y el agricultor de una conversación (tabla {@code transacciones}). Los términos (unidad,
+ * cantidad, peso y precio) no cambian; solo avanza el estado, y cada cambio fija {@code id_actualizado_por}.
+ * {@code cantidad_kg} y {@code monto_total} son columnas generadas; {@code trg_transacciones_bi} puede fijar el peso
+ * por unidad.
+ */
+@Entity
+@Table(name = "transacciones")
+public class Transaccion {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id_transaccion")
+    private Long id;
+
+    @Column(name = "id_conversacion", nullable = false, updatable = false)
+    private Long idConversacion;
+
+    @Column(name = "id_propuesta_grupal", updatable = false)
+    private Long idPropuestaGrupal;
+
+    @Column(name = "id_unidad", nullable = false, updatable = false)
+    private Integer idUnidad;
+
+    @Column(name = "cantidad", nullable = false, precision = 12, scale = 2, updatable = false)
+    private BigDecimal cantidad;
+
+    @Column(name = "peso_unidad_kg", nullable = false, precision = 10, scale = 3, updatable = false)
+    private BigDecimal pesoUnidadKg;
+
+    @Column(name = "precio_unitario", nullable = false, precision = 10, scale = 2, updatable = false)
+    private BigDecimal precioUnitario;
+
+    @Column(name = "cantidad_kg", precision = 14, scale = 2, insertable = false, updatable = false)
+    private BigDecimal cantidadKg;
+
+    @Column(name = "monto_total", precision = 14, scale = 2, insertable = false, updatable = false)
+    private BigDecimal montoTotal;
+
+    @Column(name = "fecha_recojo", nullable = false, updatable = false)
+    private LocalDate fechaRecojo;
+
+    @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.VARCHAR)
+    @Column(name = "estado", nullable = false, length = 12)
+    private EstadoTransaccion estado;
+
+    @Column(name = "id_actualizado_por")
+    private Long idActualizadoPor;
+
+    @Column(name = "fecha_creacion", insertable = false, updatable = false)
+    private LocalDateTime fechaCreacion;
+
+    @Column(name = "fecha_actualizacion", insertable = false, updatable = false)
+    private LocalDateTime fechaActualizacion;
+
+    /** Constructor requerido por JPA. */
+    protected Transaccion() {
+    }
+
+    /**
+     * Crea el acuerdo del chat, que nace ACORDADA.
+     *
+     * @param idConversacion conversación
+     * @param idUnidad       unidad acordada
+     * @param cantidad       cantidad en esa unidad
+     * @param pesoUnidadKg   kilos por unidad
+     * @param precioUnitario soles por unidad
+     * @param fechaRecojo    día de recojo
+     * @param idRegistra     parte que registra el acuerdo
+     * @return la venta, sin guardar
+     */
+    public static Transaccion acordada(Long idConversacion, Integer idUnidad, BigDecimal cantidad,
+            BigDecimal pesoUnidadKg, BigDecimal precioUnitario, LocalDate fechaRecojo, Long idRegistra) {
+        Transaccion t = new Transaccion();
+        t.idConversacion = idConversacion;
+        t.idUnidad = idUnidad;
+        t.cantidad = cantidad;
+        t.pesoUnidadKg = pesoUnidadKg;
+        t.precioUnitario = precioUnitario;
+        t.fechaRecojo = fechaRecojo;
+        t.estado = EstadoTransaccion.ACORDADA;
+        t.idActualizadoPor = idRegistra;
+        return t;
+    }
+
+    /**
+     * Crea una parte de una propuesta conjunta (RF-10), que nace PROPUESTA y espera la respuesta del agricultor.
+     *
+     * @param idConversacion    conversación del comprador con la publicación
+     * @param idPropuestaGrupal propuesta conjunta
+     * @param idUnidad          unidad de la publicación
+     * @param cantidad          unidades enteras de la parte
+     * @param pesoUnidadKg      kilos por unidad
+     * @param precioUnitario    soles por unidad
+     * @param fechaRecojo       día de recojo (también límite para responder)
+     * @param idComprador       comprador que propone
+     * @return la venta, sin guardar
+     */
+    public static Transaccion propuesta(Long idConversacion, Long idPropuestaGrupal, Integer idUnidad,
+            BigDecimal cantidad, BigDecimal pesoUnidadKg, BigDecimal precioUnitario, LocalDate fechaRecojo,
+            Long idComprador) {
+        Transaccion t = acordada(idConversacion, idUnidad, cantidad, pesoUnidadKg, precioUnitario, fechaRecojo,
+                idComprador);
+        t.idPropuestaGrupal = idPropuestaGrupal;
+        t.estado = EstadoTransaccion.PROPUESTA;
+        return t;
+    }
+
+    /**
+     * Cambia el estado y registra quién lo hizo ({@code trg_transacciones_bu} valida el cambio).
+     *
+     * @param nuevo     nuevo estado
+     * @param idUsuario parte que hace el cambio
+     */
+    public void cambiarEstado(EstadoTransaccion nuevo, Long idUsuario) {
+        this.estado = nuevo;
+        this.idActualizadoPor = idUsuario;
+    }
+
+    /**
+     * Devuelve el id de la venta.
+     *
+     * @return id de la venta
+     */
+    public Long getId() {
+        return id;
+    }
+
+    /**
+     * Devuelve la conversación de la que nace.
+     *
+     * @return conversación de la que nace
+     */
+    public Long getIdConversacion() {
+        return idConversacion;
+    }
+
+    /**
+     * Devuelve la propuesta conjunta, o {@code null} si nace del chat.
+     *
+     * @return propuesta conjunta, o {@code null} si nace del chat
+     */
+    public Long getIdPropuestaGrupal() {
+        return idPropuestaGrupal;
+    }
+
+    /**
+     * Devuelve la unidad acordada.
+     *
+     * @return unidad acordada
+     */
+    public Integer getIdUnidad() {
+        return idUnidad;
+    }
+
+    /**
+     * Devuelve la cantidad en la unidad acordada.
+     *
+     * @return cantidad en la unidad acordada
+     */
+    public BigDecimal getCantidad() {
+        return cantidad;
+    }
+
+    /**
+     * Devuelve los kilos por unidad.
+     *
+     * @return kilos por unidad
+     */
+    public BigDecimal getPesoUnidadKg() {
+        return pesoUnidadKg;
+    }
+
+    /**
+     * Devuelve los soles por unidad.
+     *
+     * @return soles por unidad
+     */
+    public BigDecimal getPrecioUnitario() {
+        return precioUnitario;
+    }
+
+    /**
+     * Devuelve los kilos acordados (los calcula la base de datos).
+     *
+     * @return kilos acordados (los calcula la base de datos)
+     */
+    public BigDecimal getCantidadKg() {
+        return cantidadKg;
+    }
+
+    /**
+     * Devuelve el monto total (lo calcula la base de datos).
+     *
+     * @return monto total (lo calcula la base de datos)
+     */
+    public BigDecimal getMontoTotal() {
+        return montoTotal;
+    }
+
+    /**
+     * Devuelve el día de recojo.
+     *
+     * @return día de recojo
+     */
+    public LocalDate getFechaRecojo() {
+        return fechaRecojo;
+    }
+
+    /**
+     * Devuelve el estado.
+     *
+     * @return estado
+     */
+    public EstadoTransaccion getEstado() {
+        return estado;
+    }
+
+    /**
+     * Devuelve el autor del último cambio ({@code null}: proceso automático).
+     *
+     * @return autor del último cambio ({@code null}: proceso automático)
+     */
+    public Long getIdActualizadoPor() {
+        return idActualizadoPor;
+    }
+
+    /**
+     * Devuelve la fecha y hora del acuerdo.
+     *
+     * @return fecha y hora del acuerdo
+     */
+    public LocalDateTime getFechaCreacion() {
+        return fechaCreacion;
+    }
+
+    /**
+     * Devuelve la fecha y hora del último cambio.
+     *
+     * @return fecha y hora del último cambio
+     */
+    public LocalDateTime getFechaActualizacion() {
+        return fechaActualizacion;
+    }
+}

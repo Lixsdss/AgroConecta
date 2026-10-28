@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Lotes agrupados · AgroConecta</title>
+    <link rel="stylesheet" href="/vendor/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/css/estilos.css">
+    <script type="module" src="/js/ventaagrupada/lotes.js"></script>
+</head>
+<body>
+<!-- Lotes agrupados (diseño "agrupados", RF-10 / UC-12 paso 1). Solo el comprador. -->
+<main class="ac-pantalla">
+    <div class="ac-barra">
+        <a class="ac-atras" href="/pages/usuario/inicio.html" aria-label="Volver al inicio"><svg class="ac-icono" aria-hidden="true" focusable="false"><use href="/img/iconos.svg#arrow-left"></use></svg></a>
+        <h1>Lotes agrupados</h1>
+    </div>
+
+    <p class="ac-alerta ac-alerta-info d-flex gap-2"><svg class="ac-icono" aria-hidden="true" focusable="false"><use href="/img/iconos.svg#layers"></use></svg> <span>Unimos ofertas del mismo cultivo, variedad y zona. Compre todo en un solo lote.</span></p>
+
+    <a class="btn btn-outline-primary w-100 mb-3" href="/pages/ventaagrupada/propuestas.html">
+        <svg class="ac-icono" aria-hidden="true" focusable="false"><use href="/img/iconos.svg#clipboard-list"></use></svg>
+        <span>Mis propuestas</span>
+    </a>
+
+    <div id="alerta" class="ac-alerta" role="alert" tabindex="-1" hidden></div>
+
+    <div class="ac-resultados" id="lista" aria-live="polite"></div>
+
+    <div class="ac-vacio" id="vacio" hidden>
+        <svg class="ac-icono ac-icono-grande" aria-hidden="true" focusable="false"><use href="/img/iconos.svg#layers"></use></svg>
+        <h2 class="h5 mt-2">Todavía no hay lotes</h2>
+        <p class="ac-suave">Un lote se forma cuando 2 o más agricultores venden el mismo cultivo y variedad en la misma zona.</p>
+        <a class="btn btn-primary" href="/pages/publicacion/buscar.html">
+            <svg class="ac-icono" aria-hidden="true" focusable="false"><use href="/img/iconos.svg#search"></use></svg>
+            <span>Buscar productos</span>
+        </a>
+    </div>
+
+    <button class="btn btn-outline-primary w-100 mt-3" type="button" id="ver-mas" hidden>
+        <svg class="ac-icono" aria-hidden="true" focusable="false"><use href="/img/iconos.svg#chevron-down"></use></svg>
+        <span>Ver más</span>
+    </button>
+</main>
+</body>
+</html>

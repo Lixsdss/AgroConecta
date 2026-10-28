@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Configuración de Logback de AgroConecta.
+  - dev: solo consola.
+  - test: solo consola y nivel WARN, para que la salida de las pruebas quede limpia.
+  - prod: consola y archivo en logs/ con rotación por tamaño y por día, y retención limitada.
+  Nunca se registran contraseñas, hashes, tokens ni el contenido de los mensajes: el celular se registra
+  enmascarado (ReglasUsuario.enmascararCelular). Esta configuración no cambia esa regla del código.
+-->
+<configuration>
+
+    <!-- Carpeta de los archivos de log (solo prod); se puede cambiar con la variable LOG_PATH -->
+    <property name="RUTA_LOGS" value="${LOG_PATH:-logs}"/>
+
+    <!-- Fecha y hora, nivel, hilo, clase abreviada y mensaje -->
+    <property name="PATRON"
+              value="%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%thread] %logger{36} - %msg%n"/>
+
+    <appender name="CONSOLA" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>${PATRON}</pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+    </appender>
+
+    <!-- Niveles por paquete, comunes a todos los perfiles -->
+    <logger name="pe.agroconecta" level="INFO"/>
+    <logger name="org.hibernate.SQL" level="WARN"/>
+    <logger name="org.hibernate.orm.jdbc.bind" level="WARN"/>
+    <logger name="org.springframework" level="WARN"/>
+
+    <springProfile name="!prod &amp; !test">
+        <root level="INFO">
+            <appender-ref ref="CONSOLA"/>
+        </root>
+    </springProfile>
+
+    <springProfile name="test">
+        <logger name="pe.agroconecta" level="WARN"/>
+        <root level="WARN">
+            <appender-ref ref="CONSOLA"/>
+        </root>
+    </springProfile>
+
+    <springProfile name="prod">
+        <appender name="ARCHIVO" class="ch.qos.logback.core.rolling.RollingFileAppender">
+            <file>${RUTA_LOGS}/agroconecta.log</file>
+            <!-- Un archivo por día; si pasa de 10 MB se parte. Se guardan 30 días y como máximo 1 GB -->
+            <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+                <fileNamePattern>${RUTA_LOGS}/agroconecta.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+                <maxFileSize>10MB</maxFileSize>
+                <maxHistory>30</maxHistory>
+                <totalSizeCap>1GB</totalSizeCap>
+            </rollingPolicy>
+            <encoder>
+                <pattern>${PATRON}</pattern>
+                <charset>UTF-8</charset>
+            </encoder>
+        </appender>
+
+        <root level="INFO">
+            <appender-ref ref="CONSOLA"/>
+            <appender-ref ref="ARCHIVO"/>
+        </root>
+    </springProfile>
+
+</configuration>

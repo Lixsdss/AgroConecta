@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Detalle de la cosecha · AgroConecta</title>
+    <link rel="stylesheet" href="/vendor/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/css/estilos.css">
+    <script type="module" src="/js/publicacion/detalle.js"></script>
+</head>
+<body>
+<!-- Detalle de una publicación (UC-03 paso 7). Sencillo: el diseño no tiene esta pantalla. "Escribir" y "WhatsApp" (RF-04, UC-04). -->
+<main class="ac-pantalla">
+    <div class="ac-barra">
+        <a class="ac-atras" href="/pages/publicacion/buscar.html" id="volver" aria-label="Volver a la búsqueda"><svg class="ac-icono" aria-hidden="true" focusable="false"><use href="/img/iconos.svg#arrow-left"></use></svg></a>
+        <h1>Detalle de la cosecha</h1>
+    </div>
+
+    <div id="alerta" class="ac-alerta" role="alert" tabindex="-1" hidden></div>
+
+    <article id="detalle" hidden>
+        <div class="d-flex justify-content-between align-items-start gap-2 mb-3">
+            <h2 class="ac-titulo mb-0" id="titulo"></h2>
+            <span id="vence"></span>
+        </div>
+
+        <section class="ac-tarjeta-precio mb-3" aria-label="Precio">
+            <div class="ac-precio-kilo" id="precio-unidad"></div>
+            <div id="precio-kilo"></div>
+        </section>
+
+        <dl class="ac-datos">
+            <dt>Disponible</dt><dd id="disponible"></dd>
+            <dt>Lugar</dt><dd id="lugar"></dd>
+            <dt>Cosecha</dt><dd id="cosecha"></dd>
+            <dt>Se vende hasta</dt><dd id="limite"></dd>
+            <dt>Agricultor</dt><dd id="agricultor"></dd>
+        </dl>
+
+        <div id="contacto" class="mt-4"></div>
+
+        <section class="mt-4" aria-labelledby="titulo-reputacion">
+            <h3 class="h6 fw-bold" id="titulo-reputacion">Lo que dicen del agricultor</h3>
+            <div id="reputacion" hidden></div>
+        </section>
+    </article>
+</main>
+</body>
+</html>

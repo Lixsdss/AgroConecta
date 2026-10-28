@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Reclamos · AgroConecta</title>
+    <link rel="stylesheet" href="/vendor/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/css/estilos.css">
+    <script type="module" src="/js/administracion/reclamos.js"></script>
+</head>
+<body>
+<!-- Formato escritorio del administrador (UC-11 parte 3, 1440×900, RF-09) -->
+<div class="ac-escritorio">
+    <aside class="ac-lateral" aria-label="Menú de administración">
+        <div>
+            <p class="ac-marca mb-1">AgroConecta</p>
+            <p class="ac-suave mb-0">Administración</p>
+        </div>
+        <nav>
+            <a href="/pages/administracion/panel.html">
+                <svg class="ac-icono" aria-hidden="true" focusable="false"><use href="/img/iconos.svg#layout-dashboard"></use></svg>
+                <span>Panel</span>
+            </a>
+            <a href="/pages/administracion/moderacion.html">
+                <svg class="ac-icono" aria-hidden="true" focusable="false"><use href="/img/iconos.svg#shield-check"></use></svg>
+                <span>Moderación</span>
+            </a>
+            <a href="/pages/administracion/precios.html">
+                <svg class="ac-icono" aria-hidden="true" focusable="false"><use href="/img/iconos.svg#chart-line"></use></svg>
+                <span>Precios de mercado</span>
+            </a>
+            <a href="/pages/administracion/usuarios.html">
+                <svg class="ac-icono" aria-hidden="true" focusable="false"><use href="/img/iconos.svg#users"></use></svg>
+                <span>Usuarios</span>
+            </a>
+            <a href="/pages/administracion/reclamos.html" aria-current="page">
+                <svg class="ac-icono" aria-hidden="true" focusable="false"><use href="/img/iconos.svg#flag"></use></svg>
+                <span>Reclamos</span>
+            </a>
+        </nav>
+        <div class="ac-usuario-lateral">
+            <span class="ac-iniciales" id="iniciales" aria-hidden="true"></span>
+            <div>
+                <strong id="nombre-admin"></strong>
+                <div class="ac-suave">Administración</div>
+            </div>
+        </div>
+        <button class="btn btn-outline-primary w-100" type="button" id="salir">
+            <svg class="ac-icono" aria-hidden="true" focusable="false"><use href="/img/iconos.svg#log-out"></use></svg>
+            <span>Salir</span>
+        </button>
+    </aside>
+
+    <main class="ac-contenido">
+        <p class="ac-alerta ac-alerta-info ac-solo-escritorio">Esta sección está pensada para una computadora.</p>
+        <h1 class="mb-3">Reclamos</h1>
+
+        <div id="aviso" class="ac-alerta" role="status" tabindex="-1" hidden></div>
+
+        <div class="ac-pestanas" role="tablist" aria-label="Reclamos por estado">
+            <button type="button" role="tab" aria-selected="true" data-estado="PENDIENTE">Pendientes</button>
+            <button type="button" role="tab" aria-selected="false" data-estado="FUNDADO">Fundados</button>
+            <button type="button" role="tab" aria-selected="false" data-estado="INFUNDADO">Infundados</button>
+        </div>
+
+        <div class="ac-moderacion">
+            <section aria-label="Lista de reclamos">
+                <div id="lista" aria-live="polite"></div>
+                <nav class="d-flex justify-content-between mt-2 d-none" aria-label="Páginas" id="paginas">
+                    <button class="btn btn-outline-primary" type="button" id="anterior">Anterior</button>
+                    <span class="ac-suave align-self-center" id="pagina"></span>
+                    <button class="btn btn-outline-primary" type="button" id="siguiente">Siguiente</button>
+                </nav>
+            </section>
+            <section class="ac-panel" aria-label="Detalle del reclamo" id="detalle" hidden></section>
+        </div>
+    </main>
+</div>
+</body>
+</html>
