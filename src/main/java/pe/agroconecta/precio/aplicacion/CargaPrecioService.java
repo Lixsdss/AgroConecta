@@ -109,6 +109,27 @@ public class CargaPrecioService {
     }
 
     /**
+     * Carga el precio del día con la fuente como texto, para los módulos que no conocen el enum del dominio de
+     * precio.
+     *
+     * @param idAdministrador id del administrador
+     * @param idCultivo       id del cultivo
+     * @param idDistrito      id de la zona de precio
+     * @param fecha           día, o {@code null} para hoy
+     * @param precioKg        soles por kilo
+     * @param fuente          MERCADO_MAYORISTA_PIURA, MERCADO_SULLANA o ENCUESTA_ACOPIADORES
+     * @return precio guardado
+     * @throws IllegalArgumentException si la fuente no existe
+     * @throws ReglaNegocioException    si el cultivo no existe o el distrito no es zona de precio
+     * @throws ConflictoException       si ya hay precio de ese cultivo, zona y fecha
+     */
+    @Transactional
+    public PrecioRegistradoDto registrar(long idAdministrador, Integer idCultivo, Integer idDistrito, LocalDate fecha,
+            BigDecimal precioKg, String fuente) {
+        return registrar(idAdministrador, idCultivo, idDistrito, fecha, precioKg, FuentePrecio.valueOf(fuente));
+    }
+
+    /**
      * Corrige un precio ("Editar"). Quien edita queda como responsable.
      *
      * @param idAdministrador id del administrador de la sesión
