@@ -31,7 +31,7 @@ class ArquitecturaTest {
 
     /** Módulos de negocio; deben coincidir con el mapa de módulos de CLAUDE.md. */
     static final List<String> MODULOS = List.of("catalogo", "usuario", "publicacion", "precio", "mensajeria",
-            "venta", "ventaagrupada", "notificacion", "administracion");
+            "venta", "ventaagrupada", "notificacion", "administracion", "demo");
 
     private static final String COMPARTIDO = "compartido";
 
